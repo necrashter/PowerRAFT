@@ -1,0 +1,648 @@
+:root {
+	--blue-bg: #494a4d;
+	--blue-fg: #eaf5ff;
+	--blue-bga: #2c2c2d;
+	--blue-text-shadow: #070a0b8f;
+	--blue-dark-bg: #3b3d42;
+
+	--reverse-blue-bg: #6e6e6e;
+	--reverse-blue-fg: #eae9ec;
+
+	--orange-bg: #1E0E03BA;
+	--orange-dark-bg: #1E0E03CA;
+	--orange-fg: #ff935e;
+	--orange-text-shadow: #fae327;
+	--orange-border: rgba( 255, 255, 0, 0.7 );
+
+	--reverse-orange-bg: #ff935eBA;
+	--reverse-orange-fg: #1E0E03;
+
+	--main-opaque-bg: #f1f1f1;
+
+	--accent: #1a5882;
+	--dark-accent: #0e466a;
+
+	--light-grad-top: rgba(255,255,255,0.4);
+	--light-grad-bottom: rgba(255,255,255,0.1);
+
+	--shadow: rgba(0,0,0,0.8);
+	--light-shadow: rgba(0,0,0,0.6);
+
+	--bar-bg: rgba( 200, 255, 215, 0.4 );
+	--bar-fg: #031E11;
+
+	--grad-light: #1e1e1e;
+
+	--disabled-box-fg: #888;
+	--disabled-box-fg: #ccc;
+
+	--marker-bg: #0743dfab;
+}
+
+@font-face {
+	font-family: Orbitron;
+	src: url("../fonts/Orbitron/Orbitron.ttf");
+}
+@font-face {
+	font-family: RobotoMono;
+	src: url("../fonts/Roboto_Mono/RobotoMono-Regular.ttf");
+}
+
+html, body {
+	height: 100%;
+	margin: 0;
+	font-family: sans-serif;
+	overflow: hidden; /* regression ? */
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+}
+
+#BottomRightPanel {
+	position: absolute;
+	width: 20em;
+	bottom: 0;
+	right: 0;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	z-index: 500;
+	padding: 1em;
+	transition: visibility 0.25s, opacity 0.25s;
+	border-radius: 2em 0 0 0;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+}
+
+#BottomRightPanel.hidden {
+	visibility: hidden;
+	opacity: 0;
+}
+#BottomRightPanel > .close {
+	position: absolute;
+	right: 0;
+	top: 0;
+	margin: 8px;
+	padding: 6px 14px;
+}
+#BottomRightPanel > .content {
+	margin-right: 1.5em;
+}
+#BottomRightPanel > .content > * {
+	margin: 3px;
+}
+
+#BottomRightPanel > h1 {
+	font-size: 2rem;
+    text-shadow: 0 0 5px var(--blue-text-shadow);
+}
+
+#BottomLeftPanel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: var(--blue-bg);
+    color: var(--blue-fg);
+    z-index: 500;
+	/*
+	font-family: RobotoMono;
+	font-size: 1.5em;
+	position: absolute;
+	width: 20em;
+	bottom: 0;
+	left: 0;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	z-index: 500;
+	padding: 1em;
+	margin: 0.5em;
+	clip-path: polygon(0 0, calc( 100% - 30px ) 0px, 100% 30px, 100% 100%, 30px 100%, 0 calc( 100% - 30px), 0 50% );
+	*/
+}
+
+#TopLeftPanel {
+	font-size: 1.8rem;
+	position: absolute;
+	top: 0;
+	left:0;
+	margin: 0;
+	padding: 0.5em;
+	width: 10em;
+	z-index: 500;
+	border-radius: 0 0 1em 0;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+	color: var(--blue-fg);
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	transition: 0.4s;
+}
+#TopLeftPanel::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 1px;
+	width: calc(100% - 2px);
+	height: 50%;
+	background: linear-gradient(to bottom, var(--light-grad-top), transparent);
+	border-radius: 2px;
+	z-index: -1;
+	transition: opacity 0.4s;
+}
+
+#TopLeftPanel.warning::after {
+	opacity: 0.8;
+}
+#TopLeftPanel.warning {
+	background: var(--orange-bg);
+	color: var(--orange-fg);
+	text-shadow: 0 0 5px var(--orange-text-shadow);
+}
+
+#TopRightPanel {
+    font-size: 1.25em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+	padding: 0.5em 0.5em 1em 1em;
+    color: var(--blue-fg);
+    z-index: 500;
+}
+
+#TopRightPanel::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+	border-radius: 0 0 0 1em;
+	z-index: -1;
+}
+
+#LatLang {
+	/* text-shadow: 0 0 5px var(--blue-text-shadow); */
+}
+
+
+#Tooltip {
+	position: absolute;
+	z-index: 990;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	transition: visibility 0.4s, opacity 0.4s, transform 0.3s;
+	padding: 0.5em;
+	/* background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg)); */
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow), 0 0 4px 1px black;
+	border-radius: 8px;
+}
+
+#Tooltip * {
+	margin: 2px;
+	padding: 2px;
+}
+
+#Tooltip.hidden {
+	visibility: hidden;
+	opacity: 0;
+	/* transform: scaleY(0.1); */
+}
+
+#ContextMenu {
+	position: absolute;
+	z-index: 950;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	transition: visibility 0.2s, opacity 0.2s, transform 0.3s;
+}
+#ContextMenu.hidden {
+	visibility: hidden;
+	opacity: 0;
+	transform: scaleY(0.1);
+}
+#ContextMenu > div {
+	padding: 0.1em 0.25em;
+	cursor: pointer;
+	user-select: none;
+}
+#ContextMenu > div:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+
+#Overlay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+	transition: visibility 0.5s, opacity 0.5s;
+	z-index: 700;
+	background: var(--shadow);
+	color: var(--blue-fg);
+}
+
+#Overlay.warning {
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+
+#Overlay.hidden {
+	visibility: hidden;
+	opacity: 0;
+}
+
+#Centred {
+	width: 30em;
+	height: 100%;
+	margin: 0 auto;
+	top: 0;
+	position: absolute;
+	padding: 0;
+	left: 0;
+	right: 0;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+}
+#Overlay.warning #Centred {
+	background: var(--orange-dark-bg);
+}
+#OverlayClose {
+	position: absolute;
+	top: 0;
+	left: calc(100% - 5em);
+	/* text-shadow: 0 0 5px var(--blue-text-shadow); */
+	margin: 1em;
+}
+#CentredContent {
+	margin: 1.4em;
+}
+
+h1,
+h2 {
+	/* text-shadow: 0 0 5px var(--blue-text-shadow); */
+	font-weight: normal;
+}
+
+.warning h1,
+.warning h2 {
+	text-shadow: 0 0 5px var(--orange-text-shadow);
+}
+
+.blockButton {
+	/* text-shadow: 0 0 5px var(--blue-text-shadow); */
+	/* background: var(--blue-dark-bg); */
+	background: linear-gradient(to top, var(--blue-dark-bg), var(--grad-light));
+	color: var(--blue-fg);
+	padding: 0.6em 1.2em;
+	margin: 0.2em;
+	cursor: pointer;
+	text-align: center;
+	user-select: none;
+	border-radius: 32px;
+	box-shadow: inset 0px 0px 2px 2px var(--shadow), inset 0px 0px 12px 0px var(--light-shadow);
+	position: relative;
+	z-index: 0;
+	/* overflow: hidden; */
+}
+.blockButton::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 10px;
+	width: calc(100% - 20px);
+	height: 50%;
+	background: linear-gradient(to bottom, var(--light-grad-top), var(--light-grad-bottom));
+	border-radius: 32px;
+	z-index: -1;
+}
+
+.blockButton:hover {
+	background: var(--accent);
+}
+.blockButton:active {
+	background: linear-gradient(to top, var(--blue-dark-bg), var(--grad-light));
+	color: var(--reverse-blue-fg);
+}
+.blockButton:active::after {
+	opacity: 0;
+}
+.warning .blockButton {
+	text-shadow: 0 0 3px var(--orange-text-shadow);
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+.warning .blockButton:hover {
+	background: var(--reverse-orange-bg);
+	color: var(--reverse-orange-fg);
+}
+
+.blockButton.disabled {
+	color: gray;
+	/* cursor: not-allowed; */
+}
+.blockButton.disabled:hover {
+	background: var(--blue-dark-bg);
+	color: gray;
+}
+
+.blockButton.alt {
+	text-shadow: 0 0 3px var(--orange-text-shadow);
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+.blockButton.alt:hover {
+	background: var(--reverse-orange-bg);
+	color: var(--reverse-orange-fg);
+}
+
+button {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	padding: 0.6em 1.2em;
+	margin: 0.2em;
+	cursor: pointer;
+	text-align: center;
+}
+button:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+#MenuButton {
+	top: 3em;
+	z-index: 600;
+	position: absolute;
+	font-size: 1.5em;
+}
+
+
+#OverlayLeftBar {
+	width: 7em;
+    height: 100%;
+    background: var(--blue-bg);
+    top: 0;
+    position: absolute;
+    padding: 0;
+    left: 0;
+	display: flex;
+	flex-direction: column;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+}
+
+#OverlayLeftBar > .block {
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+#OverlayLeftBar .blockButton {
+    margin: 1em 1em;
+    text-align: center;
+    padding: 0.75em 0em;
+}
+
+#OverlayLeftBar > hr {
+	color: var(--blue-fg);
+}
+
+#OverlayContent {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+#OverlayRight {
+	position: absolute;
+	height: 100%;
+	width: calc(100% - 7em);
+	left: 7em;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.halfBox {
+	width: 50%;
+	height: 50%;
+}
+
+.contentBox {
+	margin: 2em;
+	padding: 1em;
+	color: var(--blue-fg);
+	border-radius: 2em;
+	background: linear-gradient(to top, var(--blue-bga) , var(--blue-bg));
+	box-shadow: inset 0px 0px 16px 0px var(--light-shadow);
+}
+
+.contentBox h1 {
+	margin: 0 1em;
+}
+
+.barWrap {
+	font: 15px RobotoMono;
+	text-align: right;
+	margin: 1em;
+}
+
+.horizontalBarWrap {
+	display: flex;
+	flex-direction: row;
+	margin: 0.2em 0;
+}
+
+.horizontalBarWrap > div {
+	padding: 0.3em;
+	height: 1em;
+}
+
+.horizontalBarWrap .horizontalBar {
+	padding: 0;
+	background: var(--bar-bg);
+	color: var(--var-fg);
+	overflow: hidden;
+	height: 1.6em;
+}
+
+.horizontalBar p {
+	margin: 0.3em;
+}
+
+
+#TopBar {
+	position: absolute;
+	left: 0;
+	width: 20em;
+	z-index: 599;
+	right: 0;
+	margin: 0 auto;
+	display: flex;
+}
+
+#TopBar > * {
+	flex-grow: 1;
+}
+
+
+
+input[type="file"] {
+    display: none;
+}
+
+input[type="text"] {
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	padding: 0.2em;
+	margin: 0.2em;
+	font-family: RobotoMono;
+}
+
+#PanelContainer {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+}
+
+#PanelContainer > div {
+	margin: 0;
+	height: 100%;
+}
+
+#LeftPanel {
+	position: relative;
+	flex-grow: 1;
+}
+
+#RightPanel {
+	width: 30em;
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	overflow-y: scroll;
+	overflow-x: hidden;
+	box-shadow: inset 10px 0px 16px 0px var(--light-shadow);
+	padding-left: 0.5em;
+}
+
+#RightPanelContent {
+	padding: 1em;
+}
+
+#HUD {
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+	pointer-events: none;
+}
+
+#HUD > * {
+	pointer-events: auto;
+}
+
+.disabled {
+	text-shadow: none;
+    color: gray;
+}
+
+
+.selectList {
+	user-select: none;
+    border: 0.15em solid var(--shadow);
+    margin: 2em 1em;
+    border-radius: 0.5em;
+    box-shadow: 0 0 5px 4px var(--shadow);
+}
+
+.selectList > div {
+	padding: 0.1em 0.5em;
+	display: flex;
+	cursor: pointer;
+    border-radius: 0.3em;
+}
+.selectList.wide > div {
+	padding: 0.4em 0.5em;
+}
+
+.selectList > .currentIndex::before {
+	content: "▶ ";
+}
+.selectList.wide > div::before {
+	content: "▶ ";
+	padding: 0.5em 1em 0.5em 0.5em;
+	position: absolute;
+    transform: translateX(-2.5em);
+    opacity: 0;
+	transition: opacity 0.5s;
+}
+.selectList.wide > .selected::before {
+	opacity: 1;
+}
+.selectList.wide > div {
+	transition: padding 0.5s;
+	position: relative;
+}
+.selectList.wide > .selected {
+	padding-left: 3em;
+}
+
+.selectList > div.hover,
+.selectList > div:hover {
+	background: var(--dark-accent);
+	color: var(--reverse-blue-fg);
+}
+
+.policyControls {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+}
+
+.rightFlexFloat {
+	flex-grow: 1;
+	text-align: right;
+}
+
+.tabButtons {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	padding: 0 0 1em 0;
+}
+
+.tabButtons .blockButton {
+	flex-grow: 1;
+	border-radius: 20px 20px 0 0;
+	margin: 0;
+}
+
+.tabButtons .disabled::after {
+	opacity: 0;
+}
+
+
+@keyframes height-anim {
+	0% {
+		max-height: 0;
+	}
+	100% {
+		max-height: 10em;
+	}
+}
+
+.list-elem {
+	animation-name: height-anim;
+	animation-duration: 1s;
+}
+
+summary {
+	cursor: pointer;
+}

@@ -1,0 +1,568 @@
+:root {
+	--blue-bg: #031E11BA;
+	--blue-fg: #14fdce;
+	--blue-text-shadow: #27e1fa;
+	--blue-dark-bg: #031E11CA;
+	--blue-border: rgba( 0, 255, 255, 0.7 );
+
+	--reverse-blue-bg: rgba( 200, 255, 215, 0.8 );
+	--reverse-blue-fg: #137B49;
+
+	--orange-bg: #1E0E03BA;
+	--orange-dark-bg: #1E0E03CA;
+	--orange-fg: #ff935e;
+	--orange-text-shadow: #fae327;
+	--orange-border: rgba( 255, 255, 0, 0.7 );
+
+	--reverse-orange-bg: #ff935eBA;
+	--reverse-orange-fg: #1E0E03;
+
+	--main-opaque-bg: #052F2B;
+}
+
+@font-face {
+	font-family: Orbitron;
+	src: url("../fonts/Orbitron/Orbitron.ttf");
+}
+@font-face {
+	font-family: RobotoMono;
+	src: url("../fonts/Roboto_Mono/RobotoMono-Regular.ttf");
+}
+
+html, body {
+	height: 100%;
+	margin: 0;
+	font-family: sans-serif;
+	overflow: hidden; /* regression ? */
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+}
+
+#BottomRightPanel {
+	position: absolute;
+	width: 20em;
+	bottom: 0;
+	right: 0;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	z-index: 500;
+	padding: 1em;
+	margin: 0.5em;
+	clip-path: polygon(30px 0, 100% 0px, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+	transition: visibility 0.25s, opacity 0.25s;
+}
+
+#BottomRightPanel.hidden {
+	visibility: hidden;
+	opacity: 0;
+}
+#BottomRightPanel > .close {
+	position: absolute;
+	right: 0;
+	top: 0;
+	margin: 8px;
+	padding: 6px 14px;
+}
+#BottomRightPanel > .content {
+	margin-right: 1.5em;
+}
+#BottomRightPanel > .content > * {
+	margin: 3px;
+}
+
+#BottomRightPanel > h1 {
+	font-size: 2rem;
+    text-shadow: 0 0 5px var(--blue-text-shadow);
+}
+
+#BottomLeftPanel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: var(--blue-bg);
+    color: var(--blue-fg);
+    z-index: 500;
+	/*
+	font-family: RobotoMono;
+	font-size: 1.5em;
+	position: absolute;
+	width: 20em;
+	bottom: 0;
+	left: 0;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	z-index: 500;
+	padding: 1em;
+	margin: 0.5em;
+	clip-path: polygon(0 0, calc( 100% - 30px ) 0px, 100% 30px, 100% 100%, 30px 100%, 0 calc( 100% - 30px), 0 50% );
+	*/
+}
+
+#TopLeftPanel {
+	font-family: Orbitron;
+	font-size: 1.8rem;
+	position: absolute;
+	top: 0;
+	left:0;
+	margin: 0;
+	padding: 0.5em;
+	width: 10em;
+	z-index: 500;
+	clip-path: polygon(0 0, 100% 0px, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	transition: 0.4s;
+}
+
+#TopLeftPanel.warning {
+	background: var(--orange-bg);
+	color: var(--orange-fg);
+	text-shadow: 0 0 5px var(--orange-text-shadow);
+}
+
+#TopRightPanel {
+    font-size: 1.25em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+	padding: 0.5em 0.5em 1em 1em;
+    color: var(--blue-fg);
+    z-index: 500;
+    text-shadow: 0 0 5px var(--blue-text-shadow);
+}
+
+#TopRightPanel::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+    background: var(--blue-bg);
+    clip-path: polygon(0 0, 100% 0px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+	z-index: -1;
+}
+
+#LatLang {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+}
+
+
+#Tooltip {
+	position: absolute;
+	z-index: 990;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	transition: visibility 0.2s, opacity 0.2s, transform 0.3s;
+	padding: 0.5em;
+}
+#Tooltip * {
+	margin: 2px;
+	padding: 2px;
+}
+
+
+#Tooltip.hidden {
+	visibility: hidden;
+	opacity: 0;
+	transform: scaleY(0.1);
+}
+
+#ContextMenu {
+	position: absolute;
+	z-index: 950;
+	background: var(--blue-bg);
+	color: var(--blue-fg);
+	border: 0.15em solid var(--blue-border);
+	transition: visibility 0.2s, opacity 0.2s, transform 0.3s;
+}
+#ContextMenu.hidden {
+	visibility: hidden;
+	opacity: 0;
+	transform: scaleY(0.1);
+}
+#ContextMenu > div {
+	padding: 0.1em 0.25em;
+	cursor: pointer;
+	user-select: none;
+}
+#ContextMenu > div:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+
+#Overlay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+	transition: visibility 0.5s, opacity 0.5s;
+	z-index: 700;
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+}
+
+#Overlay.warning {
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+
+#Overlay.hidden {
+	visibility: hidden;
+	opacity: 0;
+}
+
+#Centred {
+	border-right: 0.1em solid;
+    border-left: 0.1em solid;
+	width: 30em;
+	height: 100%;
+	margin: 0 auto;
+	top: 0;
+	position: absolute;
+	padding: 0;
+	left: 0;
+	right: 0;
+	background: var(--blue-dark-bg);
+}
+#Overlay.warning #Centred {
+	background: var(--orange-dark-bg);
+}
+#OverlayClose {
+	position: absolute;
+	top: 0;
+	left: calc(100% - 5em);
+	/* text-shadow: 0 0 5px var(--blue-text-shadow); */
+	margin: 1em;
+}
+#CentredContent {
+	margin: 1.4em;
+}
+
+h1,
+h2 {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	font-weight: normal;
+	font-family: Orbitron;
+}
+
+.warning h1,
+.warning h2 {
+	text-shadow: 0 0 5px var(--orange-text-shadow);
+}
+
+.blockButton {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	border: 0.15em solid var(--blue-border);
+	padding: 0.6em 1.2em;
+	margin: 0.2em;
+	cursor: pointer;
+	text-align: center;
+	user-select: none;
+}
+
+.blockButton:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+.warning .blockButton {
+	border: 0.15em solid var(--orange-border);
+	text-shadow: 0 0 3px var(--orange-text-shadow);
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+.warning .blockButton:hover {
+	background: var(--reverse-orange-bg);
+	color: var(--reverse-orange-fg);
+}
+
+.blockButton.disabled {
+	text-shadow: none;
+    color: gray;
+	/* TODO: var? */
+	border: 0.15em solid gray;
+	cursor: not-allowed;
+}
+.blockButton.disabled:hover {
+	background: var(--blue-dark-bg);
+	color: gray;
+}
+
+.blockButton.alt {
+	border: 0.15em solid var(--orange-border);
+	text-shadow: 0 0 3px var(--orange-text-shadow);
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
+.blockButton.alt:hover {
+	background: var(--reverse-orange-bg);
+	color: var(--reverse-orange-fg);
+}
+
+button {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	border: 0.15em solid var(--blue-border);
+	padding: 0.6em 1.2em;
+	margin: 0.2em;
+	cursor: pointer;
+	text-align: center;
+}
+button:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+#MenuButton {
+	top: 3em;
+	z-index: 600;
+	position: absolute;
+	font-size: 1.5em;
+	font-family: Orbitron;
+}
+
+
+#OverlayLeftBar {
+	width: 7em;
+    height: 100%;
+    background: #022011c9;
+    top: 0;
+    position: absolute;
+    padding: 0;
+    left: 0;
+    border-right: 0.1em solid;
+	display: flex;
+	flex-direction: column;
+}
+
+#OverlayLeftBar > .block {
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+#OverlayLeftBar .blockButton {
+	font-family: Orbitron;
+    margin: 1em 1em;
+    text-align: center;
+    padding: 0.75em 0em;
+}
+
+#OverlayLeftBar > hr {
+	color: var(--blue-fg);
+}
+
+#OverlayContent {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+#OverlayRight {
+	position: absolute;
+	height: 100%;
+	width: calc(100% - 7em);
+	left: 7em;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.halfBox {
+	width: 50%;
+	height: 50%;
+}
+
+.contentBox {
+	margin: 2em;
+	padding: 1em;
+	color: var(--blue-fg);
+	background: #022011c9;
+	border: 0.1em solid;
+}
+
+.contentBox h1 {
+	margin: 0 1em;
+    font-family: Orbitron;
+}
+
+.barWrap {
+	font: 15px RobotoMono;
+	text-align: right;
+	margin: 1em;
+}
+
+.horizontalBarWrap {
+	display: flex;
+	flex-direction: row;
+	margin: 0.2em 0;
+}
+
+.horizontalBarWrap > div {
+	padding: 0.3em;
+	height: 1em;
+}
+
+.horizontalBarWrap .horizontalBar {
+	padding: 0;
+	background: rgba( 200, 255, 215, 0.8 );
+	color: #031E11;
+	overflow: hidden;
+	height: 1.6em;
+}
+
+.horizontalBar p {
+	margin: 0.3em;
+}
+
+
+#TopBar {
+	position: absolute;
+	left: 0;
+	width: 20em;
+	z-index: 599;
+	right: 0;
+	margin: 0 auto;
+	display: flex;
+}
+
+#TopBar > * {
+	flex-grow: 1;
+}
+
+
+
+input[type="file"] {
+    display: none;
+}
+
+input[type="text"] {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	border: 0.15em solid var(--blue-border);
+	padding: 0.2em;
+	margin: 0.2em;
+	font-family: RobotoMono;
+}
+
+#PanelContainer {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+}
+
+#PanelContainer > div {
+	margin: 0;
+	height: 100%;
+}
+
+#LeftPanel {
+	position: relative;
+	flex-grow: 1;
+}
+
+#RightPanel {
+	width: 30em;
+	background: var(--main-opaque-bg);
+	color: var(--blue-fg);
+    border-left: 0.1em solid;
+	overflow-y: scroll;
+}
+
+#RightPanelContent {
+	padding: 1em;
+}
+
+#HUD {
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+	pointer-events: none;
+}
+
+#HUD > * {
+	pointer-events: auto;
+}
+
+.disabled {
+	text-shadow: none;
+    color: gray;
+}
+
+
+.selectList {
+	user-select: none;
+	border: 0.15em solid var(--blue-border);
+	margin: 2em 0em;
+	background: black;
+}
+
+.selectList > div {
+	padding: 0.1em 0.5em;
+	display: flex;
+	cursor: pointer;
+}
+.selectList.wide > div {
+	padding: 0.4em 0.5em;
+}
+
+.selectList > .currentIndex::before {
+	content: "▶ ";
+}
+.selectList.wide > div::before {
+	content: "▶ ";
+	padding: 0.5em 1em 0.5em 0.5em;
+	position: absolute;
+    transform: translateX(-2.5em);
+    opacity: 0;
+	transition: opacity 0.5s;
+}
+.selectList.wide > .selected::before {
+	opacity: 1;
+}
+.selectList.wide > div {
+	transition: padding 0.5s;
+	position: relative;
+}
+.selectList.wide > .selected {
+	padding-left: 3em;
+}
+
+.selectList > div:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+.selectList > div.hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.policyControls {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+}
+
+
+.rightFlexFloat {
+	flex-grow: 1;
+	text-align: right;
+}
+
+summary {
+	cursor: pointer;
+}

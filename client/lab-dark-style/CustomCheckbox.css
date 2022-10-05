@@ -1,0 +1,42 @@
+/* https://www.w3schools.com/charsets/ref_utf_dingbats.asp */
+
+.customCheckbox input[type="checkbox"]:checked ~ label:before { content: "✔" }
+.customCheckbox input[type="radio"]:checked ~ label:before { content: "•" }
+.customCheckbox input { display: none; }
+
+.customCheckbox label::before {
+  display: inline-block;
+  content: "\00a0"; /* Blank space */
+  width: 20px;
+  margin: 5px 8px;
+  text-align: center;
+  background: var(--blue-dark-bg);
+	box-shadow: inset 0px 0px 2px 2px var(--shadow), inset 0px 0px 12px 0px var(--light-shadow);
+	border-radius: 4px;
+	padding: 4px;
+}
+.customCheckbox.radio label::before {
+	border-radius: 100%;
+}
+
+.customCheckbox {
+	user-select: none;
+}
+
+.customCheckbox label { cursor: pointer; }
+.customCheckbox label:hover::before {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+	/* background: var(--dark-accent); */
+}
+
+/* DISABLED */
+/* TODO */
+/*
+.customCheckbox input:disabled ~ label {
+  color: var(--disabled-box-fg);
+}
+.customCheckbox input:disabled ~ label:before {
+  background: var(--disabled-box-bg);
+}
+*/

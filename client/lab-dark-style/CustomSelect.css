@@ -1,0 +1,97 @@
+.CustomSelect {
+	user-select: none;
+	margin: 0.2em;
+	color: var(--blue-fg);
+	cursor: pointer;
+	position: relative;
+	z-index: 1;
+}
+
+
+.CustomSelectHead {
+	position: relative;
+	padding: 0.3em 0.5em;
+	padding-right: 2em;
+	background: var(--blue-dark-bg);
+	/* width: 12em; */
+	border-radius: 16px;
+	box-shadow: 0px 0px 2px 2px var(--shadow), inset 0px 0px 12px 0px var(--shadow);
+	z-index: 0;
+}
+.CustomSelectHead::before {
+	content: "";
+	position: absolute;
+	top: 29%;
+	right: 0.5em;
+	bottom: 25%;
+	width: 20px;
+	background: var(--blue-fg);
+	-webkit-clip-path: polygon(50% 73%, 0 0, 100% 0);
+	clip-path: polygon(50% 73%, 0 0, 100% 0);
+	padding: 10px;
+	box-sizing: border-box;
+}
+.CustomSelectHead::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 4px;
+	width: calc(100% - 8px);
+	height: 50%;
+	background: linear-gradient(to bottom, var(--light-grad-top), var(--light-grad-bottom));
+	border-radius: 32px;
+	z-index: -1;
+}
+.CustomSelectHead:active::before {
+	background: var(--reverse-blue-fg);
+}
+.CustomSelectHead:active::after {
+	opacity: 0;
+}
+.CustomSelectHead:hover {
+	background: var(--accent);
+}
+.CustomSelectHead:active {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.CustomSelectList {
+	position: relative;
+    float: left;
+    width: 100%;
+	top: -16px;
+	text-shadow: unset;
+}
+
+.CustomSelectList > div {
+	position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: -1;
+    overflow: hidden;
+    width: 100%;
+    /* background-color: var(--blue-dark-bg); */
+	background: linear-gradient(to top, var(--blue-dark-bg), var(--grad-light));
+	box-shadow: inset 0px 0px 2px 2px var(--shadow), 0px 0px 16px 2px var(--shadow);
+    padding: 16px 0px 0px 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+	border-radius: 16px;
+
+	transform: scaleY(0); 
+	transform-origin: top;
+	transition: transform 0.3s;
+}
+.CustomSelectList > div.open {
+	transform: scaleY(1); 
+}
+
+.CustomSelectElement {
+	padding: 0.2em 0.5em;
+}
+
+.CustomSelectElement:hover {
+	background: var(--accent);
+	/* color: var(--reverse-blue-fg); */
+}

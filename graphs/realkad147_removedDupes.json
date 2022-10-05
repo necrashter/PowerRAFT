@@ -1,0 +1,2444 @@
+{
+    "name": "Real Kadikoy 107",
+    "nodes": [
+        {
+            "latlng": [
+                40.994521,
+                29.050342
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fikirtepe Mah Yıldırım Sok Kiptaş İnş",
+            "id": "5006"
+        },
+        {
+            "latlng": [
+                40.99066,
+                29.053818
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hızır Bey Cad Usta İnş",
+            "id": "5008"
+        },
+        {
+            "latlng": [
+                40.992317,
+                29.027694
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Yoğurtçu Şükrü Sk Çinilii Otopark İçi",
+            "id": "5024"
+        },
+        {
+            "latlng": [
+                40.990311,
+                29.023116
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Tansas Kadıköy Postane Arkası",
+            "id": "5025"
+        },
+        {
+            "latlng": [
+                40.989772,
+                29.022797
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Tansaş Kadıköy Arkası",
+            "id": "5026"
+        },
+        {
+            "latlng": [
+                40.99031,
+                29.023126
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Neşet Ömer Sk PTT İçi",
+            "id": "5027"
+        },
+        {
+            "latlng": [
+                40.988725,
+                29.021709
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Caferağa Mah Faik Sözdener Cad Vergi Da",
+            "id": "5028"
+        },
+        {
+            "latlng": [
+                40.987741,
+                29.036818
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahça Standı Altı",
+            "id": "5064"
+        },
+        {
+            "latlng": [
+                40.971458,
+                29.044421
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahça Ordu Evi",
+            "id": "5065"
+        },
+        {
+            "latlng": [
+                40.985292,
+                29.038128
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Recep Peker Cad Medicana Hast",
+            "id": "5066"
+        },
+        {
+            "latlng": [
+                40.98806,
+                29.01946
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Rıhtım Atıksu Arıtma Tesisleri (İSKİ)",
+            "id": "5075"
+        },
+        {
+            "latlng": [
+                40.992351,
+                29.024801
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Rıhtım Tramvay İşletmesi (Rihtim otobus terminali)",
+            "id": "5076"
+        },
+        {
+            "latlng": [
+                40.980609,
+                29.053312
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Feneryolu Boztepe Sk No:14",
+            "id": "5078"
+        },
+        {
+            "latlng": [
+                40.99669455131096,
+                29.035899639129642
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "İbrahimpaşa Sok Can Apt (modified)",
+            "id": "5099"
+        },
+        {
+            "latlng": [
+                40.981136,
+                29.041801
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Kızıltoprak Bağdat Cad Ihlamur Çıkmazı",
+            "id": "5103"
+        },
+        {
+            "latlng": [
+                40.972271,
+                29.050982
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Cemil Topuzlu Cad Dr Kazım Lakay Sk",
+            "id": "5105"
+        },
+        {
+            "latlng": [
+                40.975136,
+                29.042869
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Ahmet Mithat Cad Köşesi Park Yanı",
+            "id": "5107"
+        },
+        {
+            "latlng": [
+                40.976791,
+                29.045243
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahça Mah Egemen Sok",
+            "id": "5108"
+        },
+        {
+            "latlng": [
+                40.971954,
+                29.046963
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Kurukahveci Sk No:2 As Apt Altı",
+            "id": "5114"
+        },
+        {
+            "latlng": [
+                40.997966,
+                29.032029
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Sarayardı Cad İle Hakkı Sk Köşesi",
+            "id": "5131"
+        },
+        {
+            "latlng": [
+                40.992877,
+                29.045956
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hızırbey Cad Yıldırım Sk Köşesi",
+            "id": "5135"
+        },
+        {
+            "latlng": [
+                40.998844,
+                29.033713
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Acıbadem Mah Sokullu Sokak",
+            "id": "5136"
+        },
+        {
+            "latlng": [
+                40.981785255099396,
+                29.041382074356083
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Bağdat Cad No:91 Florans Nighingen Hast (modified)",
+            "id": "5166"
+        },
+        {
+            "latlng": [
+                40.974774,
+                29.044279
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "F.Bahçe Mah Ahmet Mithat Efendi Cad",
+            "id": "5173"
+        },
+        {
+            "latlng": [
+                40.9759453344957,
+                29.058237075805668
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Sümer Sk No:1 (modified)",
+            "id": "5207"
+        },
+        {
+            "latlng": [
+                40.986726,
+                29.055184
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe SSK Hastanesi Hızırbey Cad",
+            "id": "5211"
+        },
+        {
+            "latlng": [
+                40.974108,
+                29.041589
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fener Kalamış Cad. No:86 Arkası",
+            "id": "5224"
+        },
+        {
+            "latlng": [
+                40.98660421764256,
+                29.07392263412476
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Merdivenköy Şair Arşi Cad (modified)",
+            "id": "5237"
+        },
+        {
+            "latlng": [
+                40.974851,
+                29.041532
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahçe Mah. Bilgili Sok.",
+            "id": "5242"
+        },
+        {
+            "latlng": [
+                40.971248,
+                29.046005
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahçe Tunaman sok No:10",
+            "id": "5252"
+        },
+        {
+            "latlng": [
+                40.985657,
+                29.069495
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "İncirli Sk No:1 Karşısı Merdivenköy",
+            "id": "5257"
+        },
+        {
+            "latlng": [
+                40.994924,
+                29.042058
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hızırbey Cad Hasanpaşa İETT Garajı İçi",
+            "id": "5260"
+        },
+        {
+            "latlng": [
+                40.992609,
+                29.043221
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Ömerbey Çıkmazı Sk Otel",
+            "id": "5261"
+        },
+        {
+            "latlng": [
+                40.99733563217726,
+                29.0334454250149
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Mustafabey Sk No:14 Acıbadem",
+            "id": "5276"
+        },
+        {
+            "latlng": [
+                40.969592,
+                29.054581
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Papatyalı Sk No:6 Cemil Topuzlu Cad",
+            "id": "5291"
+        },
+        {
+            "latlng": [
+                40.989408,
+                29.054954
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fikirtepe Hızırbey Cad İTM",
+            "id": "5300"
+        },
+        {
+            "latlng": [
+                40.988253,
+                29.06128
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Dumlupınar Mah Şahika Sok",
+            "id": "5316"
+        },
+        {
+            "latlng": [
+                41.003641892866696,
+                29.025321006774902
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Haydarpaşa Meslek Lisesi (modified)",
+            "id": "5317"
+        },
+        {
+            "latlng": [
+                40.9675206824815,
+                29.056627750396732
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Parkı Metro Şantiye (modified)",
+            "id": "5333"
+        },
+        {
+            "latlng": [
+                40.99399,
+                29.063596
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Y. Abdi Bey Cad Teknik Yapı",
+            "id": "5341"
+        },
+        {
+            "latlng": [
+                40.996006,
+                29.057207
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Y. Abdi Bey Cad Svr Grup İnş (found: Neoray Insaat sanayi)",
+            "id": "5343"
+        },
+        {
+            "latlng": [
+                40.994086,
+                29.059359
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Barış Sokağı Baysaş 1.",
+            "id": "5344"
+        },
+        {
+            "latlng": [
+                40.994224,
+                29.059078
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Barış Sokağı Baysaş 2.",
+            "id": "5345"
+        },
+        {
+            "latlng": [
+                40.975228,
+                29.055674
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Gülden Sk Taşyapı (found: Kontak duet ciftehavuzlar bilgilendirme ofisi)",
+            "id": "5372"
+        },
+        {
+            "latlng": [
+                41.004046,
+                29.024408
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Haydarpaşa Göğüs Cerrahi Hastanesi (found: Dr. Siyami Ersek)",
+            "id": "5381"
+        },
+        {
+            "latlng": [
+                41.003055,
+                29.027706
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Dr Eyüp Aksoy C Behiçbey Sk Askeri Yurt (found: Haydarpasa ogrenci yurdu)",
+            "id": "5382"
+        },
+        {
+            "latlng": [
+                41.004977,
+                29.021378
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "H. Paşa Numune Hast Deprem Kliniği",
+            "id": "5383"
+        },
+        {
+            "latlng": [
+                41.004389,
+                29.02659
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Eyüp Aksoy Cad Hatahane Arkası",
+            "id": "5384"
+        },
+        {
+            "latlng": [
+                40.996719,
+                29.055084
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Yumurtacı Abdibey Cad Ekşioğlu (found: Alya Life residence)",
+            "id": "5387"
+        },
+        {
+            "latlng": [
+                40.994935,
+                29.042067
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hasanpaşa İETT Garajı Dolum Tesisleri",
+            "id": "5390"
+        },
+        {
+            "latlng": [
+                40.984123,
+                29.065144
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "M. Köy Mah Lütfiye Sok",
+            "id": "5394"
+        },
+        {
+            "latlng": [
+                40.986449,
+                29.056872
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Merdivenköy SSK Poliklinik Civarı",
+            "id": "5395"
+        },
+        {
+            "latlng": [
+                40.972777,
+                29.059577
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Mah Hattat Bahatin Sk",
+            "id": "5401"
+        },
+        {
+            "latlng": [
+                40.974433,
+                29.059933
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Mah Cavitpaşa Sk",
+            "id": "5402"
+        },
+        {
+            "latlng": [
+                40.98535861428643,
+                29.053465762665056
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Marmara Üniversitesi Göztepe Kampusu",
+            "id": "5415"
+        },
+        {
+            "latlng": [
+                40.999851,
+                29.046698
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Acıbadem Özel Doğuş Lisesi Yeniyol Sk Köşesi",
+            "id": "5417"
+        },
+        {
+            "latlng": [
+                40.999851,
+                29.045917
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Doğuş Lisesi Karşısı Zeamet Sk Acıbadem",
+            "id": "5420"
+        },
+        {
+            "latlng": [
+                40.97323226375212,
+                29.05703823742408
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Mah Bağdat Cad",
+            "id": "5451"
+        },
+        {
+            "latlng": [
+                40.973014,
+                29.057877
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Mah Bağdat Cad Çifte Havuzlar Ortaokulu",
+            "id": "5456"
+        },
+        {
+            "latlng": [
+                41.000526,
+                29.044208
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Acıbadem Mah Beyaz Leylaklı Sok",
+            "id": "5457"
+        },
+        {
+            "latlng": [
+                40.997456,
+                29.03443
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Sarayardı Cad Ata Sk No:4 Acıbadem",
+            "id": "5465"
+        },
+        {
+            "latlng": [
+                40.997271,
+                29.040365
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hasanpaşa Mukbil Sk No:12 Arkası",
+            "id": "5476"
+        },
+        {
+            "latlng": [
+                40.98702,
+                29.052793
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Marmara Üniversitesi A.B.C.D. Blok",
+            "id": "5477"
+        },
+        {
+            "latlng": [
+                40.975696,
+                29.055009
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Mah. Gülden Sok",
+            "id": "5483"
+        },
+        {
+            "latlng": [
+                40.994394803753686,
+                29.044117927551273
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fikirtepe Mandıra Cad Mandarins (modified)",
+            "id": "5492"
+        },
+        {
+            "latlng": [
+                40.988215,
+                29.028619
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Bahariye Cad Kalfaoğlu Sk",
+            "id": "5502"
+        },
+        {
+            "latlng": [
+                40.972392,
+                29.043374
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "F.Bahçe Mah Dalyan Aralığı Sk",
+            "id": "5503"
+        },
+        {
+            "latlng": [
+                40.984152,
+                29.023871
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Moda Rızapaşa Sk No:1 Karşısı",
+            "id": "5504"
+        },
+        {
+            "latlng": [
+                40.978046,
+                29.046298
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Bağdat Cad No:13 Amerikan Hast.",
+            "id": "5506"
+        },
+        {
+            "latlng": [
+                40.996921,
+                29.027336
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Yel Değirmeni Teyyareci Sami Sk",
+            "id": "5507"
+        },
+        {
+            "latlng": [
+                40.99432224994734,
+                29.02463810307986
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Yel değirmeni Sk No:13 Yanı Rasimpaşa M.",
+            "id": "5508"
+        },
+        {
+            "latlng": [
+                40.99577142284573,
+                29.0383243560791
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Kurbağalıdere Cad Eski Havagazı Fab Yanı (modified)",
+            "id": "5521"
+        },
+        {
+            "latlng": [
+                40.98572954135522,
+                29.06744241714478
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Merdivenköy Uzunçayır Sok (modified)",
+            "id": "5560"
+        },
+        {
+            "latlng": [
+                40.99988491330136,
+                29.018626213073734
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Harem Sahil Oyak Beton Şantiyesi (found: GATA Haydarpasa Oyak Beton tesisi) (modified)",
+            "id": "5568"
+        },
+        {
+            "latlng": [
+                40.984315,
+                29.062225
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Ressam Salih Ermez Sk No:7 Yanı",
+            "id": "5571"
+        },
+        {
+            "latlng": [
+                40.982724,
+                29.064109
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "F. Kerim Gökay Cad No:188",
+            "id": "5573"
+        },
+        {
+            "latlng": [
+                40.973426,
+                29.049289
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Cemil Topuzlu Cad No:13 Bahçesi",
+            "id": "5575"
+        },
+        {
+            "latlng": [
+                40.994334,
+                29.025127
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Rıhtım Cad Nemlizade Sk Polat İş Hanı",
+            "id": "5581"
+        },
+        {
+            "latlng": [
+                40.995313,
+                29.055011
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Barış Sk Şua İnş",
+            "id": "5610"
+        },
+        {
+            "latlng": [
+                40.98865,
+                29.045859
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Eğitim Mah Hilmi Bey Sokaka",
+            "id": "5626"
+        },
+        {
+            "latlng": [
+                40.977528,
+                29.048439
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Gazi Muhtarpaşa Sk Sabit Pazar Karşısı",
+            "id": "5643"
+        },
+        {
+            "latlng": [
+                40.988412,
+                29.051282
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Marmara Üniversitesi Civarı",
+            "id": "5644"
+        },
+        {
+            "latlng": [
+                40.985035,
+                29.060086
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Merdivenköy Mah Karaman Sok",
+            "id": "5679"
+        },
+        {
+            "latlng": [
+                40.991986,
+                29.045711
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Eğitim Mah Emay İnş Blokları (found: KentPlus Kadikoy)",
+            "id": "5681"
+        },
+        {
+            "latlng": [
+                40.988707,
+                29.023936
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Kadıköy Güneşlibahçe Sk No:49 Yanı",
+            "id": "5687"
+        },
+        {
+            "latlng": [
+                40.981552,
+                29.071023
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Merdivenköy Mah Öğretmen Harun Reşit",
+            "id": "5711"
+        },
+        {
+            "latlng": [
+                40.983476,
+                29.066847
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Göztepe Ortabahar Sk No:6 Arkası",
+            "id": "5749"
+        },
+        {
+            "latlng": [
+                40.996319,
+                29.056221
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Yumurtacı Abdibey Cad Nuhoğlu",
+            "id": "5750"
+        },
+        {
+            "latlng": [
+                40.990007,
+                29.047591
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Eğitim Mah Muratpaşa Cad Orkide Sk Köşesi (cannot find orkide sk)",
+            "id": "5757"
+        },
+        {
+            "latlng": [
+                41.012622,
+                29.010913
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Harem Liman İçi (found: Harem Tahlisiye Bot İstasyonu)",
+            "id": "5776"
+        },
+        {
+            "latlng": [
+                40.980602,
+                29.05922
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Pınar Sk No:7 Yanı Göztepe",
+            "id": "5780"
+        },
+        {
+            "latlng": [
+                40.987368,
+                29.035369
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Migros Fenerbahça Stadı",
+            "id": "5793"
+        },
+        {
+            "latlng": [
+                40.98696056391495,
+                29.03645753860474
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Fenerbahça Stadı (modified)",
+            "id": "5794"
+        },
+        {
+            "latlng": [
+                40.970917,
+                29.051912
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "C Topuzlu Cad Haluk Tezören Sk",
+            "id": "5811"
+        },
+        {
+            "latlng": [
+                40.974957,
+                29.043072
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "F.Bahçe Mah Muhtar Sok",
+            "id": "5813"
+        },
+        {
+            "latlng": [
+                40.990594,
+                29.05997
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Mandıra Cad No:184 Önü",
+            "id": "5834"
+        },
+        {
+            "latlng": [
+                40.997109,
+                29.047717
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Uzunçayır Cad İle Taşocağı Sk Köşesi",
+            "id": "5839"
+        },
+        {
+            "latlng": [
+                40.988471,
+                29.021352
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Albay Faik Sözder Sk Otel İçi",
+            "id": "5840"
+        },
+        {
+            "latlng": [
+                40.988301,
+                29.028313
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Caferağa Spor Salonu Altı Nailbey Sk",
+            "id": "5842"
+        },
+        {
+            "latlng": [
+                40.988872,
+                29.026573
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Şifa Hastanesi Caferağa Mah Nailbey Sk",
+            "id": "5844"
+        },
+        {
+            "latlng": [
+                40.990773,
+                29.045089
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Eğitim Mah 2. Açıkgöz Sk No:21",
+            "id": "5895"
+        },
+        {
+            "latlng": [
+                40.988527,
+                29.025972
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Kadıköy Kültür Merkez Altı Rıhtım (found: Baris Manco kultur merkezi)",
+            "id": "5903"
+        },
+        {
+            "latlng": [
+                40.990082,
+                29.054361
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Hızırbey Cad Erkan İnş (found: Pirlanta goztepe)",
+            "id": "5905"
+        },
+        {
+            "latlng": [
+                40.97783330513111,
+                29.039172417649706
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "M.N. Selçuk Cad Kalamış Otel Bahçesi (found: 39 kalamis marina hotel)",
+            "id": "5928"
+        },
+        {
+            "latlng": [
+                41.001004,
+                29.021295
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Haydarpaşa GATA Tıp Fakültesi İçi (found: gata askeri hast)",
+            "id": "5930"
+        },
+        {
+            "latlng": [
+                40.989764,
+                29.023144
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Neşet Ömer Sk Migros Arkası",
+            "id": "5944"
+        },
+        {
+            "latlng": [
+                41.015352,
+                29.025462
+            ],
+            "pf": 0.5,
+            "status": 0,
+            "addr": "Z.Kamil Hastanesi",
+            "id": "10642"
+        },
+        {
+            "latlng": [
+                40.96855634124075,
+                29.055604375198364
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "3333"
+        },
+        {
+            "latlng": [
+                41.01016044808717,
+                29.016976543866374
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "4444"
+        },
+        {
+            "latlng": [
+                40.9781015,
+                29.047886749999996
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "5410"
+        },
+        {
+            "latlng": [
+                40.99046966666666,
+                29.045553
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "5680"
+        },
+        {
+            "latlng": [
+                40.99583233333333,
+                29.026432
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "5860"
+        },
+        {
+            "latlng": [
+                40.98942233333333,
+                29.052773000000002
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "53001"
+        },
+        {
+            "latlng": [
+                40.98720166666667,
+                29.058031999999997
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "53012"
+        },
+        {
+            "latlng": [
+                40.99946916472784,
+                29.028711729617388
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated",
+            "id": "55004"
+        },
+        {
+            "latlng": [
+                40.983901833333334,
+                29.058625999999997
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated from interpolated",
+            "id": "5200"
+        },
+        {
+            "latlng": [
+                40.993870333333334,
+                29.042959000000003
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated from interpolated",
+            "id": "5520"
+        },
+        {
+            "latlng": [
+                40.995720163869116,
+                29.03628413968738
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 2x(from interpolated)",
+            "id": "1111"
+        },
+        {
+            "latlng": [
+                40.98555175,
+                29.058328999999997
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 2x(from interpolated)",
+            "id": "5555"
+        },
+        {
+            "latlng": [
+                40.99686066666666,
+                29.044438
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 2x(from interpolated)",
+            "id": "5455"
+        },
+        {
+            "latlng": [
+                40.99442066666666,
+                29.04914575
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "53203"
+        },
+        {
+            "latlng": [
+                40.99110966666666,
+                29.03503225
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "55002"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "59952"
+        },
+        {
+            "latlng": [
+                40.991555969480224,
+                29.053569453166418
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "5070"
+        },
+        {
+            "latlng": [
+                40.99521333333333,
+                29.053176375
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "5110"
+        },
+        {
+            "latlng": [
+                40.99290366666666,
+                29.0565731875
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "53002"
+        },
+        {
+            "latlng": [
+                40.992396,
+                29.0498324375
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Interpolated 3x(from interpolated)",
+            "id": "53201"
+        },
+        {
+            "latlng": [
+                40.99946916472784,
+                29.028711729617388
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "2222"
+        },
+        {
+            "latlng": [
+                41.01016044808717,
+                29.016976543866374
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "642"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5048"
+        },
+        {
+            "latlng": [
+                40.991555969480224,
+                29.053569453166418
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5100"
+        },
+        {
+            "latlng": [
+                40.97323226375212,
+                29.05703823742408
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5250"
+        },
+        {
+            "latlng": [
+                40.98535861428643,
+                29.053465762665056
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5301"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5309"
+        },
+        {
+            "latlng": [
+                40.97783330513111,
+                29.039172417649706
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5498"
+        },
+        {
+            "latlng": [
+                40.995720163869116,
+                29.03628413968738
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "53011"
+        },
+        {
+            "latlng": [
+                40.995720163869116,
+                29.03628413968738
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "55001"
+        },
+        {
+            "latlng": [
+                40.99432224994734,
+                29.02463810307986
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "55003"
+        },
+        {
+            "latlng": [
+                40.99733563217726,
+                29.0334454250149
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "59951"
+        },
+        {
+            "latlng": [
+                40.991555969480224,
+                29.053569453166418
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "3201"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5053"
+        },
+        {
+            "latlng": [
+                40.97783330513111,
+                29.039172417649706
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5378"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5843"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5098"
+        },
+        {
+            "latlng": [
+                40.99483868135416,
+                29.035075186249898
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Randomized around one point",
+            "id": "5925"
+        },
+        {
+            "latlng": [
+                41.010311924853546,
+                29.063459269710922
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Isolated Nodes, randomized",
+            "id": "6666"
+        },
+        {
+            "latlng": [
+                41.009654363133535,
+                29.062828078415297
+            ],
+            "pf": 0.9,
+            "status": 0,
+            "addr": "Isolated Nodes, randomized",
+            "id": "53013"
+        }
+    ],
+    "branches": [
+        {
+            "nodes": [
+                47,
+                46
+            ]
+        },
+        {
+            "nodes": [
+                46,
+                10
+            ]
+        },
+        {
+            "nodes": [
+                10,
+                67
+            ]
+        },
+        {
+            "nodes": [
+                67,
+                98
+            ]
+        },
+        {
+            "nodes": [
+                98,
+                99
+            ]
+        },
+        {
+            "nodes": [
+                89,
+                73
+            ]
+        },
+        {
+            "nodes": [
+                73,
+                104
+            ]
+        },
+        {
+            "nodes": [
+                104,
+                44
+            ]
+        },
+        {
+            "nodes": [
+                99,
+                65
+            ]
+        },
+        {
+            "nodes": [
+                65,
+                84
+            ]
+        },
+        {
+            "nodes": [
+                84,
+                4
+            ]
+        },
+        {
+            "nodes": [
+                4,
+                3
+            ]
+        },
+        {
+            "nodes": [
+                4,
+                5
+            ]
+        },
+        {
+            "nodes": [
+                5,
+                2
+            ]
+        },
+        {
+            "nodes": [
+                44,
+                37
+            ]
+        },
+        {
+            "nodes": [
+                37,
+                45
+            ]
+        },
+        {
+            "nodes": [
+                57,
+                58
+            ]
+        },
+        {
+            "nodes": [
+                58,
+                52
+            ]
+        },
+        {
+            "nodes": [
+                52,
+                53
+            ]
+        },
+        {
+            "nodes": [
+                53,
+                24
+            ]
+        },
+        {
+            "nodes": [
+                24,
+                43
+            ]
+        },
+        {
+            "nodes": [
+                43,
+                63
+            ]
+        },
+        {
+            "nodes": [
+                38,
+                93
+            ]
+        },
+        {
+            "nodes": [
+                93,
+                94
+            ]
+        },
+        {
+            "nodes": [
+                94,
+                15
+            ]
+        },
+        {
+            "nodes": [
+                15,
+                29
+            ]
+        },
+        {
+            "nodes": [
+                29,
+                8
+            ]
+        },
+        {
+            "nodes": [
+                8,
+                26
+            ]
+        },
+        {
+            "nodes": [
+                26,
+                28
+            ]
+        },
+        {
+            "nodes": [
+                28,
+                103
+            ]
+        },
+        {
+            "nodes": [
+                34,
+                76
+            ]
+        },
+        {
+            "nodes": [
+                76,
+                18
+            ]
+        },
+        {
+            "nodes": [
+                18,
+                66
+            ]
+        },
+        {
+            "nodes": [
+                66,
+                16
+            ]
+        },
+        {
+            "nodes": [
+                16,
+                17
+            ]
+        },
+        {
+            "nodes": [
+                17,
+                23
+            ]
+        },
+        {
+            "nodes": [
+                23,
+                68
+            ]
+        },
+        {
+            "nodes": [
+                80,
+                12
+            ]
+        },
+        {
+            "nodes": [
+                12,
+                90
+            ]
+        },
+        {
+            "nodes": [
+                14,
+                22
+            ]
+        },
+        {
+            "nodes": [
+                22,
+                9
+            ]
+        },
+        {
+            "nodes": [
+                9,
+                7
+            ]
+        },
+        {
+            "nodes": [
+                7,
+                91
+            ]
+        },
+        {
+            "nodes": [
+                91,
+                92
+            ]
+        },
+        {
+            "nodes": [
+                59,
+                55
+            ]
+        },
+        {
+            "nodes": [
+                55,
+                96
+            ]
+        },
+        {
+            "nodes": [
+                96,
+                56
+            ]
+        },
+        {
+            "nodes": [
+                33,
+                61
+            ]
+        },
+        {
+            "nodes": [
+                70,
+                77
+            ]
+        },
+        {
+            "nodes": [
+                77,
+                69
+            ]
+        },
+        {
+            "nodes": [
+                69,
+                105
+            ]
+        },
+        {
+            "nodes": [
+                105,
+                97
+            ]
+        },
+        {
+            "nodes": [
+                97,
+                11
+            ]
+        },
+        {
+            "nodes": [
+                11,
+                6
+            ]
+        },
+        {
+            "nodes": [
+                6,
+                101
+            ]
+        },
+        {
+            "nodes": [
+                19,
+                21
+            ]
+        },
+        {
+            "nodes": [
+                21,
+                60
+            ]
+        },
+        {
+            "nodes": [
+                60,
+                13
+            ]
+        },
+        {
+            "nodes": [
+                13,
+                71
+            ]
+        },
+        {
+            "nodes": [
+                71,
+                49
+            ]
+        },
+        {
+            "nodes": [
+                49,
+                31
+            ]
+        },
+        {
+            "nodes": [
+                31,
+                64
+            ]
+        },
+        {
+            "nodes": [
+                64,
+                32
+            ]
+        },
+        {
+            "nodes": [
+                32,
+                100
+            ]
+        },
+        {
+            "nodes": [
+                79,
+                88
+            ]
+        },
+        {
+            "nodes": [
+                88,
+                20
+            ]
+        },
+        {
+            "nodes": [
+                20,
+                102
+            ]
+        },
+        {
+            "nodes": [
+                102,
+                1
+            ]
+        },
+        {
+            "nodes": [
+                1,
+                95
+            ]
+        },
+        {
+            "nodes": [
+                42,
+                41
+            ]
+        },
+        {
+            "nodes": [
+                41,
+                87
+            ]
+        },
+        {
+            "nodes": [
+                87,
+                48
+            ]
+        },
+        {
+            "nodes": [
+                48,
+                78
+            ]
+        },
+        {
+            "nodes": [
+                78,
+                0
+            ]
+        },
+        {
+            "nodes": [
+                39,
+                40
+            ]
+        },
+        {
+            "nodes": [
+                25,
+                82
+            ]
+        },
+        {
+            "nodes": [
+                82,
+                74
+            ]
+        },
+        {
+            "nodes": [
+                74,
+                50
+            ]
+        },
+        {
+            "nodes": [
+                50,
+                75
+            ]
+        },
+        {
+            "nodes": [
+                75,
+                86
+            ]
+        },
+        {
+            "nodes": [
+                86,
+                72
+            ]
+        },
+        {
+            "nodes": [
+                72,
+                27
+            ]
+        },
+        {
+            "nodes": [
+                27,
+                30
+            ]
+        },
+        {
+            "nodes": [
+                30,
+                85
+            ]
+        },
+        {
+            "nodes": [
+                85,
+                51
+            ]
+        },
+        {
+            "nodes": [
+                51,
+                36
+            ]
+        },
+        {
+            "nodes": [
+                62,
+                81
+            ]
+        },
+        {
+            "nodes": [
+                81,
+                54
+            ]
+        },
+        {
+            "nodes": [
+                108,
+                89
+            ]
+        },
+        {
+            "nodes": [
+                45,
+                114
+            ]
+        },
+        {
+            "nodes": [
+                63,
+                109
+            ]
+        },
+        {
+            "nodes": [
+                107,
+                34
+            ]
+        },
+        {
+            "nodes": [
+                107,
+                109
+            ]
+        },
+        {
+            "nodes": [
+                109,
+                14
+            ]
+        },
+        {
+            "nodes": [
+                111,
+                19
+            ]
+        },
+        {
+            "nodes": [
+                110,
+                83
+            ]
+        },
+        {
+            "nodes": [
+                0,
+                112
+            ]
+        },
+        {
+            "nodes": [
+                36,
+                113
+            ]
+        },
+        {
+            "nodes": [
+                112,
+                62
+            ]
+        },
+        {
+            "nodes": [
+                113,
+                36
+            ]
+        },
+        {
+            "nodes": [
+                108,
+                47
+            ]
+        },
+        {
+            "nodes": [
+                2,
+                114
+            ]
+        },
+        {
+            "nodes": [
+                104,
+                111
+            ]
+        },
+        {
+            "nodes": [
+                107,
+                38
+            ]
+        },
+        {
+            "nodes": [
+                68,
+                109
+            ]
+        },
+        {
+            "nodes": [
+                109,
+                80
+            ]
+        },
+        {
+            "nodes": [
+                101,
+                111
+            ]
+        },
+        {
+            "nodes": [
+                100,
+                110
+            ]
+        },
+        {
+            "nodes": [
+                110,
+                79
+            ]
+        },
+        {
+            "nodes": [
+                112,
+                25
+            ]
+        },
+        {
+            "nodes": [
+                112,
+                113
+            ]
+        },
+        {
+            "nodes": [
+                113,
+                54
+            ]
+        },
+        {
+            "nodes": [
+                90,
+                115
+            ]
+        },
+        {
+            "nodes": [
+                61,
+                116
+            ]
+        },
+        {
+            "nodes": [
+                116,
+                110
+            ]
+        },
+        {
+            "nodes": [
+                115,
+                113
+            ]
+        },
+        {
+            "nodes": [
+                56,
+                119
+            ]
+        },
+        {
+            "nodes": [
+                119,
+                116
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                111
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                116
+            ]
+        },
+        {
+            "nodes": [
+                118,
+                115
+            ]
+        },
+        {
+            "nodes": [
+                118,
+                113
+            ]
+        },
+        {
+            "nodes": [
+                91,
+                121
+            ]
+        },
+        {
+            "nodes": [
+                122,
+                59
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                122
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                121
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                120
+            ]
+        },
+        {
+            "nodes": [
+                120,
+                39
+            ]
+        },
+        {
+            "nodes": [
+                120,
+                123
+            ]
+        },
+        {
+            "nodes": [
+                123,
+                42
+            ]
+        },
+        {
+            "nodes": [
+                120,
+                124
+            ]
+        },
+        {
+            "nodes": [
+                40,
+                124
+            ]
+        },
+        {
+            "nodes": [
+                95,
+                125
+            ]
+        },
+        {
+            "nodes": [
+                110,
+                126
+            ]
+        },
+        {
+            "nodes": [
+                126,
+                123
+            ]
+        },
+        {
+            "nodes": [
+                124,
+                125
+            ]
+        },
+        {
+            "nodes": [
+                108,
+                128
+            ]
+        },
+        {
+            "nodes": [
+                131,
+                57
+            ]
+        },
+        {
+            "nodes": [
+                103,
+                134
+            ]
+        },
+        {
+            "nodes": [
+                133,
+                122
+            ]
+        },
+        {
+            "nodes": [
+                128,
+                129
+            ]
+        },
+        {
+            "nodes": [
+                129,
+                122
+            ]
+        },
+        {
+            "nodes": [
+                138,
+                136
+            ]
+        },
+        {
+            "nodes": [
+                138,
+                33
+            ]
+        },
+        {
+            "nodes": [
+                127,
+                138
+            ]
+        },
+        {
+            "nodes": [
+                127,
+                114
+            ]
+        },
+        {
+            "nodes": [
+                127,
+                137
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                136
+            ]
+        },
+        {
+            "nodes": [
+                117,
+                135
+            ]
+        },
+        {
+            "nodes": [
+                137,
+                70
+            ]
+        },
+        {
+            "nodes": [
+                123,
+                130
+            ]
+        },
+        {
+            "nodes": [
+                54,
+                132
+            ]
+        },
+        {
+            "nodes": [
+                134,
+                141
+            ]
+        },
+        {
+            "nodes": [
+                141,
+                140
+            ]
+        },
+        {
+            "nodes": [
+                140,
+                133
+            ]
+        },
+        {
+            "nodes": [
+                129,
+                142
+            ]
+        },
+        {
+            "nodes": [
+                130,
+                139
+            ]
+        },
+        {
+            "nodes": [
+                142,
+                143
+            ]
+        },
+        {
+            "nodes": [
+                143,
+                144
+            ]
+        },
+        {
+            "nodes": [
+                145,
+                146
+            ]
+        }
+    ],
+    "externalBranches": [],
+    "resources": [],
+    "view": {
+        "lat": 40.992888587579195,
+        "lng": 29.042830467224125
+    },
+    "zoom": 14
+}

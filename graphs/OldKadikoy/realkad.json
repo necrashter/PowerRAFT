@@ -1,0 +1,1612 @@
+{
+    "branches": [
+        {
+            "nodes": [
+                47,
+                46
+            ]
+        },
+        {
+            "nodes": [
+                46,
+                10
+            ]
+        },
+        {
+            "nodes": [
+                10,
+                67
+            ]
+        },
+        {
+            "nodes": [
+                67,
+                98
+            ]
+        },
+        {
+            "nodes": [
+                98,
+                99
+            ]
+        },
+        {
+            "nodes": [
+                89,
+                73
+            ]
+        },
+        {
+            "nodes": [
+                73,
+                104
+            ]
+        },
+        {
+            "nodes": [
+                104,
+                44
+            ]
+        },
+        {
+            "nodes": [
+                99,
+                65
+            ]
+        },
+        {
+            "nodes": [
+                65,
+                84
+            ]
+        },
+        {
+            "nodes": [
+                84,
+                4
+            ]
+        },
+        {
+            "nodes": [
+                4,
+                3
+            ]
+        },
+        {
+            "nodes": [
+                4,
+                5
+            ]
+        },
+        {
+            "nodes": [
+                5,
+                2
+            ]
+        },
+        {
+            "nodes": [
+                44,
+                37
+            ]
+        },
+        {
+            "nodes": [
+                37,
+                45
+            ]
+        },
+        {
+            "nodes": [
+                57,
+                58
+            ]
+        },
+        {
+            "nodes": [
+                58,
+                52
+            ]
+        },
+        {
+            "nodes": [
+                52,
+                53
+            ]
+        },
+        {
+            "nodes": [
+                53,
+                24
+            ]
+        },
+        {
+            "nodes": [
+                24,
+                43
+            ]
+        },
+        {
+            "nodes": [
+                43,
+                63
+            ]
+        },
+        {
+            "nodes": [
+                38,
+                93
+            ]
+        },
+        {
+            "nodes": [
+                93,
+                94
+            ]
+        },
+        {
+            "nodes": [
+                94,
+                15
+            ]
+        },
+        {
+            "nodes": [
+                15,
+                29
+            ]
+        },
+        {
+            "nodes": [
+                29,
+                8
+            ]
+        },
+        {
+            "nodes": [
+                8,
+                26
+            ]
+        },
+        {
+            "nodes": [
+                26,
+                28
+            ]
+        },
+        {
+            "nodes": [
+                28,
+                103
+            ]
+        },
+        {
+            "nodes": [
+                34,
+                76
+            ]
+        },
+        {
+            "nodes": [
+                76,
+                18
+            ]
+        },
+        {
+            "nodes": [
+                18,
+                66
+            ]
+        },
+        {
+            "nodes": [
+                66,
+                16
+            ]
+        },
+        {
+            "nodes": [
+                16,
+                17
+            ]
+        },
+        {
+            "nodes": [
+                17,
+                23
+            ]
+        },
+        {
+            "nodes": [
+                23,
+                68
+            ]
+        },
+        {
+            "nodes": [
+                80,
+                12
+            ]
+        },
+        {
+            "nodes": [
+                12,
+                90
+            ]
+        },
+        {
+            "nodes": [
+                14,
+                22
+            ]
+        },
+        {
+            "nodes": [
+                22,
+                9
+            ]
+        },
+        {
+            "nodes": [
+                9,
+                7
+            ]
+        },
+        {
+            "nodes": [
+                7,
+                91
+            ]
+        },
+        {
+            "nodes": [
+                91,
+                92
+            ]
+        },
+        {
+            "nodes": [
+                59,
+                55
+            ]
+        },
+        {
+            "nodes": [
+                55,
+                96
+            ]
+        },
+        {
+            "nodes": [
+                96,
+                56
+            ]
+        },
+        {
+            "nodes": [
+                33,
+                61
+            ]
+        },
+        {
+            "nodes": [
+                70,
+                77
+            ]
+        },
+        {
+            "nodes": [
+                77,
+                69
+            ]
+        },
+        {
+            "nodes": [
+                69,
+                105
+            ]
+        },
+        {
+            "nodes": [
+                105,
+                97
+            ]
+        },
+        {
+            "nodes": [
+                97,
+                11
+            ]
+        },
+        {
+            "nodes": [
+                11,
+                6
+            ]
+        },
+        {
+            "nodes": [
+                6,
+                101
+            ]
+        },
+        {
+            "nodes": [
+                19,
+                21
+            ]
+        },
+        {
+            "nodes": [
+                21,
+                60
+            ]
+        },
+        {
+            "nodes": [
+                60,
+                13
+            ]
+        },
+        {
+            "nodes": [
+                13,
+                71
+            ]
+        },
+        {
+            "nodes": [
+                71,
+                49
+            ]
+        },
+        {
+            "nodes": [
+                49,
+                31
+            ]
+        },
+        {
+            "nodes": [
+                31,
+                64
+            ]
+        },
+        {
+            "nodes": [
+                64,
+                32
+            ]
+        },
+        {
+            "nodes": [
+                32,
+                100
+            ]
+        },
+        {
+            "nodes": [
+                79,
+                88
+            ]
+        },
+        {
+            "nodes": [
+                88,
+                20
+            ]
+        },
+        {
+            "nodes": [
+                20,
+                102
+            ]
+        },
+        {
+            "nodes": [
+                102,
+                1
+            ]
+        },
+        {
+            "nodes": [
+                1,
+                95
+            ]
+        },
+        {
+            "nodes": [
+                42,
+                41
+            ]
+        },
+        {
+            "nodes": [
+                41,
+                87
+            ]
+        },
+        {
+            "nodes": [
+                87,
+                48
+            ]
+        },
+        {
+            "nodes": [
+                48,
+                78
+            ]
+        },
+        {
+            "nodes": [
+                78,
+                0
+            ]
+        },
+        {
+            "nodes": [
+                39,
+                40
+            ]
+        },
+        {
+            "nodes": [
+                25,
+                82
+            ]
+        },
+        {
+            "nodes": [
+                82,
+                74
+            ]
+        },
+        {
+            "nodes": [
+                74,
+                50
+            ]
+        },
+        {
+            "nodes": [
+                50,
+                75
+            ]
+        },
+        {
+            "nodes": [
+                75,
+                86
+            ]
+        },
+        {
+            "nodes": [
+                86,
+                72
+            ]
+        },
+        {
+            "nodes": [
+                72,
+                27
+            ]
+        },
+        {
+            "nodes": [
+                27,
+                30
+            ]
+        },
+        {
+            "nodes": [
+                30,
+                85
+            ]
+        },
+        {
+            "nodes": [
+                85,
+                51
+            ]
+        },
+        {
+            "nodes": [
+                51,
+                36
+            ]
+        },
+        {
+            "nodes": [
+                62,
+                81
+            ]
+        },
+        {
+            "nodes": [
+                81,
+                54
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "latlng": [
+                40.994521,
+                29.050342
+            ],
+            "addr": "Fikirtepe Mah Yıldırım Sok Kiptaş İnş",
+            "id": "5006",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.99066,
+                29.053818
+            ],
+            "addr": "Hızır Bey Cad Usta İnş",
+            "id": "5008",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.992317,
+                29.027694
+            ],
+            "addr": "Yoğurtçu Şükrü Sk Çinilii Otopark İçi",
+            "id": "5024",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.990311,
+                29.023116
+            ],
+            "addr": "Tansas Kadıköy Postane Arkası",
+            "id": "5025",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.989772,
+                29.022797
+            ],
+            "addr": "Tansaş Kadıköy Arkası",
+            "id": "5026",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.99031,
+                29.023126
+            ],
+            "addr": "Neşet Ömer Sk PTT İçi",
+            "id": "5027",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988725,
+                29.021709
+            ],
+            "addr": "Caferağa Mah Faik Sözdener Cad Vergi Da",
+            "id": "5028",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.987741,
+                29.036818
+            ],
+            "addr": "Fenerbahça Standı Altı",
+            "id": "5064",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.971458,
+                29.044421
+            ],
+            "addr": "Fenerbahça Ordu Evi",
+            "id": "5065",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.985292,
+                29.038128
+            ],
+            "addr": "Recep Peker Cad Medicana Hast",
+            "id": "5066",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.98806,
+                29.01946
+            ],
+            "addr": "Rıhtım Atıksu Arıtma Tesisleri (İSKİ)",
+            "id": "5075",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.992351,
+                29.024801
+            ],
+            "addr": "Rıhtım Tramvay İşletmesi (Rihtim otobus terminali)",
+            "id": "5076",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.980609,
+                29.053312
+            ],
+            "addr": "Feneryolu Boztepe Sk No:14",
+            "id": "5078",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996022,
+                29.038278
+            ],
+            "addr": "İbrahimpaşa Sok Can Apt",
+            "id": "5099",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.981136,
+                29.041801
+            ],
+            "addr": "Kızıltoprak Bağdat Cad Ihlamur Çıkmazı",
+            "id": "5103",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.972271,
+                29.050982
+            ],
+            "addr": "Cemil Topuzlu Cad Dr Kazım Lakay Sk",
+            "id": "5105",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.975136,
+                29.042869
+            ],
+            "addr": "Ahmet Mithat Cad Köşesi Park Yanı",
+            "id": "5107",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.976791,
+                29.045243
+            ],
+            "addr": "Fenerbahça Mah Egemen Sok",
+            "id": "5108",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.971954,
+                29.046963
+            ],
+            "addr": "Kurukahveci Sk No:2 As Apt Altı",
+            "id": "5114",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.997966,
+                29.032029
+            ],
+            "addr": "Sarayardı Cad İle Hakkı Sk Köşesi",
+            "id": "5131",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.992877,
+                29.045956
+            ],
+            "addr": "Hızırbey Cad Yıldırım Sk Köşesi",
+            "id": "5135",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.998844,
+                29.033713
+            ],
+            "addr": "Acıbadem Mah Sokullu Sokak",
+            "id": "5136",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.980879,
+                29.042327
+            ],
+            "addr": "Bağdat Cad No:91 Florans Nighingen Hast",
+            "id": "5166",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.974774,
+                29.044279
+            ],
+            "addr": "F.Bahçe Mah Ahmet Mithat Efendi Cad",
+            "id": "5173",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.980577,
+                29.092954
+            ],
+            "addr": "Göztepe Sümer Sk No:1",
+            "id": "5207",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.986726,
+                29.055184
+            ],
+            "addr": "Göztepe SSK Hastanesi Hızırbey Cad",
+            "id": "5211",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.974108,
+                29.041589
+            ],
+            "addr": "Fener Kalamış Cad. No:86 Arkası",
+            "id": "5224",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.984692,
+                29.072716
+            ],
+            "addr": "Merdivenköy Şair Arşi Cad",
+            "id": "5237",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.974851,
+                29.041532
+            ],
+            "addr": "Fenerbahçe Mah. Bilgili Sok.",
+            "id": "5242",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.971248,
+                29.046005
+            ],
+            "addr": "Fenerbahçe Tunaman sok No:10",
+            "id": "5252",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.985657,
+                29.069495
+            ],
+            "addr": "İncirli Sk No:1 Karşısı Merdivenköy",
+            "id": "5257",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.994924,
+                29.042058
+            ],
+            "addr": "Hızırbey Cad Hasanpaşa İETT Garajı İçi",
+            "id": "5260",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.992609,
+                29.043221
+            ],
+            "addr": "Ömerbey Çıkmazı Sk Otel",
+            "id": "5261",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.998543,
+                29.036366
+            ],
+            "addr": "Mustafabey Sk No:14 Acıbadem",
+            "id": "5276",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.969592,
+                29.054581
+            ],
+            "addr": "Papatyalı Sk No:6 Cemil Topuzlu Cad",
+            "id": "5291",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.989408,
+                29.054954
+            ],
+            "addr": "Fikirtepe Hızırbey Cad İTM",
+            "id": "5300",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988253,
+                29.06128
+            ],
+            "addr": "Dumlupınar Mah Şahika Sok",
+            "id": "5316",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.003111,
+                29.022727
+            ],
+            "addr": "Haydarpaşa Meslek Lisesi",
+            "id": "5317",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.055065,
+                28.833
+            ],
+            "addr": "Göztepe Parkı Metro Şantiye",
+            "id": "5333",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.99399,
+                29.063596
+            ],
+            "addr": "Y. Abdi Bey Cad Teknik Yapı",
+            "id": "5341",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996006,
+                29.057207
+            ],
+            "addr": "Y. Abdi Bey Cad Svr Grup İnş (found: Neoray Insaat sanayi)",
+            "id": "5343",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.994086,
+                29.059359
+            ],
+            "addr": "Barış Sokağı Baysaş 1.",
+            "id": "5344",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.994224,
+                29.059078
+            ],
+            "addr": "Barış Sokağı Baysaş 2.",
+            "id": "5345",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.975228,
+                29.055674
+            ],
+            "addr": "Göztepe Gülden Sk Taşyapı (found: Kontak duet ciftehavuzlar bilgilendirme ofisi)",
+            "id": "5372",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.004046,
+                29.024408
+            ],
+            "addr": "Haydarpaşa Göğüs Cerrahi Hastanesi (found: Dr. Siyami Ersek)",
+            "id": "5381",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.003055,
+                29.027706
+            ],
+            "addr": "Dr Eyüp Aksoy C Behiçbey Sk Askeri Yurt (found: Haydarpasa ogrenci yurdu)",
+            "id": "5382",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.004977,
+                29.021378
+            ],
+            "addr": "H. Paşa Numune Hast Deprem Kliniği",
+            "id": "5383",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.004389,
+                29.02659
+            ],
+            "addr": "Eyüp Aksoy Cad Hatahane Arkası",
+            "id": "5384",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996719,
+                29.055084
+            ],
+            "addr": "Yumurtacı Abdibey Cad Ekşioğlu (found: Alya Life residence)",
+            "id": "5387",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.994935,
+                29.042067
+            ],
+            "addr": "Hasanpaşa İETT Garajı Dolum Tesisleri",
+            "id": "5390",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.984123,
+                29.065144
+            ],
+            "addr": "M. Köy Mah Lütfiye Sok",
+            "id": "5394",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.986449,
+                29.056872
+            ],
+            "addr": "Merdivenköy SSK Poliklinik Civarı",
+            "id": "5395",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.972777,
+                29.059577
+            ],
+            "addr": "Göztepe Mah Hattat Bahatin Sk",
+            "id": "5401",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.974433,
+                29.059933
+            ],
+            "addr": "Göztepe Mah Cavitpaşa Sk",
+            "id": "5402",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.985099,
+                29.051536
+            ],
+            "addr": "Marmara Üniversitesi Göztepe Kampusu",
+            "id": "5415",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.999851,
+                29.046698
+            ],
+            "addr": "Acıbadem Özel Doğuş Lisesi Yeniyol Sk Köşesi",
+            "id": "5417",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.999851,
+                29.045917
+            ],
+            "addr": "Doğuş Lisesi Karşısı Zeamet Sk Acıbadem",
+            "id": "5420",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.973019,
+                29.056956
+            ],
+            "addr": "Göztepe Mah Bağdat Cad",
+            "id": "5451",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.973014,
+                29.057877
+            ],
+            "addr": "Göztepe Mah Bağdat Cad Çifte Havuzlar Ortaokulu",
+            "id": "5456",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.000526,
+                29.044208
+            ],
+            "addr": "Acıbadem Mah Beyaz Leylaklı Sok",
+            "id": "5457",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.997456,
+                29.03443
+            ],
+            "addr": "Sarayardı Cad Ata Sk No:4 Acıbadem",
+            "id": "5465",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.997271,
+                29.040365
+            ],
+            "addr": "Hasanpaşa Mukbil Sk No:12 Arkası",
+            "id": "5476",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.98702,
+                29.052793
+            ],
+            "addr": "Marmara Üniversitesi A.B.C.D. Blok",
+            "id": "5477",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.975696,
+                29.055009
+            ],
+            "addr": "Göztepe Mah. Gülden Sok",
+            "id": "5483",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996168,
+                29.049117
+            ],
+            "addr": "Fikirtepe Mandıra Cad Mandarins",
+            "id": "5492",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988215,
+                29.028619
+            ],
+            "addr": "Bahariye Cad Kalfaoğlu Sk",
+            "id": "5502",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.972392,
+                29.043374
+            ],
+            "addr": "F.Bahçe Mah Dalyan Aralığı Sk",
+            "id": "5503",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.984152,
+                29.023871
+            ],
+            "addr": "Moda Rızapaşa Sk No:1 Karşısı",
+            "id": "5504",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.978046,
+                29.046298
+            ],
+            "addr": "Bağdat Cad No:13 Amerikan Hast.",
+            "id": "5506",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996921,
+                29.027336
+            ],
+            "addr": "Yel Değirmeni Teyyareci Sami Sk",
+            "id": "5507",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.995875,
+                29.027409
+            ],
+            "addr": "Yel değirmeni Sk No:13 Yanı Rasimpaşa M.",
+            "id": "5508",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                39.927166,
+                32.848284
+            ],
+            "addr": "Kurbağalıdere Cad Eski Havagazı Fab Yanı",
+            "id": "5521",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.997148,
+                29.047964
+            ],
+            "addr": "Merdivenköy Uzunçayır Sok",
+            "id": "5560",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.999837,
+                29.022093
+            ],
+            "addr": "Harem Sahil Oyak Beton Şantiyesi (found: GATA Haydarpasa Oyak Beton tesisi)",
+            "id": "5568",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.984315,
+                29.062225
+            ],
+            "addr": "Ressam Salih Ermez Sk No:7 Yanı",
+            "id": "5571",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.982724,
+                29.064109
+            ],
+            "addr": "F. Kerim Gökay Cad No:188",
+            "id": "5573",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.973426,
+                29.049289
+            ],
+            "addr": "Cemil Topuzlu Cad No:13 Bahçesi",
+            "id": "5575",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.994334,
+                29.025127
+            ],
+            "addr": "Rıhtım Cad Nemlizade Sk Polat İş Hanı",
+            "id": "5581",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.995313,
+                29.055011
+            ],
+            "addr": "Barış Sk Şua İnş",
+            "id": "5610",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.98865,
+                29.045859
+            ],
+            "addr": "Eğitim Mah Hilmi Bey Sokaka",
+            "id": "5626",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.977528,
+                29.048439
+            ],
+            "addr": "Gazi Muhtarpaşa Sk Sabit Pazar Karşısı",
+            "id": "5643",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988412,
+                29.051282
+            ],
+            "addr": "Marmara Üniversitesi Civarı",
+            "id": "5644",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.985035,
+                29.060086
+            ],
+            "addr": "Merdivenköy Mah Karaman Sok",
+            "id": "5679",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.991986,
+                29.045711
+            ],
+            "addr": "Eğitim Mah Emay İnş Blokları (found: KentPlus Kadikoy)",
+            "id": "5681",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988707,
+                29.023936
+            ],
+            "addr": "Kadıköy Güneşlibahçe Sk No:49 Yanı",
+            "id": "5687",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.981552,
+                29.071023
+            ],
+            "addr": "Merdivenköy Mah Öğretmen Harun Reşit",
+            "id": "5711",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.983476,
+                29.066847
+            ],
+            "addr": "Göztepe Ortabahar Sk No:6 Arkası",
+            "id": "5749",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.996319,
+                29.056221
+            ],
+            "addr": "Yumurtacı Abdibey Cad Nuhoğlu",
+            "id": "5750",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.990007,
+                29.047591
+            ],
+            "addr": "Eğitim Mah Muratpaşa Cad Orkide Sk Köşesi (cannot find orkide sk)",
+            "id": "5757",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.012622,
+                29.010913
+            ],
+            "addr": "Harem Liman İçi (found: Harem Tahlisiye Bot İstasyonu)",
+            "id": "5776",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.980602,
+                29.05922
+            ],
+            "addr": "Pınar Sk No:7 Yanı Göztepe",
+            "id": "5780",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.987368,
+                29.035369
+            ],
+            "addr": "Migros Fenerbahça Stadı",
+            "id": "5793",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.98738,
+                29.037549
+            ],
+            "addr": "Fenerbahça Stadı",
+            "id": "5794",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.970917,
+                29.051912
+            ],
+            "addr": "C Topuzlu Cad Haluk Tezören Sk",
+            "id": "5811",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.974957,
+                29.043072
+            ],
+            "addr": "F.Bahçe Mah Muhtar Sok",
+            "id": "5813",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.990594,
+                29.05997
+            ],
+            "addr": "Mandıra Cad No:184 Önü",
+            "id": "5834",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.997109,
+                29.047717
+            ],
+            "addr": "Uzunçayır Cad İle Taşocağı Sk Köşesi",
+            "id": "5839",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988471,
+                29.021352
+            ],
+            "addr": "Albay Faik Sözder Sk Otel İçi",
+            "id": "5840",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988301,
+                29.028313
+            ],
+            "addr": "Caferağa Spor Salonu Altı Nailbey Sk",
+            "id": "5842",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988872,
+                29.026573
+            ],
+            "addr": "Şifa Hastanesi Caferağa Mah Nailbey Sk",
+            "id": "5844",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.990773,
+                29.045089
+            ],
+            "addr": "Eğitim Mah 2. Açıkgöz Sk No:21",
+            "id": "5895",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.988527,
+                29.025972
+            ],
+            "addr": "Kadıköy Kültür Merkez Altı Rıhtım (found: Baris Manco kultur merkezi)",
+            "id": "5903",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.990082,
+                29.054361
+            ],
+            "addr": "Hızırbey Cad Erkan İnş (found: Pirlanta goztepe)",
+            "id": "5905",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.975874,
+                29.041206
+            ],
+            "addr": "M.N. Selçuk Cad Kalamış Otel Bahçesi (found: 39 kalamis marina hotel)",
+            "id": "5928",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.001004,
+                29.021295
+            ],
+            "addr": "Haydarpaşa GATA Tıp Fakültesi İçi (found: gata askeri hast)",
+            "id": "5930",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                40.989764,
+                29.023144
+            ],
+            "addr": "Neşet Ömer Sk Migros Arkası",
+            "id": "5944",
+            "status": 0,
+            "pf": 0.5
+        },
+        {
+            "latlng": [
+                41.015352,
+                29.025462
+            ],
+            "addr": "Z.Kamil Hastanesi",
+            "id": "10642",
+            "status": 0,
+            "pf": 0.5
+        }
+    ],
+    "externalBranches": [],
+    "resources": [],
+    "view": {
+        "lat": 40.98320263357729,
+        "lng": 29.052572250366214
+    },
+    "zoom": 13,
+    "name": "Real Kadikoy 107"
+}

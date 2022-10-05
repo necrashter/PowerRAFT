@@ -1,0 +1,71 @@
+.CustomSelect {
+	user-select: none;
+	border: 0.1em solid var(--blue-fg);
+	margin: 0.2em;
+	color: var(--blue-fg);
+	cursor: pointer;
+}
+
+
+.CustomSelectHead {
+	position: relative;
+	padding: 0.2em;
+	background: var(--blue-dark-bg);
+	/* width: 12em; */
+}
+.CustomSelectHead::before {
+	content: "";
+    position: absolute;
+	top: 29%;
+	right: 0.25em;
+	bottom: 25%;
+    width: 20px;
+	background: var(--blue-fg);
+    -webkit-clip-path: polygon(50% 73%, 0 0, 100% 0);
+    clip-path: polygon(50% 73%, 0 0, 100% 0);
+    padding: 10px;
+    box-sizing: border-box;
+    transition: .3s all ease;
+}
+.CustomSelectHead:hover::before {
+	background: var(--reverse-blue-fg);
+}
+.CustomSelectHead:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.CustomSelectList {
+	position: relative;
+    float: left;
+    width: 100%;
+}
+
+.CustomSelectList > div {
+	position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 666;
+    overflow: hidden;
+    width: 100%;
+    background-color: var(--blue-dark-bg);
+    padding: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+
+	transform: scaleY(0); 
+	transform-origin: top;
+	transition: transform 0.3s;
+}
+.CustomSelectList > div.open {
+	transform: scaleY(1); 
+}
+
+.CustomSelectElement {
+	padding: 0.2em;
+}
+
+.CustomSelectElement:hover {
+	background: rgba( 200, 255, 215, 0.8 );
+	color: var(--reverse-blue-fg);
+}

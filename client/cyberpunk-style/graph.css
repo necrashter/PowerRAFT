@@ -1,0 +1,98 @@
+@keyframes fadeIn {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+
+.divIcon {
+	pointer-events: auto;
+	/*
+	animation-name: fadeIn;
+	animation-duration: 0.4s;
+	*/
+}
+
+.markerDiv {
+	width: 100%;
+	height: 100%;
+	border-radius: 100%;
+	background: #0743dfab;
+	/* background: #0743df; */
+	/* Too heavy */
+	/* box-shadow: 0px 0px 30px 7px rgba(0,0,0,0.75), inset 0px 0px 15px 4px rgba(255,255,255,0.55); */
+	transition: transform 0.25s;
+}
+
+.markerDiv:hover {
+	transform: scale(1.2);
+}
+
+.markerDiv > img {
+	position: relative;
+	top: 15%;
+	left: 15%;
+	width: 70%;
+	height: 70%;
+}
+
+
+/* Modifying the tiles */
+/*
+.leaflet-tile-pane {
+filter: brightness(80%);
+}
+ */
+
+
+.blockMarker {
+	text-shadow: 0 0 5px var(--blue-text-shadow);
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	border: 0.15em solid var(--blue-border);
+	padding: 0.6em 1.2em;
+	margin: 0.2em;
+	cursor: pointer;
+	text-align: center;
+}
+
+.blockMarker:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.blockMarker.hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.numberMarker {
+	font-size: 1.5em;
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	cursor: pointer;
+	text-align: center;
+	margin-top: 0.45em;
+}
+
+.numberMarker:hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+.numberMarker.hover {
+	background: var(--reverse-blue-bg);
+	color: var(--reverse-blue-fg);
+}
+
+/* not clickable */
+.descMarker {
+	font-size: 1.5em;
+	background: var(--blue-dark-bg);
+	color: var(--blue-fg);
+	text-align: center;
+	margin-top: 0.45em;
+}
+
+.descMarker.neg {
+	background: var(--orange-dark-bg);
+	color: var(--orange-fg);
+}
