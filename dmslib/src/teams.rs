@@ -37,7 +37,7 @@ pub enum BusState {
     Energized = 1,
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Eq, Clone)]
 pub struct State {
     buses: Vec<BusState>,
     teams: Vec<TeamState>,
@@ -405,6 +405,34 @@ impl Iterator for ActionIterator {
         } else {
             None
         }
+    }
+}
+
+impl PartialEq for State {
+    fn eq(&self, other: &Self) -> bool {
+        let buses_len = self.buses.len();
+        let teams_len = self.teams.len();
+        assert_eq!(
+            buses_len,
+            other.buses.len(),
+            "Equality is undefined for states of different systems."
+        );
+        assert_eq!(
+            teams_len,
+            other.teams.len(),
+            "Equality is undefined for states of different systems."
+        );
+        for i in 0..buses_len {
+            if self.buses[i] != other.buses[i] {
+                return false;
+            }
+        }
+        for i in 0..teams_len {
+            if self.teams[i] != other.teams[i] {
+                return false;
+            }
+        }
+        true
     }
 }
 
