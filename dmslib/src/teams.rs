@@ -2,13 +2,15 @@ use crate::webclient;
 
 use itertools::Itertools;
 use ndarray::{Array1, Array2, ArrayView1};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Serialize, Serializer};
 
+/// Data type for bus indices.
 pub type Index = usize;
+/// Data type for measuring time.
 pub type Time = usize;
 
 /// Contains information about the distribution system.
@@ -223,17 +225,17 @@ enum TeamActionState {
 
 /// An iterator for feasible action set.
 pub struct ActionIterator {
-    /// Set of buses with Unknown status.
-    unknown_buses: Vec<usize>,
-    /// `bus_energizable[i]` is `true` if `unknown_buses[i]` is bus_energizable, i.e.,
-    /// connected to an energy source or an energized bus.
-    /// Beta(s) from paper.
-    bus_energizable: Vec<bool>,
+    /// This vector contains the elements in the set of reachable buses with Unknown
+    /// status, beta(s), in ascending order.
+    target_buses: Vec<Index>,
+    /// Each element of this list at position i will give the smallest j for which
+    /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
+    minbeta: Vec<Index>,
     /// State of the teams
     team_states: Vec<TeamActionState>,
-    /// Bus at which each team is located, represented as index in unknown_buses.
-    /// usize;:MAX if en-route or not in unknown_buses.
-    team_buses: Vec<usize>,
+    /// Bus at which each team is located, represented as index in target_buses.
+    /// usize;:MAX if en-route or not in target_buses.
+    team_buses: Vec<Index>,
     /// True if the progress condition is satisfied by an en-route team.
     progress_satisfied: bool,
     /// Next action
@@ -241,36 +243,66 @@ pub struct ActionIterator {
 }
 
 impl State {
-    /// Returns an iterator to applicable and feasible actions in this state.
-    /// A(s) in paper.
-    pub fn actions(&self, graph: &Graph) -> ActionIterator {
-        let unknown_buses: Vec<usize> = self
+    /// Returns a vector such that the value at index i contains:
+    /// 1. If the status of bus at index i is unknown,
+    ///    a. the smallest j value such that bus at index i is in beta_j(s)
+    ///    b. usize::MAX if there's no such j
+    /// 2. 0 if the status of bus at index i is energized or damaged.
+    ///
+    /// For each bus, minbeta array holds the number of energizations required
+    /// to energize that bus. By traversing the graph starting from immediately
+    /// energizable buses, we determine minbeta values and hence unreachable buses,
+    /// for which minbeta = infinity.
+    #[inline]
+    pub fn minbetas(&self, graph: &Graph) -> Vec<Index> {
+        let mut minbeta: Vec<Index> = self
             .buses
             .iter()
             .enumerate()
-            .filter_map(|(i, bus)| {
-                if bus == &BusState::Unknown {
-                    Some(i)
-                } else {
-                    None
+            .map(|(i, bus)| {
+                if bus != &BusState::Unknown {
+                    return 0;
                 }
-            })
-            .collect();
-        let bus_energizable: Vec<bool> = unknown_buses
-            .iter()
-            .map(|&busi| {
-                let i = busi as usize;
                 if graph.connected[i] {
-                    return true;
+                    return 1;
                 }
                 for &j in graph.branches[i].iter() {
                     if self.buses[j] == BusState::Energized {
-                        return true;
+                        return 1;
                     }
                 }
-                false
+                usize::MAX
             })
             .collect();
+        {
+            // Determine the remaining beta values
+            let mut deque: VecDeque<Index> = minbeta
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &beta)| if beta == 1 { Some(i) } else { None })
+                .collect();
+            while let Some(i) = deque.pop_front() {
+                let next_beta: Index = minbeta[i] + 1;
+                for &j in graph.branches[i].iter() {
+                    if next_beta < minbeta[j] {
+                        minbeta[j] = next_beta;
+                        deque.push_back(j);
+                    }
+                }
+            }
+        }
+        minbeta
+    }
+
+    /// Returns an iterator to applicable and feasible actions in this state.
+    /// A(s) in paper.
+    pub fn actions(&self, graph: &Graph) -> ActionIterator {
+        let minbeta = self.minbetas(graph);
+        let (target_buses, minbeta): (Vec<Index>, Vec<Index>) = minbeta
+            .iter()
+            .enumerate()
+            .filter(|(_i, &beta)| beta != 0 && beta != usize::MAX)
+            .unzip();
         let team_states: Vec<TeamActionState> = self
             .teams
             .iter()
@@ -285,21 +317,21 @@ impl State {
                 TeamState::EnRoute(_, _, _) => TeamActionState::EnRoute,
             })
             .collect();
-        let team_buses: Vec<usize> = self
+        let team_buses: Vec<Index> = self
             .teams
             .iter()
             .map(|team| match team {
-                TeamState::OnBus(i) => match unknown_buses.binary_search(i) {
+                TeamState::OnBus(i) => match target_buses.binary_search(i) {
                     Ok(j) => j,
                     Err(_) => usize::MAX,
                 },
                 TeamState::EnRoute(_, _, _) => usize::MAX,
             })
             .collect();
-        let energizable_buses: Vec<usize> = unknown_buses
+        let energizable_buses: Vec<Index> = target_buses
             .iter()
-            .zip(bus_energizable.iter())
-            .filter_map(|(i, e)| if *e { Some(*i as usize) } else { None })
+            .zip(minbeta.iter())
+            .filter_map(|(&i, &beta)| if beta == 1 { Some(i) } else { None })
             .collect();
         let progress_satisfied = self.teams.iter().any(|team| {
             if let TeamState::EnRoute(_, b, _) = team {
@@ -309,8 +341,8 @@ impl State {
             }
         });
         let mut it = ActionIterator {
-            unknown_buses,
-            bus_energizable,
+            target_buses,
+            minbeta,
             team_states,
             team_buses,
             next: None,
@@ -351,15 +383,16 @@ impl ActionIterator {
             }
             action[i] += 1;
             if (action[i] as usize) == self.team_buses[i] {
+                // TODO: Encode this as wait?
                 action[i] += 1;
             }
-            if (action[i] as usize) < self.unknown_buses.len() {
+            if (action[i] as usize) < self.target_buses.len() {
                 return Some(action);
             } else {
                 action[i] = if self.team_states[i] == TeamActionState::OnUnknownBus {
                     WAIT_ACTION
                 } else if self.team_buses[i] == 0 {
-                    debug_assert!(1 < self.unknown_buses.len());
+                    debug_assert!(1 < self.target_buses.len());
                     1
                 } else {
                     0
@@ -376,7 +409,7 @@ impl ActionIterator {
         self.progress_satisfied
             || action
                 .iter()
-                .any(|&i| i >= 0 && self.bus_energizable[i as usize])
+                .any(|&i| i >= 0 && self.minbeta[i as usize] == 1)
     }
 }
 
@@ -392,7 +425,7 @@ impl Iterator for ActionIterator {
                     if i == CONTINUE_ACTION || i == WAIT_ACTION {
                         i
                     } else {
-                        self.unknown_buses[i as usize] as isize
+                        self.target_buses[i as usize] as isize
                     }
                 })
                 .collect();
@@ -975,5 +1008,46 @@ mod tests {
             vec![5, 4],
         ];
         check_sets(&actions, &expected_actions);
+    }
+
+    #[test]
+    fn beta_values_on_paper_example() {
+        let graph = get_paper_example_graph();
+        let dummy_teams = vec![TeamState::OnBus(0)];
+
+        let state = State {
+            buses: vec![
+                BusState::Energized,
+                BusState::Unknown,
+                BusState::Unknown,
+                BusState::Energized,
+                BusState::Damaged,
+                BusState::Unknown,
+            ],
+            teams: dummy_teams.clone(),
+        };
+        assert_eq!(state.minbetas(&graph), vec![0, 1, 2, 0, 0, usize::MAX]);
+
+        let state = State {
+            buses: vec![BusState::Unknown; 6],
+            teams: dummy_teams.clone(),
+        };
+        assert_eq!(state.minbetas(&graph), vec![1, 2, 3, 1, 2, 3]);
+
+        let state = State {
+            buses: vec![
+                BusState::Damaged,
+                BusState::Unknown,
+                BusState::Unknown,
+                BusState::Damaged,
+                BusState::Unknown,
+                BusState::Unknown,
+            ],
+            teams: dummy_teams.clone(),
+        };
+        assert_eq!(
+            state.minbetas(&graph),
+            vec![0, usize::MAX, usize::MAX, 0, usize::MAX, usize::MAX,]
+        );
     }
 }
