@@ -62,7 +62,14 @@ fn recursive_energization(
     let team_buses: Vec<usize> = teams
         .iter()
         .filter_map(|team| match team {
-            TeamState::OnBus(i) => Some(*i),
+            TeamState::OnBus(i) => {
+                let i = *i;
+                if i < buses.len() {
+                    Some(i)
+                } else {
+                    None
+                }
+            }
             TeamState::EnRoute(_, _, _) => None,
         })
         .unique()
@@ -308,7 +315,12 @@ impl State {
             .iter()
             .map(|team| match team {
                 TeamState::OnBus(i) => {
-                    if self.buses[*i] == BusState::Unknown {
+                    let i = *i;
+                    if i >= self.buses.len() {
+                        // The team is at a starting position, so it has to move.
+                        // This is treated like a known bus.
+                        TeamActionState::OnKnownBus
+                    } else if self.buses[i] == BusState::Unknown {
                         TeamActionState::OnUnknownBus
                     } else {
                         TeamActionState::OnKnownBus
