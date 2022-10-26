@@ -1,6 +1,11 @@
+mod action_exploration;
 mod action_iter;
+mod state;
 
+use action_exploration::{ActionExplorer, InitialStateExplorer, NaiveExplorer};
 use action_iter::{ActionIterator, NaiveIterator};
+use state::{BusState, State, TeamState, Transition};
+
 use crate::webclient;
 
 use itertools::Itertools;
@@ -16,6 +21,12 @@ pub type Index = usize;
 /// Data type for measuring time.
 pub type Time = usize;
 
+/// Represents the actions of a single team.
+/// Wait: -1 (WAIT_ACTION constant), Continue: -2 (CONTINUE_ACTION constant), Move: index of the bus.
+pub type TeamAction = isize;
+pub const WAIT_ACTION: isize = -1;
+pub const CONTINUE_ACTION: isize = -2;
+
 /// Contains information about the distribution system.
 pub struct Graph {
     /// Travel times between each edge.
@@ -28,338 +39,9 @@ pub struct Graph {
     pfs: Array1<f64>,
 }
 
-/// State of a single team. Use a `Vec` to represent multiple teams.
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum TeamState {
-    OnBus(Index),
-    EnRoute(Index, Index, Time),
-}
-
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum BusState {
-    Damaged = -1,
-    Unknown = 0,
-    Energized = 1,
-}
-
-#[derive(Eq, Clone)]
-pub struct State {
-    buses: Vec<BusState>,
-    teams: Vec<TeamState>,
-}
-
-/// Represents the actions of a single team.
-/// Wait: -1 (WAIT_ACTION constant), Continue: -2 (CONTINUE_ACTION constant), Move: index of the bus.
-pub type TeamAction = isize;
-pub const WAIT_ACTION: isize = -1;
-pub const CONTINUE_ACTION: isize = -2;
-
-/// Performs recursive energization with given team and bus state on the given graph.
-/// Outcomes are a list of probability and bus state pairs.
-fn recursive_energization(
-    graph: &Graph,
-    teams: &[TeamState],
-    buses: Vec<BusState>,
-) -> Vec<(f64, Vec<BusState>)> {
-    // Buses on which a team is present
-    let team_buses: Vec<usize> = teams
-        .iter()
-        .filter_map(|team| match team {
-            TeamState::OnBus(i) => {
-                let i = *i;
-                if i < buses.len() {
-                    Some(i)
-                } else {
-                    None
-                }
-            }
-            TeamState::EnRoute(_, _, _) => None,
-        })
-        .unique()
-        .collect();
-    // All energization outcomes with probability.
-    let mut outcomes: Vec<(f64, Vec<BusState>)> = Vec::new();
-    // Recursive energization process
-    let mut queue: Vec<(f64, Vec<BusState>)> = vec![(1.0, buses)];
-    while let Some(next) = queue.pop() {
-        let (p, mut state) = next;
-        // Alpha as defined in paper
-        let alpha: Vec<usize> = team_buses
-            .clone()
-            .into_iter()
-            .filter(|i| {
-                let i = *i;
-                state[i] == BusState::Unknown && {
-                    graph.connected[i]
-                        || graph.branches[i]
-                            .iter()
-                            .any(|j| state[*j] == BusState::Energized)
-                }
-            })
-            .collect();
-        if alpha.is_empty() {
-            outcomes.push((p, state));
-            continue;
-        }
-
-        for &i in &alpha {
-            state[i] = BusState::Damaged;
-        }
-        'permutations: loop {
-            let p = alpha.iter().fold(p, |acc, &i| {
-                let pf = graph.pfs[i];
-                acc * if state[i] == BusState::Damaged {
-                    pf
-                } else {
-                    1.0 - pf
-                }
-            });
-            queue.push((p, state.clone()));
-            for &i in &alpha {
-                if state[i] == BusState::Damaged {
-                    state[i] = BusState::Energized;
-                    continue 'permutations;
-                } else {
-                    state[i] = BusState::Damaged;
-                }
-            }
-            break 'permutations;
-        }
-    }
-    outcomes
-}
-
-impl State {
-    /// Creates the starting state from given team configuration.
-    fn start_state(graph: &Graph, teams: Vec<TeamState>) -> State {
-        State {
-            buses: vec![BusState::Unknown; graph.connected.len()],
-            teams,
-        }
-    }
-
-    /// Applies the given action to this state, returns the outcomes in a pair as follows:
-    /// - `Vec<TeamState>`: The resulting state of teams (note that team transitions are
-    /// deterministic).
-    /// - `Vec<(f64, Vec<BusState>)>`: Resulting bus states alongside their probabilities.
-    fn apply_action(
-        &self,
-        graph: &Graph,
-        actions: &Vec<TeamAction>,
-    ) -> (Vec<TeamState>, Vec<(f64, Vec<BusState>)>) {
-        debug_assert_eq!(actions.len(), self.teams.len());
-        // New team state
-        let teams: Vec<TeamState> = self
-            .teams
-            .iter()
-            .zip(actions.iter())
-            .map(|(team, action)| {
-                let team = team.clone();
-                let action = *action;
-                match team {
-                    TeamState::OnBus(source) => {
-                        if action == WAIT_ACTION {
-                            TeamState::OnBus(source)
-                        } else {
-                            debug_assert!(action != CONTINUE_ACTION);
-                            let dest = action as usize;
-                            let travel_time = graph.travel_times[(source, dest)];
-                            if travel_time == 1 {
-                                TeamState::OnBus(dest)
-                            } else {
-                                TeamState::EnRoute(source, dest, 1)
-                            }
-                        }
-                    }
-                    TeamState::EnRoute(source, dest, t) => {
-                        debug_assert!(action == CONTINUE_ACTION);
-                        let travel_time = graph.travel_times[(source, dest)];
-                        if travel_time - t == 1 {
-                            TeamState::OnBus(dest)
-                        } else {
-                            TeamState::EnRoute(source, dest, t + 1)
-                        }
-                    }
-                }
-            })
-            .collect();
-        let outcomes = recursive_energization(graph, &teams, self.buses.clone());
-        (teams, outcomes)
-    }
-
-    /// Attempt to energize without moving the teams.
-    fn energize(&self, graph: &Graph) -> Option<Vec<(f64, Vec<BusState>)>> {
-        let outcomes = recursive_energization(graph, &self.teams, self.buses.clone());
-        if outcomes.len() == 1 {
-            // No energizations happened
-            debug_assert_eq!(outcomes[0].0, 1.0);
-            debug_assert_eq!(outcomes[0].1, self.buses);
-            None
-        } else {
-            Some(outcomes)
-        }
-    }
-
-    /// Cost function: the count of unenergized (damaged or unknown) buses.
-    fn get_cost(&self) -> f64 {
-        self.buses
-            .iter()
-            .filter(|&b| *b != BusState::Energized)
-            .count() as f64
-    }
-
-    fn is_terminal(&self, graph: &Graph) -> bool {
-        !self.buses.iter().enumerate().any(|(i, bus)| {
-            if *bus != BusState::Unknown {
-                return false;
-            }
-            if graph.connected[i] {
-                return true;
-            }
-            for &j in graph.branches[i].iter() {
-                if self.buses[j] == BusState::Energized {
-                    return true;
-                }
-            }
-            false
-        })
-    }
-}
-
-impl State {
-    /// Returns a vector such that the value at index i contains:
-    /// 1. If the status of bus at index i is unknown,
-    ///    a. the smallest j value such that bus at index i is in beta_j(s)
-    ///    b. usize::MAX if there's no such j
-    /// 2. 0 if the status of bus at index i is energized or damaged.
-    ///
-    /// For each bus, minbeta array holds the number of energizations required
-    /// to energize that bus. By traversing the graph starting from immediately
-    /// energizable buses, we determine minbeta values and hence unreachable buses,
-    /// for which minbeta = infinity.
-    #[inline]
-    pub fn minbetas(&self, graph: &Graph) -> Vec<Index> {
-        let mut minbeta: Vec<Index> = self
-            .buses
-            .iter()
-            .enumerate()
-            .map(|(i, bus)| {
-                if bus != &BusState::Unknown {
-                    return 0;
-                }
-                if graph.connected[i] {
-                    return 1;
-                }
-                for &j in graph.branches[i].iter() {
-                    if self.buses[j] == BusState::Energized {
-                        return 1;
-                    }
-                }
-                usize::MAX
-            })
-            .collect();
-        {
-            // Determine the remaining beta values
-            let mut deque: VecDeque<Index> = minbeta
-                .iter()
-                .enumerate()
-                .filter_map(|(i, &beta)| if beta == 1 { Some(i) } else { None })
-                .collect();
-            while let Some(i) = deque.pop_front() {
-                let next_beta: Index = minbeta[i] + 1;
-                for &j in graph.branches[i].iter() {
-                    if next_beta < minbeta[j] {
-                        minbeta[j] = next_beta;
-                        deque.push_back(j);
-                    }
-                }
-            }
-        }
-        minbeta
-    }
-
-    /// Returns an iterator to applicable and feasible actions in this state.
-    /// A(s) in paper.
-    #[inline]
-    pub fn actions<T: ActionIterator>(&self, graph: &Graph) -> T {
-        T::from_state(self, graph)
-    }
-}
-
-impl PartialEq for State {
-    fn eq(&self, other: &Self) -> bool {
-        let buses_len = self.buses.len();
-        let teams_len = self.teams.len();
-        assert_eq!(
-            buses_len,
-            other.buses.len(),
-            "Equality is undefined for states of different systems."
-        );
-        assert_eq!(
-            teams_len,
-            other.teams.len(),
-            "Equality is undefined for states of different systems."
-        );
-        for i in 0..buses_len {
-            if self.buses[i] != other.buses[i] {
-                return false;
-            }
-        }
-        for i in 0..teams_len {
-            if self.teams[i] != other.teams[i] {
-                return false;
-            }
-        }
-        true
-    }
-}
-
-/// Hash is implemented for index lookup for a given state.
-impl std::hash::Hash for State {
-    fn hash<H: std::hash::Hasher>(&self, hash_state: &mut H) {
-        // We don't hash bus/team size because it will be the same in a given HashMap
-        for bus in self.buses.iter() {
-            let i = match bus {
-                BusState::Damaged => -1,
-                BusState::Unknown => 0,
-                BusState::Energized => 1,
-            };
-            i.hash(hash_state);
-        }
-        for t in self.teams.iter() {
-            match t {
-                TeamState::OnBus(i) => {
-                    0.hash(hash_state);
-                    i.hash(hash_state);
-                }
-                TeamState::EnRoute(i, j, k) => {
-                    1.hash(hash_state);
-                    i.hash(hash_state);
-                    j.hash(hash_state);
-                    k.hash(hash_state);
-                }
-            }
-        }
-    }
-}
-
-/// Represents a possible transition as a result of an action.
-pub struct Transition {
-    /// Index of the successor state.
-    successor: usize,
-    /// Probability of this transition.
-    /// The probabilities of all transitions of an action should add up to 1.
-    p: f64,
-    /// Cost that incurs when this transition is taken.
-    cost: f64,
-}
-
 /// Convert webclient types to teams problem.
 pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Solution, String> {
     let start_time = Instant::now();
-
-    let bus_count = graph.nodes.len();
-    let team_count = teams.len();
 
     let mut locations: Vec<webclient::LatLng> =
         graph.nodes.iter().map(|node| node.latlng.clone()).collect();
@@ -437,33 +119,8 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
         team_nodes[(i, 1)] = location.1;
     }
 
-    let state_count = solgen.states.len();
-    let states: Array1<BusState> = solgen
-        .states
-        .iter()
-        .flat_map(|state| &state.buses)
-        .cloned()
-        .collect::<Vec<_>>()
-        .into();
-    let states: Array2<BusState> = match states.into_shape((state_count, bus_count)) {
-        Ok(x) => x,
-        Err(e) => {
-            return Err(format!("Cannot reshape bus state array: {e}"));
-        }
-    };
-    let teams: Array1<TeamState> = solgen
-        .states
-        .iter()
-        .flat_map(|state| &state.teams)
-        .cloned()
-        .collect::<Vec<_>>()
-        .into();
-    let teams: Array2<TeamState> = match teams.into_shape((state_count, team_count)) {
-        Ok(x) => x,
-        Err(e) => {
-            return Err(format!("Cannot reshape team state array: {e}"));
-        }
-    };
+    let states: Array2<BusState> = solgen.bus_states;
+    let teams: Array2<TeamState> = solgen.team_states;
     let transitions = solgen.transitions;
     let travel_times = solgen.graph.travel_times;
 
@@ -484,22 +141,29 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
 
 /// A struct that contains the solution to a team-based restoration problem.
 /// First run `explore` and then `synthesize_policy`.
-struct SolutionGenerator {
+pub struct SolutionGenerator {
+    /// Distribution system topology.
     graph: Graph,
-    /// TODO: store 2 ndarrays, for team and bus states
-    /// There will be less indirection.
-    states: Vec<State>,
+    /// Matrix of bus states, each state in a row.
+    bus_states: Array2<BusState>,
+    /// Matrix of team states, each state in a row.
+    team_states: Array2<TeamState>,
     /// Reverse index
     state_to_index: HashMap<State, usize>,
+    /// 3D vector of transitions:
+    /// - `transitions[i]`: Actions of state i
+    /// - `transitions[i][j]`: Transitions of action j in state i
     transitions: Vec<Vec<Vec<Transition>>>,
 }
 
 impl SolutionGenerator {
     /// New solution structure from graph.
     pub fn new(graph: Graph) -> SolutionGenerator {
+        let bus_count = graph.branches.len();
         SolutionGenerator {
             graph,
-            states: Vec::new(),
+            bus_states: Array2::default((0, bus_count)),
+            team_states: Array2::default((0, 0)),
             state_to_index: HashMap::new(),
             transitions: Vec::new(),
         }
@@ -507,109 +171,20 @@ impl SolutionGenerator {
 
     /// Explore the possible states starting from the given team state.
     fn explore(&mut self, teams: Vec<TeamState>) {
+        self.team_states = Array2::default((0, teams.len()));
         let mut index = self.index_state(&State::start_state(&self.graph, teams));
-        self.explore_initial_state(index);
+        self.explore_state::<InitialStateExplorer>(index);
         index += 1;
-        while index < self.states.len() {
-            self.explore_state(index);
+        while index < self.transitions.len() {
+            self.explore_state::<NaiveExplorer>(index);
             index += 1;
         }
     }
 
-    /// Explore the initial state.
-    /// This requires special handling because energization is allowed to succeed in the initial
-    /// state without team movement. Normally, this is not the case since all energizations are
-    /// attempted after each transition.
-    fn explore_initial_state(&mut self, index: usize) {
-        let state = self.states[index].clone();
-        let cost = state.get_cost();
-        let action_transitions: Vec<Vec<Transition>> = if state.is_terminal(&self.graph) {
-            vec![vec![Transition {
-                successor: index,
-                p: 1.0,
-                cost,
-            }]]
-        } else if let Some(bus_outcomes) = state.energize(&self.graph) {
-            vec![bus_outcomes
-                .into_iter()
-                .map(|(p, bus_state)| {
-                    let successor_state = State {
-                        teams: state.teams.clone(),
-                        buses: bus_state,
-                    };
-                    let successor_index = self.index_state(&successor_state);
-                    Transition {
-                        successor: successor_index,
-                        p,
-                        cost: 0.0,
-                    }
-                })
-            .collect()]
-        } else {
-            state
-                .actions::<NaiveIterator>(&self.graph)
-                .map(|action| {
-                    let (team_outcome, bus_outcomes) = state.apply_action(&self.graph, &action);
-                    bus_outcomes
-                        .into_iter()
-                        .map(|(p, bus_state)| {
-                            let successor_state = State {
-                                teams: team_outcome.clone(),
-                                buses: bus_state,
-                            };
-                            let successor_index = self.index_state(&successor_state);
-                            Transition {
-                                successor: successor_index,
-                                p,
-                                cost,
-                            }
-                        })
-                    .collect()
-                })
-            .collect()
-        };
-        self.transitions[index] = action_transitions;
-    }
-
     /// Explore the state at given index, filling the transitions.
-    fn explore_state(&mut self, index: usize) {
-        let state = self.states[index].clone();
-        let cost = state.get_cost();
-        debug_assert_eq!(
-            state.energize(&self.graph),
-            None,
-            "Energization succeeded at the start of a non-initial state"
-            );
-        let action_transitions: Vec<Vec<Transition>> = if state.is_terminal(&self.graph) {
-            vec![vec![Transition {
-                successor: index,
-                p: 1.0,
-                cost,
-            }]]
-        } else {
-            state
-                .actions::<NaiveIterator>(&self.graph)
-                .map(|action| {
-                    let (team_outcome, bus_outcomes) = state.apply_action(&self.graph, &action);
-                    bus_outcomes
-                        .into_iter()
-                        .map(|(p, bus_state)| {
-                            let successor_state = State {
-                                teams: team_outcome.clone(),
-                                buses: bus_state,
-                            };
-                            let successor_index = self.index_state(&successor_state);
-                            Transition {
-                                successor: successor_index,
-                                p,
-                                cost,
-                            }
-                        })
-                    .collect()
-                })
-            .collect()
-        };
-        self.transitions[index] = action_transitions;
+    #[inline]
+    fn explore_state<T: ActionExplorer>(&mut self, index: usize) {
+        T::explore(self, index);
     }
 
     /// Get the index of given state, adding it to the hasmap when necessary.
@@ -617,12 +192,25 @@ impl SolutionGenerator {
         match self.state_to_index.get(s) {
             Some(i) => *i,
             None => {
-                let i = self.states.len();
-                self.states.push(s.clone());
+                let i = self.transitions.len();
+                self.bus_states
+                    .push_row(ndarray::ArrayView::from(&s.buses))
+                    .unwrap();
+                self.team_states
+                    .push_row(ndarray::ArrayView::from(&s.teams))
+                    .unwrap();
                 self.transitions.push(Vec::default());
                 self.state_to_index.insert(s.clone(), i);
                 i
             }
+        }
+    }
+
+    /// Get the state at given index.
+    fn get_state(&self, index: usize) -> State {
+        State {
+            buses: self.bus_states.row(index).to_vec(),
+            teams: self.team_states.row(index).to_vec(),
         }
     }
 
@@ -632,14 +220,14 @@ impl SolutionGenerator {
     /// Returns a pair containing action values and index of optimal action in each state.
     fn synthesize_policy(&mut self) -> (Vec<Vec<f64>>, Vec<usize>) {
         assert!(
-            !self.states.is_empty(),
+            !self.transitions.is_empty(),
             "States must be non-empty during policy synthesis"
         );
-        let mut values: Array1<f64> = Array1::zeros(self.states.len());
+        let mut values: Array1<f64> = Array1::zeros(self.transitions.len());
         const OPTIMIZATION_HORIZON: usize = 30;
         for _ in 1..OPTIMIZATION_HORIZON {
             let prev_val = values;
-            values = Array1::zeros(self.states.len());
+            values = Array1::zeros(self.transitions.len());
             for (i, action) in self.transitions.iter().enumerate() {
                 let optimal_value: f64 = action
                     .iter()
@@ -659,8 +247,8 @@ impl SolutionGenerator {
         }
 
         let mut state_action_values: Vec<Vec<f64>> = Vec::new();
-        state_action_values.reserve(self.states.len());
-        let mut policy: Vec<usize> = vec![0; self.states.len()];
+        state_action_values.reserve(self.transitions.len());
+        let mut policy: Vec<usize> = vec![0; self.transitions.len()];
 
         let prev_val = values;
         for (i, action) in self.transitions.iter().enumerate() {
@@ -767,56 +355,6 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
         for i in self.0.iter() {
             seq.serialize_element(i)?;
         }
-        seq.end()
-    }
-}
-
-impl Serialize for TeamState {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            TeamState::OnBus(a) => {
-                let mut map = serializer.serialize_map(Some(1))?;
-                map.serialize_entry("node", a)?;
-                map.end()
-            }
-            TeamState::EnRoute(a, b, t) => {
-                let mut map = serializer.serialize_map(Some(4))?;
-                map.serialize_entry("node", a)?;
-                map.serialize_entry("target", b)?;
-                map.serialize_entry("time", t)?;
-                // TODO: travel time
-                map.end()
-            }
-        }
-    }
-}
-
-impl Serialize for BusState {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            BusState::Damaged => serializer.serialize_str("D"),
-            BusState::Unknown => serializer.serialize_str("U"),
-            BusState::Energized => serializer.serialize_str("TG"),
-        }
-    }
-}
-
-impl Serialize for Transition {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(4))?;
-        seq.serialize_element(&self.successor)?;
-        seq.serialize_element(&self.p)?;
-        seq.serialize_element(&self.cost)?;
-        seq.serialize_element(&1)?;
         seq.end()
     }
 }
