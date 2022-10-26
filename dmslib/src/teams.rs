@@ -1,9 +1,9 @@
 mod action_exploration;
-mod action_iter;
+mod action_iteration;
 mod state;
 
 use action_exploration::{ActionExplorer, InitialStateExplorer, NaiveExplorer};
-use action_iter::{ActionIterator, NaiveIterator};
+use action_iteration::{ActionIterator, NaiveIterator, WaitMovingIterator};
 use state::{BusState, State, TeamState, Transition};
 
 use crate::webclient;
@@ -173,18 +173,18 @@ impl SolutionGenerator {
     fn explore(&mut self, teams: Vec<TeamState>) {
         self.team_states = Array2::default((0, teams.len()));
         let mut index = self.index_state(&State::start_state(&self.graph, teams));
-        self.explore_state::<InitialStateExplorer>(index);
+        self.explore_state::<InitialStateExplorer, WaitMovingIterator<NaiveIterator>>(index);
         index += 1;
         while index < self.transitions.len() {
-            self.explore_state::<NaiveExplorer>(index);
+            self.explore_state::<NaiveExplorer, WaitMovingIterator<NaiveIterator>>(index);
             index += 1;
         }
     }
 
     /// Explore the state at given index, filling the transitions.
     #[inline]
-    fn explore_state<T: ActionExplorer>(&mut self, index: usize) {
-        T::explore(self, index);
+    fn explore_state<T: ActionExplorer, IT: ActionIterator>(&mut self, index: usize) {
+        T::explore::<IT>(self, index);
     }
 
     /// Get the index of given state, adding it to the hasmap when necessary.
@@ -360,125 +360,4 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn get_paper_example_graph() -> Graph {
-        Graph {
-            travel_times: ndarray::arr2(&[
-                [0, 1, 2, 1, 2, 2],
-                [1, 0, 1, 2, 2, 2],
-                [2, 1, 0, 2, 2, 1],
-                [1, 2, 2, 0, 1, 2],
-                [2, 2, 2, 1, 0, 1],
-                [2, 2, 1, 2, 1, 0],
-            ]),
-            branches: vec![vec![1], vec![0, 2], vec![1], vec![4], vec![3, 5], vec![4]],
-            connected: vec![true, false, false, true, false, false],
-            pfs: ndarray::arr1(&[0.5, 0.5, 0.25, 0.25, 0.25, 0.25]),
-        }
-    }
-
-    fn check_sets<T: PartialEq>(output: &Vec<T>, expected: &Vec<T>) {
-        assert_eq!(output.len(), expected.len());
-        for a in expected {
-            assert!(output.contains(a));
-        }
-    }
-
-    #[test]
-    fn paper_example_4_1_1() {
-        let graph = get_paper_example_graph();
-        let buses: Vec<BusState> = vec![
-            BusState::Energized,
-            BusState::Unknown,
-            BusState::Unknown,
-            BusState::Energized,
-            BusState::Damaged,
-            BusState::Unknown,
-        ];
-        let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::EnRoute(4, 2, 1)];
-        let state = State { buses, teams };
-
-        assert_eq!(state.get_cost(), 4.0);
-
-        let actions: Vec<_> = state.actions::<NaiveIterator>(&graph).collect();
-
-        assert_eq!(actions, vec![vec![1, -2]]);
-    }
-
-    #[test]
-    fn on_energized_bus_actions() {
-        let graph = get_paper_example_graph();
-        let buses: Vec<BusState> = vec![
-            BusState::Energized,
-            BusState::Unknown,
-            BusState::Unknown,
-            BusState::Energized,
-            BusState::Unknown,
-            BusState::Unknown,
-        ];
-        let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::OnBus(3)];
-        let state = State { buses, teams };
-
-        assert_eq!(state.get_cost(), 4.0);
-
-        let actions: Vec<_> = state.actions::<NaiveIterator>(&graph).collect();
-        let expected_actions: Vec<Vec<TeamAction>> = vec![
-            vec![1, 1],
-            vec![1, 2],
-            vec![1, 4],
-            vec![1, 5],
-            vec![4, 1],
-            vec![4, 2],
-            vec![4, 4],
-            vec![4, 5],
-            vec![2, 1],
-            vec![2, 4],
-            vec![5, 1],
-            vec![5, 4],
-        ];
-        check_sets(&actions, &expected_actions);
-    }
-
-    #[test]
-    fn beta_values_on_paper_example() {
-        let graph = get_paper_example_graph();
-        let dummy_teams = vec![TeamState::OnBus(0)];
-
-        let state = State {
-            buses: vec![
-                BusState::Energized,
-                BusState::Unknown,
-                BusState::Unknown,
-                BusState::Energized,
-                BusState::Damaged,
-                BusState::Unknown,
-            ],
-            teams: dummy_teams.clone(),
-        };
-        assert_eq!(state.minbetas(&graph), vec![0, 1, 2, 0, 0, usize::MAX]);
-
-        let state = State {
-            buses: vec![BusState::Unknown; 6],
-            teams: dummy_teams.clone(),
-        };
-        assert_eq!(state.minbetas(&graph), vec![1, 2, 3, 1, 2, 3]);
-
-        let state = State {
-            buses: vec![
-                BusState::Damaged,
-                BusState::Unknown,
-                BusState::Unknown,
-                BusState::Damaged,
-                BusState::Unknown,
-                BusState::Unknown,
-            ],
-            teams: dummy_teams.clone(),
-        };
-        assert_eq!(
-            state.minbetas(&graph),
-            vec![0, usize::MAX, usize::MAX, 0, usize::MAX, usize::MAX,]
-        );
-    }
-}
+mod tests;
