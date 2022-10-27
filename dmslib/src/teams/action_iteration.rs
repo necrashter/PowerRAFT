@@ -1,4 +1,5 @@
 use super::*;
+use crate::utils::sorted_intersects;
 
 #[derive(PartialEq, Debug)]
 enum TeamActionState {
@@ -20,6 +21,8 @@ pub struct ProtoIterator {
     /// Bus at which each team is located, represented as index in target_buses.
     /// usize;:MAX if en-route or not in target_buses.
     team_buses: Vec<Index>,
+    /// Set of buses in beta_1
+    energizable_buses: Vec<Index>,
     /// True if the progress condition is satisfied by an en-route team.
     progress_satisfied: bool,
 }
@@ -80,21 +83,22 @@ impl ProtoIterator {
             minbeta,
             team_states,
             team_buses,
+            energizable_buses,
             progress_satisfied,
         }
     }
 }
 
 /// Trait that represents an iterator for feasible action set.
-pub trait ActionIterator: Iterator<Item = Vec<TeamAction>> {
+/// A(s) in paper.
+pub trait ActionIterator: Iterator<Item = Vec<TeamAction>> + Sized {
+    fn setup(graph: &Graph) -> Self;
     /// Construct this iterator from ProtoIterator.
-    fn from_proto(proto: ProtoIterator) -> Self;
+    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self;
     /// Construct this iterator from a state and graph.
-    fn from_state(state: &State, graph: &Graph) -> Self
-    where
-        Self: Sized,
-    {
-        Self::from_proto(ProtoIterator::from_state(state, graph))
+    #[inline]
+    fn from_state(&mut self, state: &State, graph: &Graph) -> &mut Self {
+        self.from_proto(ProtoIterator::from_state(state, graph), state)
     }
 }
 
@@ -206,24 +210,34 @@ impl Iterator for NaiveIterator {
 }
 
 impl ActionIterator for NaiveIterator {
-    fn from_proto(proto: ProtoIterator) -> Self {
+    fn setup(_graph: &Graph) -> Self {
+        NaiveIterator {
+            target_buses: Vec::default(),
+            minbeta: Vec::default(),
+            team_states: Vec::default(),
+            team_buses: Vec::default(),
+            progress_satisfied: false,
+            next: None,
+        }
+    }
+
+    fn from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
         let ProtoIterator {
             target_buses,
             minbeta,
             team_states,
             team_buses,
+            energizable_buses: _,
             progress_satisfied,
         } = proto;
-        let mut it = NaiveIterator {
-            target_buses,
-            minbeta,
-            team_states,
-            team_buses,
-            next: None,
-            progress_satisfied,
-        };
-        it.reset();
-        it
+        self.target_buses = target_buses;
+        self.minbeta = minbeta;
+        self.team_states = team_states;
+        self.team_buses = team_buses;
+        self.progress_satisfied = progress_satisfied;
+        self.next = None;
+        self.reset();
+        self
     }
 }
 
@@ -232,7 +246,9 @@ impl ActionIterator for NaiveIterator {
 /// issued. Otherwise, the underlying iterator will be initialized and used.
 pub struct WaitMovingIterator<T: ActionIterator> {
     /// Underlying iterator.
-    iter: Option<T>,
+    iter: T,
+    /// Whether we are in waiting state
+    waiting_state: bool,
     /// The wait action for this state if the "wait for moving teams" condition is satisfied.
     wait_action: Option<Vec<TeamAction>>,
 }
@@ -241,18 +257,24 @@ impl<T: ActionIterator> Iterator for WaitMovingIterator<T> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(iter) = self.iter.as_mut() {
-            iter.next()
-        } else if self.wait_action.is_some() {
+        if self.waiting_state {
             self.wait_action.take()
         } else {
-            None
+            self.iter.next()
         }
     }
 }
 
 impl<T: ActionIterator> ActionIterator for WaitMovingIterator<T> {
-    fn from_proto(proto: ProtoIterator) -> Self {
+    fn setup(graph: &Graph) -> Self {
+        Self {
+            iter: T::setup(graph),
+            waiting_state: false,
+            wait_action: None,
+        }
+    }
+
+    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
         let action: Vec<TeamAction> = proto
             .team_states
             .iter()
@@ -262,18 +284,96 @@ impl<T: ActionIterator> ActionIterator for WaitMovingIterator<T> {
                 TeamActionState::OnKnownBus => None,
             })
             .collect_vec();
-        let waiting_state: bool =
-            proto.progress_satisfied && action.len() == proto.team_states.len();
-        if waiting_state {
-            Self {
-                iter: None,
-                wait_action: Some(action),
-            }
+        self.waiting_state = proto.progress_satisfied && action.len() == proto.team_states.len();
+        if self.waiting_state {
+            self.wait_action = Some(action);
         } else {
-            Self {
-                iter: Some(T::from_proto(proto)),
-                wait_action: None,
+            self.iter.from_proto(proto, state);
+        }
+        self
+    }
+}
+
+/// An action iterator that wraps around another action iterator and eliminates actions according
+/// to the "components on the way" condition.
+///
+/// If an energizable component (i.e., in beta_1) that is on the way is skipped in an action, it
+/// will be eliminated.
+pub struct OnWayIterator<T: ActionIterator> {
+    /// Underlying iterator.
+    iter: T,
+    /// For each path i to j, there's an entry for the list of components on that path in ascending
+    /// order.
+    on_way: Array2<Vec<Index>>,
+    /// The set of buses in beta_1
+    energizable_buses: Vec<Index>,
+    /// Bus at which each team is located, represented as index in target_buses.
+    /// usize;:MAX if en-route.
+    team_buses: Vec<Index>,
+}
+
+impl<T: ActionIterator> Iterator for OnWayIterator<T> {
+    type Item = Vec<TeamAction>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(action) = self.iter.next() {
+            let on_way: bool = self.team_buses.iter().zip(action.iter()).any(|(&i, &j)| {
+                if i == usize::MAX || j == CONTINUE_ACTION || j == WAIT_ACTION {
+                    false
+                } else {
+                    sorted_intersects(
+                        self.on_way[[i, j as usize]].iter(),
+                        self.energizable_buses.iter(),
+                    )
+                }
+            });
+            if on_way {
+                continue;
+            }
+            return Some(action);
+        }
+        None
+    }
+}
+
+impl<T: ActionIterator> ActionIterator for OnWayIterator<T> {
+    fn setup(graph: &Graph) -> Self {
+        let bus_count = graph.branches.len();
+        let mut on_way: Array2<Vec<Index>> = Array2::default(graph.travel_times.raw_dim());
+        for (((i, j), elem), &direct) in on_way.indexed_iter_mut().zip(graph.travel_times.iter()) {
+            if i == j {
+                continue;
+            }
+            for k in 0..bus_count {
+                if i == k || j == k {
+                    continue;
+                }
+                let through_k = graph.travel_times[[i, k]] + graph.travel_times[[k, j]];
+                if through_k <= direct {
+                    elem.push(k);
+                }
             }
         }
+        Self {
+            iter: T::setup(graph),
+            on_way,
+            energizable_buses: Vec::default(),
+            team_buses: Vec::default(),
+        }
+    }
+
+    #[inline]
+    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
+        self.team_buses = state
+            .teams
+            .iter()
+            .map(|team| match team {
+                TeamState::OnBus(i) => *i,
+                TeamState::EnRoute(_, _, _) => usize::MAX,
+            })
+            .collect();
+        self.energizable_buses = proto.energizable_buses.clone();
+        self.iter.from_proto(proto, state);
+        self
     }
 }

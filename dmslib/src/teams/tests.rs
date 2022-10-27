@@ -39,7 +39,8 @@ fn paper_example_4_1_1() {
 
     assert_eq!(state.get_cost(), 4.0);
 
-    let actions: Vec<_> = state.actions::<NaiveIterator>(&graph).collect();
+    let mut iter = NaiveIterator::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
 
     assert_eq!(actions, vec![vec![1, -2]]);
 }
@@ -60,7 +61,8 @@ fn on_energized_bus_actions() {
 
     assert_eq!(state.get_cost(), 4.0);
 
-    let actions: Vec<_> = state.actions::<NaiveIterator>(&graph).collect();
+    let mut iter = NaiveIterator::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     let expected_actions: Vec<Vec<TeamAction>> = vec![
         vec![1, 1],
         vec![1, 2],
@@ -77,9 +79,27 @@ fn on_energized_bus_actions() {
     ];
     check_sets(&actions, &expected_actions);
 
-    let actions: Vec<_> = state
-        .actions::<WaitMovingIterator<NaiveIterator>>(&graph)
-        .collect();
+    let mut iter = WaitMovingIterator::<NaiveIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let expected_actions: Vec<Vec<TeamAction>> = vec![
+        vec![1, 1],
+        vec![1, 2],
+        vec![1, 4],
+        vec![4, 1],
+        vec![4, 2],
+        vec![4, 4],
+        vec![5, 1],
+        vec![5, 4],
+    ];
+
+    let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let mut iter = WaitMovingIterator::<OnWayIterator<NaiveIterator>>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
 }
 
@@ -99,17 +119,26 @@ fn wait_moving_elimination() {
 
     assert_eq!(state.get_cost(), 3.0);
 
-    let actions: Vec<_> = state.actions::<NaiveIterator>(&graph).collect();
     let expected_actions: Vec<Vec<TeamAction>> = vec![
         vec![WAIT_ACTION, CONTINUE_ACTION],
         vec![0, CONTINUE_ACTION],
         vec![1, CONTINUE_ACTION],
     ];
+
+    let mut iter = NaiveIterator::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
 
-    let actions: Vec<_> = state
-        .actions::<WaitMovingIterator<NaiveIterator>>(&graph)
-        .collect();
+    let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let mut iter = WaitMovingIterator::<NaiveIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
+
+    let mut iter = OnWayIterator::<WaitMovingIterator<NaiveIterator>>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
 }
 

@@ -1,18 +1,34 @@
 use super::*;
 
 /// Generic trait for the functions that explore the actions of a given state.
-pub trait ActionExplorer {
+pub trait ActionExplorer<T: ActionIterator> {
+    /// Construct an action explorer from SolutionGenerator.
+    fn setup(graph: &Graph) -> Self;
     /// Explore the actions and transitions of a state at the given index in the
     /// SolutionGenerator.
-    fn explore<T: ActionIterator>(soln: &mut SolutionGenerator, index: usize);
+    fn explore(&mut self, soln: &mut SolutionGenerator, index: usize);
+    /// Explore the actions and transitions of the initial state.
+    ///
+    /// This requires special handling because energization is allowed to succeed in the initial
+    /// state without team movement. Normally, this is not the case since all energizations are
+    /// attempted after each transition.
+    fn explore_initial(&mut self, soln: &mut SolutionGenerator, index: usize);
 }
 
 /// Naive action explorer.
-pub struct NaiveExplorer;
+pub struct NaiveExplorer<T: ActionIterator> {
+    iterator: T,
+}
 
-impl ActionExplorer for NaiveExplorer {
+impl<T: ActionIterator> ActionExplorer<T> for NaiveExplorer<T> {
+    fn setup(graph: &Graph) -> Self {
+        NaiveExplorer {
+            iterator: T::setup(graph),
+        }
+    }
+
     #[inline]
-    fn explore<T: ActionIterator>(soln: &mut SolutionGenerator, index: usize) {
+    fn explore(&mut self, soln: &mut SolutionGenerator, index: usize) {
         let state = soln.get_state(index);
         let cost = state.get_cost();
         debug_assert_eq!(
@@ -27,8 +43,8 @@ impl ActionExplorer for NaiveExplorer {
                 cost,
             }]]
         } else {
-            state
-                .actions::<T>(&soln.graph)
+            self.iterator
+                .from_state(&state, &soln.graph)
                 .map(|action| {
                     let (team_outcome, bus_outcomes) = state.apply_action(&soln.graph, &action);
                     bus_outcomes
@@ -51,18 +67,9 @@ impl ActionExplorer for NaiveExplorer {
         };
         soln.transitions[index] = action_transitions;
     }
-}
 
-/// Action explorer for initial state.
-///
-/// This requires special handling because energization is allowed to succeed in the initial
-/// state without team movement. Normally, this is not the case since all energizations are
-/// attempted after each transition.
-pub struct InitialStateExplorer;
-
-impl ActionExplorer for InitialStateExplorer {
     #[inline]
-    fn explore<T: ActionIterator>(soln: &mut SolutionGenerator, index: usize) {
+    fn explore_initial(&mut self, soln: &mut SolutionGenerator, index: usize) {
         let state = soln.get_state(index);
         let cost = state.get_cost();
         let action_transitions: Vec<Vec<Transition>> = if state.is_terminal(&soln.graph) {
@@ -88,8 +95,8 @@ impl ActionExplorer for InitialStateExplorer {
                 })
                 .collect()]
         } else {
-            state
-                .actions::<T>(&soln.graph)
+            self.iterator
+                .from_state(&state, &soln.graph)
                 .map(|action| {
                     let (team_outcome, bus_outcomes) = state.apply_action(&soln.graph, &action);
                     bus_outcomes

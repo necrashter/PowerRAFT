@@ -2,9 +2,9 @@ mod action_exploration;
 mod action_iteration;
 mod state;
 
-use action_exploration::{ActionExplorer, InitialStateExplorer, NaiveExplorer};
-use action_iteration::{ActionIterator, NaiveIterator, WaitMovingIterator};
-use state::{BusState, State, TeamState, Transition};
+use action_exploration::*;
+use action_iteration::*;
+use state::*;
 
 use crate::webclient;
 
@@ -173,18 +173,14 @@ impl SolutionGenerator {
     fn explore(&mut self, teams: Vec<TeamState>) {
         self.team_states = Array2::default((0, teams.len()));
         let mut index = self.index_state(&State::start_state(&self.graph, teams));
-        self.explore_state::<InitialStateExplorer, WaitMovingIterator<NaiveIterator>>(index);
+        let mut explorer =
+            NaiveExplorer::<WaitMovingIterator<OnWayIterator<NaiveIterator>>>::setup(&self.graph);
+        explorer.explore_initial(self, index);
         index += 1;
         while index < self.transitions.len() {
-            self.explore_state::<NaiveExplorer, WaitMovingIterator<NaiveIterator>>(index);
+            explorer.explore(self, index);
             index += 1;
         }
-    }
-
-    /// Explore the state at given index, filling the transitions.
-    #[inline]
-    fn explore_state<T: ActionExplorer, IT: ActionIterator>(&mut self, index: usize) {
-        T::explore::<IT>(self, index);
     }
 
     /// Get the index of given state, adding it to the hasmap when necessary.

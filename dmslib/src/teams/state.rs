@@ -255,13 +255,6 @@ impl State {
         }
         minbeta
     }
-
-    /// Returns an iterator to applicable and feasible actions in this state.
-    /// A(s) in paper.
-    #[inline]
-    pub fn actions<T: ActionIterator>(&self, graph: &Graph) -> T {
-        T::from_state(self, graph)
-    }
 }
 
 impl PartialEq for State {
