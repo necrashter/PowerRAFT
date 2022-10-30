@@ -1,7 +1,7 @@
 use super::*;
 
 /// Generic trait for the functions that explore the actions of a given state.
-pub trait ActionExplorer<T: ActionIterator> {
+pub trait ActionExplorer<T: for<'a> ActionIterator<'a>> {
     /// Construct an action explorer from SolutionGenerator.
     fn setup(graph: &Graph) -> Self;
     /// Explore the actions and transitions of a state at the given index in the
@@ -16,11 +16,11 @@ pub trait ActionExplorer<T: ActionIterator> {
 }
 
 /// Naive action explorer.
-pub struct NaiveExplorer<T: ActionIterator> {
+pub struct NaiveExplorer<T: for<'a> ActionIterator<'a>> {
     iterator: T,
 }
 
-impl<T: ActionIterator> ActionExplorer<T> for NaiveExplorer<T> {
+impl<T: for<'a> ActionIterator<'a>> ActionExplorer<T> for NaiveExplorer<T> {
     fn setup(graph: &Graph) -> Self {
         NaiveExplorer {
             iterator: T::setup(graph),
