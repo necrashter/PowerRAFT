@@ -49,7 +49,7 @@ impl<'a, T: ActionIterator<'a>> ActionExplorer<'a, T> for NaiveExplorer<'a, T> {
             }]]
         } else {
             self.iterator
-                .from_state(&state, graph)
+                .prepare_from_state(&state, graph)
                 .map(|action| {
                     let (team_outcome, bus_outcomes) = state.apply_action(graph, &action);
                     bus_outcomes
@@ -101,7 +101,7 @@ impl<'a, T: ActionIterator<'a>> ActionExplorer<'a, T> for NaiveExplorer<'a, T> {
                 .collect()]
         } else {
             self.iterator
-                .from_state(&state, graph)
+                .prepare_from_state(&state, graph)
                 .map(|action| {
                     let (team_outcome, bus_outcomes) = state.apply_action(graph, &action);
                     bus_outcomes

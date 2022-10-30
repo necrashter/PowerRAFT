@@ -33,7 +33,7 @@ pub struct ProtoIterator {
 
 impl ProtoIterator {
     /// Construct ProtoIterator from a state and graph.
-    fn from_state(state: &State, graph: &Graph) -> ProtoIterator {
+    fn prepare_from_state(state: &State, graph: &Graph) -> ProtoIterator {
         let minbeta = state.minbetas(graph);
         let (target_buses, minbeta): (Vec<Index>, Vec<Index>) = minbeta
             .iter()
@@ -107,11 +107,11 @@ impl ProtoIterator {
 pub trait ActionIterator<'a>: Iterator<Item = Vec<TeamAction>> + Sized {
     fn setup(graph: &'a Graph) -> Self;
     /// Construct this iterator from ProtoIterator.
-    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self;
+    fn prepare_from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self;
     /// Construct this iterator from a state and graph.
     #[inline]
-    fn from_state(&mut self, state: &State, graph: &Graph) -> &mut Self {
-        self.from_proto(ProtoIterator::from_state(state, graph), state)
+    fn prepare_from_state(&mut self, state: &State, graph: &Graph) -> &mut Self {
+        self.prepare_from_proto(ProtoIterator::prepare_from_state(state, graph), state)
     }
 }
 
@@ -234,7 +234,7 @@ impl ActionIterator<'_> for NaiveIterator {
         }
     }
 
-    fn from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
+    fn prepare_from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
         let ProtoIterator {
             target_buses,
             minbeta,
@@ -434,19 +434,13 @@ impl<'a> PermutationalIterator<'a> {
 
     /// Called when self.next_permutations is empty. Changes bus or team combination.
     fn get_next_permutations(&mut self) -> bool {
-        if self.next_bus_combination() {
+        if self.next_bus_combination() || self.next_team_combination() {
             true
+        } else if self.moving_team_count < self.can_move_teams.len() {
+            self.moving_team_count += 1;
+            self.prepare_moving_team_iter()
         } else {
-            if self.next_team_combination() {
-                true
-            } else {
-                if self.moving_team_count + 1 <= self.can_move_teams.len() {
-                    self.moving_team_count += 1;
-                    self.prepare_moving_team_iter()
-                } else {
-                    false
-                }
-            }
+            false
         }
     }
 }
@@ -468,12 +462,10 @@ impl<'a> Iterator for PermutationalIterator<'a> {
                 action[team_index] = target as TeamAction;
             }
             Some(action)
+        } else if self.get_next_permutations() {
+            self.next()
         } else {
-            if self.get_next_permutations() {
-                self.next()
-            } else {
-                None
-            }
+            None
         }
     }
 }
@@ -497,7 +489,7 @@ impl<'a> ActionIterator<'a> for PermutationalIterator<'a> {
         }
     }
 
-    fn from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
+    fn prepare_from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
         let ProtoIterator {
             target_buses,
             minbeta,
@@ -566,7 +558,7 @@ impl<'a, T: ActionIterator<'a>> ActionIterator<'a> for WaitMovingIterator<'a, T>
         }
     }
 
-    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
+    fn prepare_from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
         let action: Vec<TeamAction> = proto
             .team_states
             .iter()
@@ -580,7 +572,7 @@ impl<'a, T: ActionIterator<'a>> ActionIterator<'a> for WaitMovingIterator<'a, T>
         if self.waiting_state {
             self.wait_action = Some(action);
         } else {
-            self.iter.from_proto(proto, state);
+            self.iter.prepare_from_proto(proto, state);
         }
         self
     }
@@ -659,10 +651,10 @@ impl<'a, T: ActionIterator<'a>> ActionIterator<'a> for OnWayIterator<'a, T> {
     }
 
     #[inline]
-    fn from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
+    fn prepare_from_proto(&mut self, proto: ProtoIterator, state: &State) -> &mut Self {
         self.team_nodes = proto.team_nodes.clone();
         self.energizable_buses = proto.energizable_buses.clone();
-        self.iter.from_proto(proto, state);
+        self.iter.prepare_from_proto(proto, state);
         self
     }
 }
