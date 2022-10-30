@@ -186,30 +186,21 @@ fn beta_values_on_paper_example() {
 #[test]
 fn minimal_nonopt_permutations() {
     let graph = Graph {
-        travel_times: ndarray::arr2(&[
-            [0, 1, 1, 2],
-            [1, 0, 2, 1],
-            [1, 2, 0, 1],
-            [2, 1, 1, 0],
-        ]),
+        travel_times: ndarray::arr2(&[[0, 1, 1, 2], [1, 0, 2, 1], [1, 2, 0, 1], [2, 1, 1, 0]]),
         branches: vec![vec![], vec![]],
         connected: vec![true, true],
         pfs: ndarray::arr1(&[0.5, 0.5]),
     };
 
     let state = State {
-        buses: vec![ BusState::Unknown, BusState::Unknown ],
+        buses: vec![BusState::Unknown, BusState::Unknown],
         teams: vec![TeamState::OnBus(2), TeamState::OnBus(3)],
     };
 
     assert_eq!(state.minbetas(&graph), vec![1, 1]);
 
-    let expected_actions: Vec<Vec<TeamAction>> = vec![
-        vec![0, 0],
-        vec![1, 0],
-        vec![0, 1],
-        vec![1, 1],
-    ];
+    let expected_actions: Vec<Vec<TeamAction>> =
+        vec![vec![0, 0], vec![1, 0], vec![0, 1], vec![1, 1]];
     let mut iter = NaiveIterator::setup(&graph);
     let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
@@ -218,9 +209,7 @@ fn minimal_nonopt_permutations() {
     let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
 
-    let expected_actions: Vec<Vec<TeamAction>> = vec![
-        vec![0, 1],
-    ];
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 1]];
     let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
     let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
@@ -229,17 +218,21 @@ fn minimal_nonopt_permutations() {
     let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
 
-    let expected_actions: Vec<Vec<TeamAction>> = vec![
-        vec![0, 0],
-        vec![0, 1],
-        vec![1, 1],
-    ];
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 0], vec![0, 1], vec![1, 1]];
     let mut iter = PermutationalIterator::setup(&graph);
     let actions: Vec<_> = iter.from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
 
-    // TODO: Fix lifetime issues
-    // let mut iter = WaitMovingIterator::<PermutationalIterator>::setup(&graph);
-    // let actions: Vec<_> = iter.from_state(&state, &graph).collect();
-    // check_sets(&actions, &expected_actions);
+    let mut iter = WaitMovingIterator::<PermutationalIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 1]];
+    let mut iter = OnWayIterator::<PermutationalIterator>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let mut iter = OnWayIterator::<WaitMovingIterator<PermutationalIterator>>::setup(&graph);
+    let actions: Vec<_> = iter.from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
 }

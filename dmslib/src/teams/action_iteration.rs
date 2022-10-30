@@ -532,16 +532,19 @@ impl<'a> ActionIterator<'a> for PermutationalIterator<'a> {
 /// An action iterator that wraps around another action iterator and checks for "wait for moving
 /// teams" condition during initialization. If the condition is met, only wait action will be
 /// issued. Otherwise, the underlying iterator will be initialized and used.
-pub struct WaitMovingIterator<T: for<'a> ActionIterator<'a>> {
+pub struct WaitMovingIterator<'a, T: ActionIterator<'a>> {
     /// Underlying iterator.
     iter: T,
     /// Whether we are in waiting state
     waiting_state: bool,
     /// The wait action for this state if the "wait for moving teams" condition is satisfied.
     wait_action: Option<Vec<TeamAction>>,
+    /// This struct semantically stores a reference with `'a` lifetime due to wrapped
+    /// ActionIterator.
+    _phantom: std::marker::PhantomData<&'a ()>,
 }
 
-impl<T: for<'a> ActionIterator<'a>> Iterator for WaitMovingIterator<T> {
+impl<'a, T: ActionIterator<'a>> Iterator for WaitMovingIterator<'a, T> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -553,12 +556,13 @@ impl<T: for<'a> ActionIterator<'a>> Iterator for WaitMovingIterator<T> {
     }
 }
 
-impl<T: for<'a> ActionIterator<'a>> ActionIterator<'_> for WaitMovingIterator<T> {
-    fn setup(graph: &Graph) -> Self {
+impl<'a, T: ActionIterator<'a>> ActionIterator<'a> for WaitMovingIterator<'a, T> {
+    fn setup(graph: &'a Graph) -> Self {
         Self {
             iter: T::setup(graph),
             waiting_state: false,
             wait_action: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -587,7 +591,7 @@ impl<T: for<'a> ActionIterator<'a>> ActionIterator<'_> for WaitMovingIterator<T>
 ///
 /// If an energizable component (i.e., in beta_1) that is on the way is skipped in an action, it
 /// will be eliminated.
-pub struct OnWayIterator<T: for<'a> ActionIterator<'a>> {
+pub struct OnWayIterator<'a, T: ActionIterator<'a>> {
     /// Underlying iterator.
     iter: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
@@ -598,9 +602,12 @@ pub struct OnWayIterator<T: for<'a> ActionIterator<'a>> {
     /// Node (bus or initial position) at which each team is located, represented by its index.
     /// usize;:MAX if en-route.
     team_nodes: Vec<Index>,
+    /// This struct semantically stores a reference with `'a` lifetime due to wrapped
+    /// ActionIterator.
+    _phantom: std::marker::PhantomData<&'a ()>,
 }
 
-impl<T: for<'a> ActionIterator<'a>> Iterator for OnWayIterator<T> {
+impl<'a, T: ActionIterator<'a>> Iterator for OnWayIterator<'a, T> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -624,8 +631,8 @@ impl<T: for<'a> ActionIterator<'a>> Iterator for OnWayIterator<T> {
     }
 }
 
-impl<T: for<'a> ActionIterator<'a>> ActionIterator<'_> for OnWayIterator<T> {
-    fn setup(graph: &Graph) -> Self {
+impl<'a, T: ActionIterator<'a>> ActionIterator<'a> for OnWayIterator<'a, T> {
+    fn setup(graph: &'a Graph) -> Self {
         let bus_count = graph.branches.len();
         let mut on_way: Array2<Vec<Index>> = Array2::default(graph.travel_times.raw_dim());
         for (((i, j), elem), &direct) in on_way.indexed_iter_mut().zip(graph.travel_times.iter()) {
@@ -647,6 +654,7 @@ impl<T: for<'a> ActionIterator<'a>> ActionIterator<'_> for OnWayIterator<T> {
             on_way,
             energizable_buses: Vec::default(),
             team_nodes: Vec::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 

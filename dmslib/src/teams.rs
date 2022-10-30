@@ -102,14 +102,15 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
         connected[x.node] = true;
     }
 
-    let mut solgen = SolutionGenerator::new(Graph {
+    let graph = Graph {
         travel_times,
         branches,
         connected,
         pfs,
-    });
+    };
+    let mut solgen = SolutionGenerator::new(graph.branches.len());
     let generation_start_time = Instant::now();
-    solgen.explore(teams_state);
+    solgen.explore(&graph, teams_state);
     let generation_time: f64 = generation_start_time.elapsed().as_secs_f64();
     let (values, policy) = solgen.synthesize_policy();
 
@@ -122,7 +123,7 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
     let states: Array2<BusState> = solgen.bus_states;
     let teams: Array2<TeamState> = solgen.team_states;
     let transitions = solgen.transitions;
-    let travel_times = solgen.graph.travel_times;
+    let travel_times = graph.travel_times;
 
     let total_time: f64 = start_time.elapsed().as_secs_f64();
 
@@ -143,7 +144,7 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
 /// First run `explore` and then `synthesize_policy`.
 pub struct SolutionGenerator {
     /// Distribution system topology.
-    graph: Graph,
+    // graph: Graph,
     /// Matrix of bus states, each state in a row.
     bus_states: Array2<BusState>,
     /// Matrix of team states, each state in a row.
@@ -158,10 +159,8 @@ pub struct SolutionGenerator {
 
 impl SolutionGenerator {
     /// New solution structure from graph.
-    pub fn new(graph: Graph) -> SolutionGenerator {
-        let bus_count = graph.branches.len();
+    pub fn new(bus_count: usize) -> SolutionGenerator {
         SolutionGenerator {
-            graph,
             bus_states: Array2::default((0, bus_count)),
             team_states: Array2::default((0, 0)),
             state_to_index: HashMap::new(),
@@ -170,15 +169,15 @@ impl SolutionGenerator {
     }
 
     /// Explore the possible states starting from the given team state.
-    fn explore(&mut self, teams: Vec<TeamState>) {
+    fn explore(&mut self, graph: &Graph, teams: Vec<TeamState>) {
         self.team_states = Array2::default((0, teams.len()));
-        let mut index = self.index_state(&State::start_state(&self.graph, teams));
+        let mut index = self.index_state(&State::start_state(graph, teams));
         let mut explorer =
-            NaiveExplorer::<WaitMovingIterator<OnWayIterator<NaiveIterator>>>::setup(&self.graph);
-        explorer.explore_initial(self, index);
+            NaiveExplorer::<WaitMovingIterator<OnWayIterator<NaiveIterator>>>::setup(graph);
+        explorer.explore_initial(self, graph, index);
         index += 1;
         while index < self.transitions.len() {
-            explorer.explore(self, index);
+            explorer.explore(self, graph, index);
             index += 1;
         }
     }
