@@ -1,5 +1,8 @@
 use super::*;
-use crate::utils::{is_graph_cyclic, sorted_intersection, sorted_intersects};
+use crate::utils::{
+    are_indices_sorted, get_repeating_indices, is_graph_cyclic, sorted_intersection,
+    sorted_intersects,
+};
 use itertools::structs::{Combinations, CombinationsWithReplacement};
 
 #[derive(PartialEq, Debug)]
@@ -11,12 +14,15 @@ enum TeamActionState {
 
 /// Not an action iterator by itself, but holds the data required to build an iterator.
 pub struct ProtoIterator {
+    /// Each element of this list at position i will give the smallest j for which
+    /// `i` is an element of beta_j(s). j=0 is there's no such j.
+    minbeta: Vec<Index>,
     /// This vector contains the elements in the set of reachable buses with Unknown
     /// status, beta(s), in ascending order.
     target_buses: Vec<Index>,
     /// Each element of this list at position i will give the smallest j for which
     /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
-    minbeta: Vec<Index>,
+    target_minbeta: Vec<Index>,
     /// State of the teams
     team_states: Vec<TeamActionState>,
     /// Node (bus or initial position) at which each team is located, represented by its index.
@@ -35,7 +41,7 @@ impl ProtoIterator {
     /// Construct ProtoIterator from a state and graph.
     fn prepare_from_state(state: &State, graph: &Graph) -> ProtoIterator {
         let minbeta = state.minbetas(graph);
-        let (target_buses, minbeta): (Vec<Index>, Vec<Index>) = minbeta
+        let (target_buses, target_minbeta): (Vec<Index>, Vec<Index>) = minbeta
             .iter()
             .enumerate()
             .filter(|(_i, &beta)| beta != 0 && beta != usize::MAX)
@@ -80,7 +86,7 @@ impl ProtoIterator {
             .collect();
         let energizable_buses: Vec<Index> = target_buses
             .iter()
-            .zip(minbeta.iter())
+            .zip(target_minbeta.iter())
             .filter_map(|(&i, &beta)| if beta == 1 { Some(i) } else { None })
             .collect();
         let progress_satisfied = state.teams.iter().any(|team| {
@@ -91,8 +97,9 @@ impl ProtoIterator {
             }
         });
         ProtoIterator {
-            target_buses,
             minbeta,
+            target_buses,
+            target_minbeta,
             team_states,
             team_nodes,
             team_buses_target,
@@ -122,7 +129,7 @@ pub struct NaiveIterator {
     target_buses: Vec<Index>,
     /// Each element of this list at position i will give the smallest j for which
     /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
-    minbeta: Vec<Index>,
+    target_minbeta: Vec<Index>,
     /// State of the teams
     team_states: Vec<TeamActionState>,
     /// Bus at which each team is located, represented as index in target_buses.
@@ -190,7 +197,7 @@ impl NaiveIterator {
         self.progress_satisfied
             || action
                 .iter()
-                .any(|&i| i >= 0 && self.minbeta[i as usize] == 1)
+                .any(|&i| i >= 0 && self.target_minbeta[i as usize] == 1)
     }
 }
 
@@ -226,7 +233,7 @@ impl ActionIterator<'_> for NaiveIterator {
     fn setup(_graph: &Graph) -> Self {
         NaiveIterator {
             target_buses: Vec::default(),
-            minbeta: Vec::default(),
+            target_minbeta: Vec::default(),
             team_states: Vec::default(),
             team_buses_target: Vec::default(),
             progress_satisfied: false,
@@ -236,8 +243,9 @@ impl ActionIterator<'_> for NaiveIterator {
 
     fn prepare_from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
         let ProtoIterator {
+            minbeta: _,
             target_buses,
-            minbeta,
+            target_minbeta,
             team_states,
             team_nodes: _,
             team_buses_target,
@@ -245,7 +253,7 @@ impl ActionIterator<'_> for NaiveIterator {
             progress_satisfied,
         } = proto;
         self.target_buses = target_buses;
-        self.minbeta = minbeta;
+        self.target_minbeta = target_minbeta;
         self.team_states = team_states;
         self.team_buses_target = team_buses_target;
         self.progress_satisfied = progress_satisfied;
@@ -263,12 +271,12 @@ pub struct PermutationalIterator<'a> {
     /// status, beta(s), in ascending order.
     target_buses: Vec<Index>,
     /// Each element of this list at position i will give the smallest j for which
-    /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
+    /// `i` is an element of beta_j(s). j=0 is there's no such j.
     minbeta: Vec<Index>,
     /// State of the teams
     team_states: Vec<TeamActionState>,
     /// Bus at which each team is located, represented as index in target_buses.
-    /// usize;:MAX if en-route or not in target_buses.
+    /// usize;:MAX if en-route.
     team_nodes: Vec<Index>,
     /// Teams that have to move, i.e., standing on a known bus or an initial location outside bus.
     must_move_teams: Vec<usize>,
@@ -283,8 +291,8 @@ pub struct PermutationalIterator<'a> {
     progress_satisfied: bool,
     /// Currently ordered teams
     ordered_teams: Vec<usize>,
-    /// Next permutations stack
-    next_permutations: Vec<Vec<usize>>,
+    /// Stack of next actions from the permutations of last team-bus combination.
+    next_actions: Vec<Vec<TeamAction>>,
 }
 
 impl<'a> PermutationalIterator<'a> {
@@ -326,51 +334,59 @@ impl<'a> PermutationalIterator<'a> {
         if let Some(bus_combination) = self.bus_combination_iter.next() {
             // Check progress condition
             if !self.progress_satisfied && bus_combination.iter().all(|&i| self.minbeta[i] > 1) {
-                self.next_bus_combination();
+                return self.next_bus_combination();
             }
-            let team_nodes = self
+            // The node on which each ordered team is located.
+            let ordered_team_nodes = self
                 .ordered_teams
                 .iter()
                 .map(|&i| self.team_nodes[i])
                 .collect_vec();
-            // Get the intersection between team_nodes and targets
+            // Get the intersection between team_nodes and targets.
             let bus_target_intersection = sorted_intersection(
                 &bus_combination,
-                &team_nodes.iter().cloned().sorted().collect(),
+                &ordered_team_nodes.iter().cloned().sorted().collect(),
             );
+            let repeating_indices = get_repeating_indices(&bus_combination);
 
             // Permutation iterator
-            let permutations = bus_combination
-                .into_iter()
+            let permutations = (0..self.ordered_teams.len())
                 .permutations(self.ordered_teams.len())
-                .collect_vec();
-            // Whether each permutation is eliminated
-            let mut eliminated: Vec<bool> = vec![false; permutations.len()];
-
-            // Check cycles (teams changing buses with each other)
-            if bus_target_intersection.len() > 1 {
-                for (i, permutation) in permutations.iter().enumerate() {
-                    let edges: Vec<(usize, usize)> = team_nodes
-                        .iter()
-                        .cloned()
-                        .zip(permutation.iter().cloned())
-                        .filter_map(|(a, b)| {
-                            let a = bus_target_intersection.binary_search(&a);
-                            let b = bus_target_intersection.binary_search(&b);
-                            match (a, b) {
-                                (Ok(x), Ok(y)) => Some((x, y)),
-                                _ => None,
-                            }
-                        })
-                        .sorted()
-                        .collect();
-                    if is_graph_cyclic(bus_target_intersection.len(), &edges) {
-                        eliminated[i] = true;
+                .filter(|permutation| {
+                    // Remove the permutations that are equivalent due to repeating elements in
+                    // combination.
+                    if !are_indices_sorted(permutation, &repeating_indices) {
+                        return false;
                     }
-                }
-            }
+                    // Check cycles (teams changing buses with each other)
+                    // There cannot be cycles if intersection is not greater than 1.
+                    if bus_target_intersection.len() > 1 {
+                        let edges: Vec<(usize, usize)> = permutation
+                            .iter()
+                            .cloned()
+                            .zip(bus_combination.iter().cloned())
+                            .filter_map(|(a, b)| {
+                                let a = ordered_team_nodes[a];
+                                let a = bus_target_intersection.binary_search(&a);
+                                let b = bus_target_intersection.binary_search(&b);
+                                match (a, b) {
+                                    (Ok(x), Ok(y)) => Some((x, y)),
+                                    _ => None,
+                                }
+                            })
+                            .sorted()
+                            .collect();
+                        if is_graph_cyclic(bus_target_intersection.len(), &edges) {
+                            return false;
+                        }
+                    }
+                    true
+                })
+                .collect_vec();
 
             // Compare each permutation
+            // Whether each permutation is eliminated
+            let mut eliminated: Vec<bool> = vec![false; permutations.len()];
             for i in 0..permutations.len() {
                 if eliminated[i] {
                     continue;
@@ -379,15 +395,15 @@ impl<'a> PermutationalIterator<'a> {
                     if eliminated[j] {
                         continue;
                     }
-                    let a = team_nodes
+                    let a = permutations[i]
                         .iter()
-                        .zip(permutations[i].iter())
-                        .map(|(&x, &y)| self.travel_times[[x, y]])
+                        .zip(bus_combination.iter())
+                        .map(|(&x, &y)| self.travel_times[[ordered_team_nodes[x], y]])
                         .collect_vec();
-                    let b = team_nodes
+                    let b = permutations[j]
                         .iter()
-                        .zip(permutations[j].iter())
-                        .map(|(&x, &y)| self.travel_times[[x, y]])
+                        .zip(bus_combination.iter())
+                        .map(|(&x, &y)| self.travel_times[[ordered_team_nodes[x], y]])
                         .collect_vec();
                     let mut all_smaller_eq = true;
                     let mut all_greater_eq = true;
@@ -412,19 +428,30 @@ impl<'a> PermutationalIterator<'a> {
                 }
             }
 
-            self.next_permutations = eliminated
+            let action_template = self
+                .team_states
+                .iter()
+                .map(|s| match s {
+                    TeamActionState::EnRoute => CONTINUE_ACTION,
+                    _ => WAIT_ACTION,
+                })
+                .collect_vec();
+            self.next_actions = eliminated
                 .into_iter()
                 .rev()
                 .zip(permutations.into_iter().rev())
-                .filter_map(
-                    |(eliminated, permutation)| {
-                        if eliminated {
-                            None
-                        } else {
-                            Some(permutation)
+                .filter_map(|(eliminated, permutation)| {
+                    if eliminated {
+                        None
+                    } else {
+                        let mut action = action_template.clone();
+                        for (&perm_i, &bus) in permutation.iter().zip(bus_combination.iter()) {
+                            let team_index = self.ordered_teams[perm_i];
+                            action[team_index] = bus as TeamAction;
                         }
-                    },
-                )
+                        Some(action)
+                    }
+                })
                 .collect_vec();
             true
         } else {
@@ -432,7 +459,7 @@ impl<'a> PermutationalIterator<'a> {
         }
     }
 
-    /// Called when self.next_permutations is empty. Changes bus or team combination.
+    /// Called when self.next_actions is empty. Changes bus or team combination.
     fn get_next_permutations(&mut self) -> bool {
         if self.next_bus_combination() || self.next_team_combination() {
             true
@@ -449,18 +476,7 @@ impl<'a> Iterator for PermutationalIterator<'a> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(next) = self.next_permutations.pop() {
-            let mut action = self
-                .team_states
-                .iter()
-                .map(|s| match s {
-                    TeamActionState::EnRoute => CONTINUE_ACTION,
-                    _ => WAIT_ACTION,
-                })
-                .collect_vec();
-            for (&team_index, &target) in self.ordered_teams.iter().zip(next.iter()) {
-                action[team_index] = target as TeamAction;
-            }
+        if let Some(action) = self.next_actions.pop() {
             Some(action)
         } else if self.get_next_permutations() {
             self.next()
@@ -485,14 +501,15 @@ impl<'a> ActionIterator<'a> for PermutationalIterator<'a> {
             bus_combination_iter: Vec::default().into_iter().combinations_with_replacement(0),
             progress_satisfied: false,
             ordered_teams: Vec::default(),
-            next_permutations: Vec::default(),
+            next_actions: Vec::default(),
         }
     }
 
     fn prepare_from_proto(&mut self, proto: ProtoIterator, _state: &State) -> &mut Self {
         let ProtoIterator {
-            target_buses,
             minbeta,
+            target_buses,
+            target_minbeta: _,
             team_states,
             team_nodes,
             team_buses_target: _,

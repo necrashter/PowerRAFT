@@ -145,6 +145,50 @@ pub fn is_graph_cyclic(vertex_count: usize, edges: &Vec<(usize, usize)>) -> bool
     false
 }
 
+/// Given a vector and ordered list of indices for that vector, checks whether all elements in the
+/// given indices are sorted in ascending order (equality accepted).
+///
+/// Panics if an invalid index is given.
+pub fn are_indices_sorted<T: Ord>(v: &[T], indices: &Vec<usize>) -> bool {
+    if indices.len() <= 1 {
+        return true;
+    }
+    let mut last = &v[indices[0]];
+    for &index in indices.iter().skip(1) {
+        let current = &v[index];
+        if current < last {
+            return false;
+        }
+        last = current;
+    }
+    true
+}
+
+/// Returns the indices of elements that are repeating in a continuous sequence.
+/// For example, `1,1,1` is considered but `1,2,1` is ignored.
+pub fn get_repeating_indices<T: PartialEq>(v: &[T]) -> Vec<usize> {
+    let mut out: Vec<usize> = Vec::new();
+    if v.len() <= 1 {
+        return out;
+    }
+    out.reserve_exact(v.len());
+    let mut last_added = false;
+    let mut last = &v[0];
+    for (i, current) in v.iter().enumerate().skip(1) {
+        if current == last {
+            if !last_added {
+                out.push(i - 1);
+            }
+            out.push(i);
+            last_added = true;
+        } else {
+            last_added = false;
+        }
+        last = current;
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,5 +258,44 @@ mod tests {
         assert_eq!(is_graph_cyclic(4, &vec![(0, 1), (1, 2), (2, 3)]), false);
         assert_eq!(is_graph_cyclic(3, &vec![(0, 0)]), true);
         assert_eq!(is_graph_cyclic(3, &vec![]), false);
+    }
+
+    #[test]
+    fn are_indices_sorted_test() {
+        assert_eq!(are_indices_sorted(&vec![0], &vec![0]), true,);
+        assert_eq!(
+            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![1, 2, 4]),
+            true,
+        );
+        assert_eq!(
+            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![0, 1]),
+            false,
+        );
+        assert_eq!(
+            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![1, 2, 3]),
+            false,
+        );
+    }
+
+    #[test]
+    fn get_repeating_indices_test() {
+        assert_eq!(
+            get_repeating_indices(&Vec::<usize>::new()),
+            Vec::<usize>::new(),
+        );
+        assert_eq!(get_repeating_indices(&vec![1]), Vec::<usize>::new(),);
+        assert_eq!(
+            get_repeating_indices(&vec![1, 2, 3, 4, 5, 4]),
+            Vec::<usize>::new(),
+        );
+        assert_eq!(
+            get_repeating_indices(&vec![1, 2, 3, 3, 3, 4]),
+            vec![2, 3, 4],
+        );
+        assert_eq!(get_repeating_indices(&vec![0, 0, 0, 0]), vec![0, 1, 2, 3],);
+        assert_eq!(
+            get_repeating_indices(&vec![1, 2, 3, 3, 3, 4, 1, 1, 1, 1]),
+            vec![2, 3, 4, 6, 7, 8, 9],
+        );
     }
 }
