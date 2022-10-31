@@ -101,6 +101,35 @@ fn on_energized_bus_actions() {
     let mut iter = WaitMovingIterator::<OnWayIterator<NaiveIterator>>::setup(&graph);
     let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
+
+    let expected_actions: Vec<Vec<TeamAction>> = vec![
+        vec![1, 1],
+        vec![1, 2],
+        vec![1, 4],
+        vec![1, 5],
+        vec![4, 4],
+        vec![2, 4],
+        vec![5, 4],
+    ];
+
+    let mut iter = PermutationalIterator::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let mut iter = WaitMovingIterator::<PermutationalIterator>::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let expected_actions: Vec<Vec<TeamAction>> =
+        vec![vec![1, 1], vec![1, 2], vec![1, 4], vec![4, 4], vec![5, 4]];
+
+    let mut iter = OnWayIterator::<PermutationalIterator>::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
+
+    let mut iter = WaitMovingIterator::<OnWayIterator<PermutationalIterator>>::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    check_sets(&actions, &expected_actions);
 }
 
 #[test]
@@ -235,4 +264,37 @@ fn minimal_nonopt_permutations() {
     let mut iter = OnWayIterator::<WaitMovingIterator<PermutationalIterator>>::setup(&graph);
     let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
     check_sets(&actions, &expected_actions);
+}
+
+#[test]
+fn eliminating_cycle_permutations() {
+    let graph = get_paper_example_graph();
+    let buses: Vec<BusState> = vec![
+        BusState::Energized,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Energized,
+        BusState::Energized,
+        BusState::Unknown,
+    ];
+    // Note that this is not reachable during normal operation except for the initial state (a team
+    // positioned on energizable bus), but it is enough for a quick test.
+    let teams: Vec<TeamState> = vec![
+        TeamState::OnBus(0),
+        TeamState::OnBus(2),
+        TeamState::OnBus(5),
+    ];
+    let state = State { buses, teams };
+
+    let eliminated_action = vec![1, 5, 2];
+
+    let mut iter = NaiveIterator::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    assert!(actions.contains(&eliminated_action));
+
+    let mut iter = PermutationalIterator::setup(&graph);
+    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    assert!(!actions.contains(&eliminated_action));
+
+    // TODO: PermutationalIterator sends a team to itself
 }
