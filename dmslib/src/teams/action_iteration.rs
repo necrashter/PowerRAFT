@@ -358,6 +358,12 @@ impl<'a> PermutationalIterator<'a> {
                     if !are_indices_sorted(permutation, &repeating_indices) {
                         return false;
                     }
+                    // Remove the permutations that send a team to the bus on which it's located.
+                    for (&team_index, &target) in permutation.iter().zip(bus_combination.iter()) {
+                        if ordered_team_nodes[team_index] == target {
+                            return false;
+                        }
+                    }
                     // Check cycles (teams changing buses with each other)
                     // There cannot be cycles if intersection is not greater than 1.
                     if bus_target_intersection.len() > 1 {

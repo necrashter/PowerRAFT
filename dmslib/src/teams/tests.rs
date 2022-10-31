@@ -291,10 +291,18 @@ fn eliminating_cycle_permutations() {
     let mut iter = NaiveIterator::setup(&graph);
     let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
     assert!(actions.contains(&eliminated_action));
+    for action in &actions {
+        // Ensure that no team is sent to the bus on which it's standing
+        assert_ne!(action[1], 2);
+        assert_ne!(action[2], 5);
+    }
 
     let mut iter = PermutationalIterator::setup(&graph);
     let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
     assert!(!actions.contains(&eliminated_action));
-
-    // TODO: PermutationalIterator sends a team to itself
+    for action in &actions {
+        // Ensure that no team is sent to the bus on which it's standing
+        assert_ne!(action[1], 2);
+        assert_ne!(action[2], 5);
+    }
 }
