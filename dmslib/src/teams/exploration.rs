@@ -1,12 +1,12 @@
 use super::*;
 
 /// Generic trait for the functions that explore the actions of a given state.
-pub trait Explorer<'a, T: ActionIterator<'a>> {
+pub trait Explorer<'a, T: ActionIterator<'a>, TransitionType: Transition> {
     /// Explore the possible states starting from the given team state.
     fn explore(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-    ) -> (StateIndexer, Vec<Vec<Vec<Transition>>>);
+    ) -> (StateIndexer, Vec<Vec<Vec<TransitionType>>>);
 }
 
 /// Naive action explorer.
@@ -20,7 +20,7 @@ pub struct NaiveExplorer<'a, T: ActionIterator<'a>> {
     /// 3D vector of transitions:
     /// - `transitions[i]`: Actions of state i
     /// - `transitions[i][j]`: Transitions of action j in state i
-    transitions: Vec<Vec<Vec<Transition>>>,
+    transitions: Vec<Vec<Vec<RegularTransition>>>,
 }
 
 impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
@@ -35,8 +35,8 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
             None,
             "Energization succeeded at the start of a non-initial state"
         );
-        let action_transitions: Vec<Vec<Transition>> = if state.is_terminal(self.graph) {
-            vec![vec![Transition {
+        let action_transitions: Vec<Vec<RegularTransition>> = if state.is_terminal(self.graph) {
+            vec![vec![RegularTransition {
                 successor: index,
                 p: 1.0,
                 cost,
@@ -54,7 +54,7 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
                                 buses: bus_state,
                             };
                             let successor_index = self.states.index_state(&successor_state);
-                            Transition {
+                            RegularTransition {
                                 successor: successor_index,
                                 p,
                                 cost,
@@ -78,8 +78,8 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
     fn explore_initial(&mut self, index: usize) {
         let state = self.states.get_state(index);
         let cost = state.get_cost();
-        let action_transitions: Vec<Vec<Transition>> = if state.is_terminal(self.graph) {
-            vec![vec![Transition {
+        let action_transitions: Vec<Vec<RegularTransition>> = if state.is_terminal(self.graph) {
+            vec![vec![RegularTransition {
                 successor: index,
                 p: 1.0,
                 cost,
@@ -93,7 +93,7 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
                         buses: bus_state,
                     };
                     let successor_index = self.states.index_state(&successor_state);
-                    Transition {
+                    RegularTransition {
                         successor: successor_index,
                         p,
                         cost: 0.0,
@@ -113,7 +113,7 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
                                 buses: bus_state,
                             };
                             let successor_index = self.states.index_state(&successor_state);
-                            Transition {
+                            RegularTransition {
                                 successor: successor_index,
                                 p,
                                 cost,
@@ -129,11 +129,11 @@ impl<'a, T: ActionIterator<'a>> NaiveExplorer<'a, T> {
     }
 }
 
-impl<'a, T: ActionIterator<'a>> Explorer<'a, T> for NaiveExplorer<'a, T> {
+impl<'a, T: ActionIterator<'a>> Explorer<'a, T, RegularTransition> for NaiveExplorer<'a, T> {
     fn explore(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-    ) -> (StateIndexer, Vec<Vec<Vec<Transition>>>) {
+    ) -> (StateIndexer, Vec<Vec<Vec<RegularTransition>>>) {
         let mut explorer = NaiveExplorer {
             iterator: T::setup(graph),
             graph,

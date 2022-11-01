@@ -3,8 +3,11 @@ use ndarray::Array1;
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 
-/// Represents a possible transition as a result of an action.
-pub struct Transition {
+/// Marker trait for all structs that represent state transitions.
+pub trait Transition: Serialize {}
+
+/// A regular MDP transition with probability and cost.
+pub struct RegularTransition {
     /// Index of the successor state.
     pub successor: usize,
     /// Probability of this transition.
@@ -14,7 +17,9 @@ pub struct Transition {
     pub cost: f64,
 }
 
-impl Serialize for Transition {
+impl Transition for RegularTransition {}
+
+impl Serialize for RegularTransition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -32,7 +37,9 @@ impl Serialize for Transition {
 /// Must be run after running `explore`, i.e., state space must not be empty.
 ///
 /// Returns a pair containing action values and index of optimal action in each state.
-pub fn synthesize_policy(transitions: &Vec<Vec<Vec<Transition>>>) -> (Vec<Vec<f64>>, Vec<usize>) {
+pub fn synthesize_policy(
+    transitions: &Vec<Vec<Vec<RegularTransition>>>,
+) -> (Vec<Vec<f64>>, Vec<usize>) {
     assert!(
         !transitions.is_empty(),
         "States must be non-empty during policy synthesis"

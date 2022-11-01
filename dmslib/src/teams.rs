@@ -156,7 +156,7 @@ pub struct Solution {
     /// Array of actions for each state, each entry containing a list of transitions
     /// This has to be triple Vec because each state has arbitrary number of actions and each
     /// action has arbitrary number of transitions.
-    pub transitions: Vec<Vec<Vec<Transition>>>,
+    pub transitions: Vec<Vec<Vec<RegularTransition>>>,
 
     /// Value function for each action.
     pub values: Vec<Vec<f64>>,
