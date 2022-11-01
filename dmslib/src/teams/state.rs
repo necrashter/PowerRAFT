@@ -314,17 +314,6 @@ impl std::hash::Hash for State {
     }
 }
 
-/// Represents a possible transition as a result of an action.
-pub struct Transition {
-    /// Index of the successor state.
-    pub successor: usize,
-    /// Probability of this transition.
-    /// The probabilities of all transitions of an action should add up to 1.
-    pub p: f64,
-    /// Cost that incurs when this transition is taken.
-    pub cost: f64,
-}
-
 impl Serialize for TeamState {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -361,16 +350,57 @@ impl Serialize for BusState {
     }
 }
 
-impl Serialize for Transition {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(4))?;
-        seq.serialize_element(&self.successor)?;
-        seq.serialize_element(&self.p)?;
-        seq.serialize_element(&self.cost)?;
-        seq.serialize_element(&1)?;
-        seq.end()
+/// A struct for indexing the explored states of a team-based restoration problem.
+pub struct StateIndexer {
+    /// Number of states.
+    pub state_count: usize,
+    /// Matrix of bus states, each state in a row.
+    bus_states: Array2<BusState>,
+    /// Matrix of team states, each state in a row.
+    team_states: Array2<TeamState>,
+    /// Reverse index
+    state_to_index: HashMap<State, usize>,
+}
+
+impl StateIndexer {
+    /// New solution structure from graph.
+    pub fn new(bus_count: usize, team_count: usize) -> StateIndexer {
+        StateIndexer {
+            state_count: 0,
+            bus_states: Array2::default((0, bus_count)),
+            team_states: Array2::default((0, team_count)),
+            state_to_index: HashMap::new(),
+        }
+    }
+
+    /// Get the index of given state, adding it to the hasmap when necessary.
+    pub fn index_state(&mut self, s: &State) -> usize {
+        match self.state_to_index.get(s) {
+            Some(i) => *i,
+            None => {
+                let i = self.state_count;
+                self.state_count += 1;
+                self.bus_states
+                    .push_row(ndarray::ArrayView::from(&s.buses))
+                    .unwrap();
+                self.team_states
+                    .push_row(ndarray::ArrayView::from(&s.teams))
+                    .unwrap();
+                self.state_to_index.insert(s.clone(), i);
+                i
+            }
+        }
+    }
+
+    /// Get the state at given index.
+    pub fn get_state(&self, index: usize) -> State {
+        State {
+            buses: self.bus_states.row(index).to_vec(),
+            teams: self.team_states.row(index).to_vec(),
+        }
+    }
+
+    pub fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
+        (self.bus_states, self.team_states)
     }
 }
