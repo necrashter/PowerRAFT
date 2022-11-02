@@ -8,6 +8,7 @@ use state::*;
 
 use crate::policy::*;
 use crate::webclient;
+use crate::{Index, Time};
 
 use itertools::Itertools;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -16,11 +17,6 @@ use std::time::Instant;
 
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Serialize, Serializer};
-
-/// Data type for bus indices.
-pub type Index = usize;
-/// Data type for measuring time.
-pub type Time = usize;
 
 /// Represents the actions of a single team.
 /// Wait: -1 (WAIT_ACTION constant), Continue: -2 (CONTINUE_ACTION constant), Move: index of the bus.

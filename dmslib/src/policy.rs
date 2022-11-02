@@ -1,4 +1,6 @@
 //! Contains methods and utilities for policy synthesis.
+use crate::Time;
+
 use ndarray::Array1;
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
@@ -60,6 +62,62 @@ impl Serialize for RegularTransition {
         seq.serialize_element(&self.p)?;
         seq.serialize_element(&self.cost)?;
         seq.serialize_element(&1)?;
+        seq.end()
+    }
+}
+
+/// A regular MDP transition with probability and cost.
+pub struct TimedTransition {
+    /// Index of the successor state.
+    pub successor: usize,
+    /// Probability of this transition.
+    /// The probabilities of all transitions of an action should add up to 1.
+    pub p: f64,
+    /// Cost that incurs when this transition is taken.
+    pub cost: f64,
+    /// Passed time when this transition is taken.
+    pub time: Time,
+}
+
+impl Transition for TimedTransition {
+    #[inline]
+    fn terminal_transition(index: usize, cost: f64) -> Self {
+        Self {
+            successor: index,
+            p: 1.0,
+            cost,
+            time: 1,
+        }
+    }
+
+    #[inline]
+    fn costless_transition(index: usize, p: f64) -> Self {
+        Self {
+            successor: index,
+            p,
+            cost: 0.0,
+            // Not sure about this one, it might be also 0.
+            // TODO: Look into this after implementing timed policy synthesis.
+            time: 1,
+        }
+    }
+
+    #[inline]
+    fn set_successor(&mut self, index: usize) {
+        self.successor = index;
+    }
+}
+
+impl Serialize for TimedTransition {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(4))?;
+        seq.serialize_element(&self.successor)?;
+        seq.serialize_element(&self.p)?;
+        seq.serialize_element(&self.cost)?;
+        seq.serialize_element(&self.time)?;
         seq.end()
     }
 }
@@ -126,4 +184,49 @@ pub fn synthesize_policy(
         policy[i] = optimal_action;
     }
     (state_action_values, policy)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn transition_traits_test() {
+        macro_rules! test_trait_funcs {
+            ($a:ty) => {{
+                let transition = <$a>::terminal_transition(2, 6.0);
+                assert_eq!(transition.cost, 6.0);
+                assert_eq!(transition.p, 1.0);
+                assert_eq!(transition.successor, 2);
+                let mut transition = <$a>::costless_transition(2, 0.5);
+                assert_eq!(transition.cost, 0.0);
+                assert_eq!(transition.p, 0.5);
+                assert_eq!(transition.successor, 2);
+                transition.set_successor(20);
+                assert_eq!(transition.successor, 20);
+            }};
+        }
+        test_trait_funcs!(RegularTransition);
+        test_trait_funcs!(TimedTransition);
+    }
+
+    #[test]
+    fn transition_serialization() {
+        let t = RegularTransition {
+            successor: 2,
+            p: 0.5,
+            cost: 6.0,
+        };
+
+        assert_eq!(serde_json::to_string(&t).unwrap(), "[2,0.5,6.0,1]");
+
+        let t = TimedTransition {
+            successor: 2,
+            p: 0.5,
+            cost: 6.0,
+            time: 12,
+        };
+
+        assert_eq!(serde_json::to_string(&t).unwrap(), "[2,0.5,6.0,12]");
+    }
 }
