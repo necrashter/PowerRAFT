@@ -36,87 +36,111 @@ pub struct Graph {
     pfs: Array1<f64>,
 }
 
-/// Convert webclient types to teams problem.
-pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Solution, String> {
-    let start_time = Instant::now();
+/// Represents a field teams restoration problem.
+/// Convert your [`webclient::Graph`] to this form with an initial team state and call [`solve`].
+pub struct Problem {
+    graph: Graph,
+    initial_teams: Vec<TeamState>,
+    team_nodes: Array2<f64>,
+}
 
-    let mut locations: Vec<webclient::LatLng> =
-        graph.nodes.iter().map(|node| node.latlng.clone()).collect();
-    let pfs: Array1<f64> = graph.nodes.iter().map(|node| node.pf).collect();
+impl webclient::Graph {
+    /// Convert this graph for solving a restoration problem with teams.
+    pub fn to_teams_problem(self, teams: Vec<webclient::Team>) -> Result<Problem, String> {
+        let mut locations: Vec<webclient::LatLng> =
+            self.nodes.iter().map(|node| node.latlng.clone()).collect();
+        let pfs: Array1<f64> = self.nodes.iter().map(|node| node.pf).collect();
 
-    for (i, team) in teams.iter().enumerate() {
-        if team.index.is_none() && team.latlng.is_none() {
-            return Err(format!("Team {i} has neither index nor latlng!"));
-        }
-    }
-
-    for res in graph.resources.iter() {
-        if res.kind.is_some() {
-            return Err(String::from(
-                "Only transmission grid is supported for teams!",
-            ));
-        }
-    }
-
-    let teams_state: Vec<TeamState> = teams
-        .into_iter()
-        .map(|t| {
-            if let Some(i) = t.index {
-                TeamState::OnBus(i)
-            } else {
-                let i = locations.len();
-                // We did error checking above
-                locations.push(t.latlng.as_ref().unwrap().clone());
-                TeamState::OnBus(i)
+        for (i, team) in teams.iter().enumerate() {
+            if team.index.is_none() && team.latlng.is_none() {
+                return Err(format!("Team {i} has neither index nor latlng!"));
             }
-        })
-        .collect();
-
-    let lnodes = locations.len();
-    let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
-
-    for (i1, l1) in locations.iter().enumerate() {
-        for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
-            let time = l1.distance_to(l2).ceil() as Time;
-            travel_times[(i1, i2)] = time;
-            travel_times[(i2, i1)] = time;
         }
+
+        for res in self.resources.iter() {
+            if res.kind.is_some() {
+                return Err(String::from(
+                    "Only transmission grid is supported for teams!",
+                ));
+            }
+        }
+
+        let initial_teams: Vec<TeamState> = teams
+            .into_iter()
+            .map(|t| {
+                if let Some(i) = t.index {
+                    TeamState::OnBus(i)
+                } else {
+                    let i = locations.len();
+                    // We did error checking above
+                    locations.push(t.latlng.as_ref().unwrap().clone());
+                    TeamState::OnBus(i)
+                }
+            })
+            .collect();
+
+        let lnodes = locations.len();
+        let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
+
+        for (i1, l1) in locations.iter().enumerate() {
+            for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
+                let time = l1.distance_to(l2).ceil() as Time;
+                travel_times[(i1, i2)] = time;
+                travel_times[(i2, i1)] = time;
+            }
+        }
+
+        let mut branches = vec![Vec::new(); self.nodes.len()];
+
+        for branch in self.branches.iter() {
+            let a = branch.nodes.0;
+            let b = branch.nodes.1;
+            // TODO: throw error on duplicate branch?
+            branches[a].push(b);
+            branches[b].push(a);
+        }
+
+        let mut connected: Vec<bool> = vec![false; self.nodes.len()];
+
+        for x in self.external.iter() {
+            connected[x.node] = true;
+        }
+
+        let graph = Graph {
+            travel_times,
+            branches,
+            connected,
+            pfs,
+        };
+
+        let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
+        for (i, location) in locations.into_iter().enumerate() {
+            team_nodes[(i, 0)] = location.0;
+            team_nodes[(i, 1)] = location.1;
+        }
+
+        Ok(Problem {
+            graph,
+            initial_teams,
+            team_nodes,
+        })
     }
+}
 
-    let mut branches = vec![Vec::new(); graph.nodes.len()];
-
-    for branch in graph.branches.iter() {
-        let a = branch.nodes.0;
-        let b = branch.nodes.1;
-        // TODO: throw error on duplicate branch?
-        branches[a].push(b);
-        branches[b].push(a);
-    }
-
-    let mut connected: Vec<bool> = vec![false; graph.nodes.len()];
-
-    for x in graph.external.iter() {
-        connected[x.node] = true;
-    }
-
-    let graph = Graph {
-        travel_times,
-        branches,
-        connected,
-        pfs,
-    };
+#[inline]
+fn solve(problem: Problem) -> Result<Solution, String> {
+    let start_time = Instant::now();
+    let Problem {
+        graph,
+        initial_teams,
+        team_nodes,
+    } = problem;
     let generation_start_time = Instant::now();
     let (states, transitions) = NaiveExplorer::<NaiveIterator, RegularTransition>::explore::<
         NaiveActionApplier,
-    >(&graph, teams_state);
+    >(&graph, initial_teams);
     let generation_time: f64 = generation_start_time.elapsed().as_secs_f64();
     let (values, policy) = NaivePolicySynthesizer::synthesize_policy(&transitions, 30);
-
-    let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
-    for (i, location) in locations.into_iter().enumerate() {
-        team_nodes[(i, 0)] = location.0;
-        team_nodes[(i, 1)] = location.1;
-    }
 
     let (states, teams) = states.deconstruct();
     let travel_times = graph.travel_times;
@@ -134,6 +158,12 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
         values,
         policy,
     })
+}
+
+impl Problem {
+    pub fn solve(self) -> Result<Solution, String> {
+        solve(self)
+    }
 }
 
 pub struct Solution {

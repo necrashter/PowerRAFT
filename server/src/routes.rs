@@ -27,7 +27,7 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
         .and(warp::body::content_length_limit(1024 * 1024))
         .and(warp::body::json())
         .map(|req: serde_json::Value| {
-            dbg!(&req);
+            // dbg!(&req);
             let graph: dmslib::webclient::Graph = if let Some(field) = req.get("graph") {
                 match serde_json::from_value(field.clone()) {
                     Ok(v) => v,
@@ -53,10 +53,17 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                     StatusCode::BAD_REQUEST,
                 );
             };
-            let solution = match dmslib::teams::solve(graph, teams) {
+            let problem = match graph.to_teams_problem(teams) {
                 Ok(x) => x,
                 Err(e) => {
-                    let error = format!("Error while generating solution: {e}");
+                    let error = format!("Error while parsing problem: {e}");
+                    return reply::with_status(reply::json(&error), StatusCode::BAD_REQUEST);
+                }
+            };
+            let solution = match problem.solve() {
+                Ok(x) => x,
+                Err(e) => {
+                    let error = format!("Error while solving the field-teams problem: {e}");
                     return reply::with_status(reply::json(&error), StatusCode::BAD_REQUEST);
                 }
             };
