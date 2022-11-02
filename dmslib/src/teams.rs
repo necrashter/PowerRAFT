@@ -1,3 +1,4 @@
+//! Module for solving field teams restoration problem.
 mod action_iteration;
 mod exploration;
 mod state;
@@ -37,7 +38,7 @@ pub struct Graph {
 }
 
 /// Represents a field teams restoration problem.
-/// Convert your [`webclient::Graph`] to this form with an initial team state and call [`solve`].
+/// Convert your [`webclient::Graph`] to this form with an initial team state and call [`Problem::solve`].
 pub struct Problem {
     graph: Graph,
     initial_teams: Vec<TeamState>,
@@ -161,11 +162,15 @@ fn solve(problem: Problem) -> Result<Solution, String> {
 }
 
 impl Problem {
+    /// Generate a solution for this field teams restoration problem.
+    /// Returns `Ok(Solution)` if successful. `Err(String)` with the error string if there was an
+    /// error.
     pub fn solve(self) -> Result<Solution, String> {
         solve(self)
     }
 }
 
+/// Stores the solution for a field teams restoration [`Problem`].
 pub struct Solution {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,

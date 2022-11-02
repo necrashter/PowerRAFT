@@ -1,5 +1,3 @@
-//! # Web Client
-//!
 //! This module contains structs to serialize and deserialize web client representation of graphs.
 use serde::{Deserialize, Serialize};
 
