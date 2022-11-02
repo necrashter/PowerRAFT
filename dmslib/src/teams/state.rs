@@ -1,5 +1,8 @@
 use super::*;
 
+#[cfg(test)]
+mod tests;
+
 /// State of a single team. Use a `Vec` to represent multiple teams.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum TeamState {
@@ -356,6 +359,78 @@ impl StateIndexer {
     }
 }
 
+/// Get the minimum amount of time until a team arrives when the teams are ordered with the given
+/// action.
+fn min_time_until_arrival(
+    graph: &Graph,
+    teams: &[TeamState],
+    actions: &[TeamAction],
+) -> Option<Time> {
+    teams
+        .iter()
+        .zip(actions.iter())
+        .filter_map(|(team, &action)| match team {
+            TeamState::OnBus(source) => {
+                if action == WAIT_ACTION {
+                    None
+                } else {
+                    debug_assert!(action != CONTINUE_ACTION);
+                    let dest = action as usize;
+                    let travel_time = graph.travel_times[(*source, dest)];
+                    Some(travel_time)
+                }
+            }
+            TeamState::EnRoute(source, dest, t) => {
+                debug_assert!(action == CONTINUE_ACTION);
+                let travel_time = graph.travel_times[(*source, *dest)];
+                Some(travel_time - t)
+            }
+        })
+        .min()
+}
+
+/// Advance time for the teams when the given action is ordered.
+#[inline]
+fn advance_time_for_teams(
+    graph: &Graph,
+    teams: &[TeamState],
+    actions: &[TeamAction],
+    time: usize,
+) -> Vec<TeamState> {
+    teams
+        .iter()
+        .zip(actions.iter())
+        .map(|(team, &action)| {
+            let team = team.clone();
+            match team {
+                TeamState::OnBus(source) => {
+                    if action == WAIT_ACTION {
+                        TeamState::OnBus(source)
+                    } else {
+                        debug_assert!(action != CONTINUE_ACTION);
+                        let dest = action as usize;
+                        let travel_time = graph.travel_times[(source, dest)];
+                        if time >= travel_time {
+                            TeamState::OnBus(dest)
+                        } else {
+                            TeamState::EnRoute(source, dest, time)
+                        }
+                    }
+                }
+                TeamState::EnRoute(source, dest, t) => {
+                    debug_assert!(action == CONTINUE_ACTION);
+                    let travel_time = graph.travel_times[(source, dest)];
+                    if time + t >= travel_time {
+                        TeamState::OnBus(dest)
+                    } else {
+                        TeamState::EnRoute(source, dest, t + time)
+                    }
+                }
+            }
+        })
+        .collect()
+}
+
 /// Trait that contains methods to apply given actions at a given state.
 /// The resulting transitions will have TransitionType.
 pub trait ActionApplier<TransitionType: Transition> {
@@ -382,41 +457,7 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
         actions: &[TeamAction],
     ) -> Vec<(RegularTransition, State)> {
         debug_assert_eq!(actions.len(), state.teams.len());
-        // New team state
-        let teams: Vec<TeamState> = state
-            .teams
-            .iter()
-            .zip(actions.iter())
-            .map(|(team, action)| {
-                let team = team.clone();
-                let action = *action;
-                match team {
-                    TeamState::OnBus(source) => {
-                        if action == WAIT_ACTION {
-                            TeamState::OnBus(source)
-                        } else {
-                            debug_assert!(action != CONTINUE_ACTION);
-                            let dest = action as usize;
-                            let travel_time = graph.travel_times[(source, dest)];
-                            if travel_time == 1 {
-                                TeamState::OnBus(dest)
-                            } else {
-                                TeamState::EnRoute(source, dest, 1)
-                            }
-                        }
-                    }
-                    TeamState::EnRoute(source, dest, t) => {
-                        debug_assert!(action == CONTINUE_ACTION);
-                        let travel_time = graph.travel_times[(source, dest)];
-                        if travel_time - t == 1 {
-                            TeamState::OnBus(dest)
-                        } else {
-                            TeamState::EnRoute(source, dest, t + 1)
-                        }
-                    }
-                }
-            })
-            .collect();
+        let teams = advance_time_for_teams(graph, &state.teams, actions, 1);
         recursive_energization(graph, &teams, state.buses.clone())
             .into_iter()
             .map(|(p, bus_state)| {
@@ -424,6 +465,45 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
                     successor: usize::MAX,
                     p,
                     cost,
+                };
+                let successor_state = State {
+                    teams: teams.clone(),
+                    buses: bus_state,
+                };
+                (transition, successor_state)
+            })
+            .collect()
+    }
+}
+
+/// Simple action applier that takes time into consideration.
+/// Determines the minimum amount of time until a team reaches its destination and advances time
+/// accordingly. Returns `TimedTransition`s.
+pub struct TimedActionApplier;
+
+impl ActionApplier<TimedTransition> for TimedActionApplier {
+    #[inline]
+    fn apply(
+        state: &State,
+        cost: f64,
+        graph: &Graph,
+        actions: &[TeamAction],
+    ) -> Vec<(TimedTransition, State)> {
+        debug_assert_eq!(actions.len(), state.teams.len());
+        // Get minimum time until a team reaches its destination.
+        // NOTE: if there's no minimum time, it means that all teams are waiting, which shouldn't
+        // happen.
+        let time: Time = min_time_until_arrival(graph, &state.teams, actions)
+            .expect("Cannot get minimum time in TimedActionApplier");
+        let teams = advance_time_for_teams(graph, &state.teams, actions, time);
+        recursive_energization(graph, &teams, state.buses.clone())
+            .into_iter()
+            .map(|(p, bus_state)| {
+                let transition = TimedTransition {
+                    successor: usize::MAX,
+                    p,
+                    cost,
+                    time,
                 };
                 let successor_state = State {
                     teams: teams.clone(),

@@ -101,6 +101,109 @@ fn paper_example_4_1_1() {
 }
 
 #[test]
+fn test_timed_action_applier() {
+    let mut graph = get_paper_example_graph();
+    graph.travel_times.mapv_inplace(|x| 2 * x);
+    let buses: Vec<BusState> = vec![
+        BusState::Energized,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Energized,
+        BusState::Damaged,
+        BusState::Unknown,
+    ];
+    let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::EnRoute(4, 2, 2)];
+    let state = State { buses, teams };
+
+    let cost = state.get_cost();
+    assert_eq!(cost, 4.0);
+
+    let action: Vec<TeamAction> = vec![1, -2];
+
+    // Naive action
+    let expected_team_outcome: Vec<TeamState> =
+        vec![TeamState::EnRoute(0, 1, 1), TeamState::EnRoute(4, 2, 3)];
+    let expected_outcomes: Vec<(f64, State)> = vec![(
+        1.0,
+        State {
+            teams: expected_team_outcome,
+            buses: vec![
+                BusState::Energized,
+                BusState::Unknown,
+                BusState::Unknown,
+                BusState::Energized,
+                BusState::Damaged,
+                BusState::Unknown,
+            ],
+        },
+    )];
+    let outcomes: Vec<(f64, State)> = NaiveActionApplier::apply(&state, cost, &graph, &action)
+        .into_iter()
+        .map(|(transition, state)| {
+            assert_eq!(transition.cost, cost);
+            (transition.p, state)
+        })
+        .collect();
+    check_sets(&outcomes, &expected_outcomes);
+
+    // Timed action
+    let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
+    let expected_outcomes: Vec<(f64, State)> = vec![
+        (
+            0.5,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+        (
+            0.5 * 0.25,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+        (
+            0.5 * 0.75,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+    ];
+    let outcomes: Vec<(f64, State)> = TimedActionApplier::apply(&state, cost, &graph, &action)
+        .into_iter()
+        .map(|(transition, state)| {
+            assert_eq!(transition.cost, cost);
+            assert_eq!(transition.time, 2);
+            (transition.p, state)
+        })
+        .collect();
+    check_sets(&outcomes, &expected_outcomes);
+}
+
+#[test]
 fn on_energized_bus_actions() {
     let graph = get_paper_example_graph();
     let buses: Vec<BusState> = vec![
