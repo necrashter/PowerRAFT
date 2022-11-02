@@ -37,12 +37,67 @@ fn paper_example_4_1_1() {
     let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::EnRoute(4, 2, 1)];
     let state = State { buses, teams };
 
-    assert_eq!(state.get_cost(), 4.0);
+    let cost = state.get_cost();
+    assert_eq!(cost, 4.0);
 
     let mut iter = NaiveIterator::setup(&graph);
     let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
 
     assert_eq!(actions, vec![vec![1, -2]]);
+
+    let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
+    let expected_outcomes: Vec<(f64, State)> = vec![
+        (
+            0.5,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+        (
+            0.5 * 0.25,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+        (
+            0.5 * 0.75,
+            State {
+                teams: expected_team_outcome.clone(),
+                buses: vec![
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+            },
+        ),
+    ];
+    let outcomes: Vec<(f64, State)> = NaiveActionApplier::apply(&state, cost, &graph, &actions[0])
+        .into_iter()
+        .map(|(transition, state)| {
+            assert_eq!(transition.cost, cost);
+            (transition.p, state)
+        })
+        .collect();
+    check_sets(&outcomes, &expected_outcomes);
 }
 
 #[test]

@@ -116,55 +116,6 @@ impl State {
         }
     }
 
-    /// Applies the given action to this state, returns the outcomes in a pair as follows:
-    /// - `Vec<TeamState>`: The resulting state of teams (note that team transitions are
-    /// deterministic).
-    /// - `Vec<(f64, Vec<BusState>)>`: Resulting bus states alongside their probabilities.
-    pub fn apply_action(
-        &self,
-        graph: &Graph,
-        actions: &Vec<TeamAction>,
-    ) -> (Vec<TeamState>, Vec<(f64, Vec<BusState>)>) {
-        debug_assert_eq!(actions.len(), self.teams.len());
-        // New team state
-        let teams: Vec<TeamState> = self
-            .teams
-            .iter()
-            .zip(actions.iter())
-            .map(|(team, action)| {
-                let team = team.clone();
-                let action = *action;
-                match team {
-                    TeamState::OnBus(source) => {
-                        if action == WAIT_ACTION {
-                            TeamState::OnBus(source)
-                        } else {
-                            debug_assert!(action != CONTINUE_ACTION);
-                            let dest = action as usize;
-                            let travel_time = graph.travel_times[(source, dest)];
-                            if travel_time == 1 {
-                                TeamState::OnBus(dest)
-                            } else {
-                                TeamState::EnRoute(source, dest, 1)
-                            }
-                        }
-                    }
-                    TeamState::EnRoute(source, dest, t) => {
-                        debug_assert!(action == CONTINUE_ACTION);
-                        let travel_time = graph.travel_times[(source, dest)];
-                        if travel_time - t == 1 {
-                            TeamState::OnBus(dest)
-                        } else {
-                            TeamState::EnRoute(source, dest, t + 1)
-                        }
-                    }
-                }
-            })
-            .collect();
-        let outcomes = recursive_energization(graph, &teams, self.buses.clone());
-        (teams, outcomes)
-    }
-
     /// Attempt to energize without moving the teams.
     pub fn energize(&self, graph: &Graph) -> Option<Vec<(f64, Vec<BusState>)>> {
         let outcomes = recursive_energization(graph, &self.teams, self.buses.clone());
@@ -402,5 +353,84 @@ impl StateIndexer {
 
     pub fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         (self.bus_states, self.team_states)
+    }
+}
+
+/// Trait that contains methods to apply given actions at a given state.
+/// The resulting transitions will have TransitionType.
+pub trait ActionApplier<TransitionType: Transition> {
+    /// Apply the action at given state, returning a list of transitions and the corresponding
+    /// successor states.
+    fn apply(
+        state: &State,
+        cost: f64,
+        graph: &Graph,
+        actions: &[TeamAction],
+    ) -> Vec<(TransitionType, State)>;
+}
+
+/// The most basic action applier.
+/// Applies the action, advances time by 1 unit, and returns `RegularTransition`s.
+pub struct NaiveActionApplier;
+
+impl ActionApplier<RegularTransition> for NaiveActionApplier {
+    #[inline]
+    fn apply(
+        state: &State,
+        cost: f64,
+        graph: &Graph,
+        actions: &[TeamAction],
+    ) -> Vec<(RegularTransition, State)> {
+        debug_assert_eq!(actions.len(), state.teams.len());
+        // New team state
+        let teams: Vec<TeamState> = state
+            .teams
+            .iter()
+            .zip(actions.iter())
+            .map(|(team, action)| {
+                let team = team.clone();
+                let action = *action;
+                match team {
+                    TeamState::OnBus(source) => {
+                        if action == WAIT_ACTION {
+                            TeamState::OnBus(source)
+                        } else {
+                            debug_assert!(action != CONTINUE_ACTION);
+                            let dest = action as usize;
+                            let travel_time = graph.travel_times[(source, dest)];
+                            if travel_time == 1 {
+                                TeamState::OnBus(dest)
+                            } else {
+                                TeamState::EnRoute(source, dest, 1)
+                            }
+                        }
+                    }
+                    TeamState::EnRoute(source, dest, t) => {
+                        debug_assert!(action == CONTINUE_ACTION);
+                        let travel_time = graph.travel_times[(source, dest)];
+                        if travel_time - t == 1 {
+                            TeamState::OnBus(dest)
+                        } else {
+                            TeamState::EnRoute(source, dest, t + 1)
+                        }
+                    }
+                }
+            })
+            .collect();
+        recursive_energization(graph, &teams, state.buses.clone())
+            .into_iter()
+            .map(|(p, bus_state)| {
+                let transition = RegularTransition {
+                    successor: usize::MAX,
+                    p,
+                    cost,
+                };
+                let successor_state = State {
+                    teams: teams.clone(),
+                    buses: bus_state,
+                };
+                (transition, successor_state)
+            })
+            .collect()
     }
 }

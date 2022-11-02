@@ -4,7 +4,15 @@ use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 
 /// Marker trait for all structs that represent state transitions.
-pub trait Transition: Serialize {}
+pub trait Transition: Serialize {
+    /// Generate a self-transition for a terminal state.
+    fn terminal_transition(index: usize, cost: f64) -> Self;
+    /// Generate a transition without cost with probability.
+    /// In teams, this is used for the case when a bus is energizable immediately at the start.
+    fn costless_transition(index: usize, p: f64) -> Self;
+    /// Set the index of successor state.
+    fn set_successor(&mut self, index: usize);
+}
 
 /// A regular MDP transition with probability and cost.
 pub struct RegularTransition {
@@ -17,7 +25,30 @@ pub struct RegularTransition {
     pub cost: f64,
 }
 
-impl Transition for RegularTransition {}
+impl Transition for RegularTransition {
+    #[inline]
+    fn terminal_transition(index: usize, cost: f64) -> Self {
+        Self {
+            successor: index,
+            p: 1.0,
+            cost,
+        }
+    }
+
+    #[inline]
+    fn costless_transition(index: usize, p: f64) -> Self {
+        Self {
+            successor: index,
+            p,
+            cost: 0.0,
+        }
+    }
+
+    #[inline]
+    fn set_successor(&mut self, index: usize) {
+        self.successor = index;
+    }
+}
 
 impl Serialize for RegularTransition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

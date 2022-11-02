@@ -110,7 +110,9 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
         pfs,
     };
     let generation_start_time = Instant::now();
-    let (states, transitions) = NaiveExplorer::<NaiveIterator>::explore(&graph, teams_state);
+    let (states, transitions) = NaiveExplorer::<NaiveIterator, RegularTransition>::explore::<
+        NaiveActionApplier,
+    >(&graph, teams_state);
     let generation_time: f64 = generation_start_time.elapsed().as_secs_f64();
     let (values, policy) = synthesize_policy(&transitions);
 
