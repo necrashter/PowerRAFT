@@ -122,24 +122,60 @@ impl Serialize for TimedTransition {
     }
 }
 
-/// Synthesize a policy, an array containing the index of optimal actions in each state.
-/// Must be run after running `explore`, i.e., state space must not be empty.
+/// Generic policy synthesizer for the given transition type.
+pub trait PolicySynthesizer<TransitionType: Transition> {
+    /// Synthesize a policy, an action selection strategy that minimizes the cost.
+    /// Returns a pair containing values of actions and index of the optimal action in each state.
+    fn synthesize_policy(
+        transitions: &[Vec<Vec<TransitionType>>],
+        optimization_horizon: usize,
+    ) -> (Vec<Vec<f64>>, Vec<usize>);
+}
+
+/// The most basic policy synthesizer for `RegularTransition`s.
+/// Uses a bottom-up approach, computing each `V_{i}` before `V_{i+1}`.
 ///
-/// Returns a pair containing action values and index of optimal action in each state.
-pub fn synthesize_policy(
-    transitions: &Vec<Vec<Vec<RegularTransition>>>,
-) -> (Vec<Vec<f64>>, Vec<usize>) {
-    assert!(
-        !transitions.is_empty(),
-        "States must be non-empty during policy synthesis"
-    );
-    let mut values: Array1<f64> = Array1::zeros(transitions.len());
-    const OPTIMIZATION_HORIZON: usize = 30;
-    for _ in 1..OPTIMIZATION_HORIZON {
+/// The complexity is `O(optimization_horizon * transitions)`.
+pub struct NaivePolicySynthesizer;
+
+impl PolicySynthesizer<RegularTransition> for NaivePolicySynthesizer {
+    fn synthesize_policy(
+        transitions: &[Vec<Vec<RegularTransition>>],
+        optimization_horizon: usize,
+    ) -> (Vec<Vec<f64>>, Vec<usize>) {
+        assert!(
+            !transitions.is_empty(),
+            "States must be non-empty during policy synthesis"
+        );
+        let mut values: Array1<f64> = Array1::zeros(transitions.len());
+        for _ in 1..optimization_horizon {
+            let prev_val = values;
+            values = Array1::zeros(transitions.len());
+            for (i, action) in transitions.iter().enumerate() {
+                let optimal_value: f64 = action
+                    .iter()
+                    .map(|transitions| {
+                        transitions
+                            .iter()
+                            .map(|t| t.p * (t.cost + prev_val[t.successor]))
+                            .sum()
+                    })
+                    .min_by(|a: &f64, b| {
+                        a.partial_cmp(b)
+                            .expect("Transition values must be comparable in value iteration")
+                    })
+                    .expect("No actions in a state");
+                values[i] = optimal_value;
+            }
+        }
+
+        let mut state_action_values: Vec<Vec<f64>> = Vec::new();
+        state_action_values.reserve(transitions.len());
+        let mut policy: Vec<usize> = vec![0; transitions.len()];
+
         let prev_val = values;
-        values = Array1::zeros(transitions.len());
         for (i, action) in transitions.iter().enumerate() {
-            let optimal_value: f64 = action
+            let action_values: Vec<f64> = action
                 .iter()
                 .map(|transitions| {
                     transitions
@@ -147,43 +183,21 @@ pub fn synthesize_policy(
                         .map(|t| t.p * (t.cost + prev_val[t.successor]))
                         .sum()
                 })
-                .min_by(|a: &f64, b| {
-                    a.partial_cmp(b)
+                .collect();
+            let optimal_action = action_values
+                .iter()
+                .enumerate()
+                .min_by(|a: &(usize, &f64), b: &(usize, &f64)| {
+                    a.1.partial_cmp(b.1)
                         .expect("Transition values must be comparable in value iteration")
                 })
-                .expect("No actions in a state");
-            values[i] = optimal_value;
+                .expect("No actions in a state")
+                .0;
+            state_action_values.push(action_values);
+            policy[i] = optimal_action;
         }
+        (state_action_values, policy)
     }
-
-    let mut state_action_values: Vec<Vec<f64>> = Vec::new();
-    state_action_values.reserve(transitions.len());
-    let mut policy: Vec<usize> = vec![0; transitions.len()];
-
-    let prev_val = values;
-    for (i, action) in transitions.iter().enumerate() {
-        let action_values: Vec<f64> = action
-            .iter()
-            .map(|transitions| {
-                transitions
-                    .iter()
-                    .map(|t| t.p * (t.cost + prev_val[t.successor]))
-                    .sum()
-            })
-            .collect();
-        let optimal_action = action_values
-            .iter()
-            .enumerate()
-            .min_by(|a: &(usize, &f64), b: &(usize, &f64)| {
-                a.1.partial_cmp(b.1)
-                    .expect("Transition values must be comparable in value iteration")
-            })
-            .expect("No actions in a state")
-            .0;
-        state_action_values.push(action_values);
-        policy[i] = optimal_action;
-    }
-    (state_action_values, policy)
 }
 
 #[cfg(test)]
@@ -228,5 +242,58 @@ mod tests {
         };
 
         assert_eq!(serde_json::to_string(&t).unwrap(), "[2,0.5,6.0,12]");
+    }
+
+    #[test]
+    fn naive_policy_test() {
+        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(
+            &vec![
+                vec![
+                    vec![RegularTransition {
+                        successor: 1,
+                        cost: 2.0,
+                        p: 1.0,
+                    }],
+                    vec![RegularTransition {
+                        successor: 1,
+                        cost: 0.5,
+                        p: 1.0,
+                    }],
+                ],
+                vec![vec![RegularTransition {
+                    successor: 1,
+                    cost: 1.0,
+                    p: 1.0,
+                }]],
+            ],
+            10,
+        );
+        assert_eq!(values, vec![vec![11.0, 9.5], vec![10.0]]);
+        assert_eq!(actions, vec![1, 0]);
+
+        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(
+            &vec![
+                vec![vec![
+                    RegularTransition {
+                        successor: 1,
+                        cost: 2.0,
+                        p: 0.5,
+                    },
+                    RegularTransition {
+                        successor: 1,
+                        cost: 0.0,
+                        p: 0.5,
+                    },
+                ]],
+                vec![vec![RegularTransition {
+                    successor: 1,
+                    cost: 1.0,
+                    p: 1.0,
+                }]],
+            ],
+            10,
+        );
+        assert_eq!(values, vec![vec![10.0], vec![10.0]]);
+        assert_eq!(actions, vec![0, 0]);
     }
 }

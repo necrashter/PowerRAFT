@@ -110,7 +110,7 @@ pub fn solve(graph: webclient::Graph, teams: Vec<webclient::Team>) -> Result<Sol
         NaiveActionApplier,
     >(&graph, teams_state);
     let generation_time: f64 = generation_start_time.elapsed().as_secs_f64();
-    let (values, policy) = synthesize_policy(&transitions);
+    let (values, policy) = NaivePolicySynthesizer::synthesize_policy(&transitions, 30);
 
     let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
     for (i, location) in locations.into_iter().enumerate() {
