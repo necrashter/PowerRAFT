@@ -17,6 +17,7 @@ pub trait Transition: Serialize {
 }
 
 /// A regular MDP transition with probability and cost.
+#[derive(Clone)]
 pub struct RegularTransition {
     /// Index of the successor state.
     pub successor: usize,
@@ -52,6 +53,41 @@ impl Transition for RegularTransition {
     }
 }
 
+impl RegularTransition {
+    /// Convert this transition to an equivalent [`TimedTransition`] with `time = 1`.
+    #[inline]
+    pub fn to_timed(self) -> TimedTransition {
+        let RegularTransition { successor, p, cost } = self;
+        TimedTransition {
+            successor,
+            p,
+            cost,
+            time: 1,
+        }
+    }
+}
+
+/// Given a [`RegularTransition`] space, return the equivalent [`TimedTransition`] space with all
+/// transition times equal to 1.
+pub fn to_timed_transitions(
+    transitions: &[Vec<Vec<RegularTransition>>],
+) -> Vec<Vec<Vec<TimedTransition>>> {
+    transitions
+        .iter()
+        .map(|state| {
+            state
+                .iter()
+                .map(|action| {
+                    action
+                        .iter()
+                        .map(|transition| transition.clone().to_timed())
+                        .collect()
+                })
+                .collect()
+        })
+        .collect()
+}
+
 impl Serialize for RegularTransition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -67,6 +103,7 @@ impl Serialize for RegularTransition {
 }
 
 /// A regular MDP transition with probability and cost.
+#[derive(Clone)]
 pub struct TimedTransition {
     /// Index of the successor state.
     pub successor: usize,
@@ -96,9 +133,9 @@ impl Transition for TimedTransition {
             successor: index,
             p,
             cost: 0.0,
-            // Not sure about this one, it might be also 0.
-            // TODO: Look into this after implementing timed policy synthesis.
-            time: 1,
+            // NOTE: The policy synthesizer must handle zero-timed transitions correctly for this
+            // to work. See docstring of NaiveTimedPolicySynthesizer.
+            time: 0,
         }
     }
 
@@ -200,6 +237,116 @@ impl PolicySynthesizer<RegularTransition> for NaivePolicySynthesizer {
     }
 }
 
+/// The most basic policy synthesizer for `TimedTransition`s.
+/// Uses a bottom-up approach, computing each `V_{i}` before `V_{i+1}`.
+/// The complexity is `O(optimization_horizon * transitions)`.
+///
+/// ## Transitions with `t=0`
+///
+/// Transitions with zero time are handled correctly, given that all states with zero-timed
+/// transitions come before others. This is always the case in field-team restoration problem,
+/// where zero-timed transitions may only occur at the first state, only if there's team on
+/// energizable bus.
+pub struct NaiveTimedPolicySynthesizer;
+
+impl PolicySynthesizer<TimedTransition> for NaiveTimedPolicySynthesizer {
+    fn synthesize_policy(
+        transitions: &[Vec<Vec<TimedTransition>>],
+        optimization_horizon: usize,
+    ) -> (Vec<Vec<f64>>, Vec<usize>) {
+        assert!(
+            !transitions.is_empty(),
+            "States must be non-empty during policy synthesis"
+        );
+        // Special handling for first iteration: figure out maximum transition time, which will be
+        // used to determine how many value functions we need to remember from previous iterations.
+        let (values, max_time): (Array1<f64>, usize) = {
+            let mut values = Array1::zeros(transitions.len());
+            let mut max_time: usize = 0;
+            for (i, action) in transitions.iter().enumerate().rev() {
+                let optimal_value: f64 = action
+                    .iter()
+                    .map(|transitions| {
+                        transitions
+                            .iter()
+                            .map(|t| {
+                                max_time = std::cmp::max(max_time, t.time);
+                                t.p * t.cost
+                            })
+                            .sum()
+                    })
+                    .min_by(|a: &f64, b| {
+                        a.partial_cmp(b)
+                            .expect("Transition values must be comparable in value iteration")
+                    })
+                    .expect("No actions in a state");
+                values[i] = optimal_value;
+            }
+            (values, max_time)
+        };
+        // Array of values from previous iterations.
+        // `values[0]`: current iteration, `values[1]`: previous iteration, etc.
+        let mut values: Vec<Array1<f64>> = vec![values; max_time + 1];
+        for iteration in 2..optimization_horizon {
+            values[max_time] = Array1::zeros(transitions.len());
+            values.rotate_right(1);
+            for (i, action) in transitions.iter().enumerate().rev() {
+                let optimal_value: f64 = action
+                    .iter()
+                    .map(|transitions| {
+                        transitions
+                            .iter()
+                            .map(|t| {
+                                let cost = t.cost * std::cmp::min(t.time, iteration) as f64;
+                                t.p * (cost + values[t.time][t.successor])
+                            })
+                            .sum()
+                    })
+                    .min_by(|a: &f64, b| {
+                        a.partial_cmp(b)
+                            .expect("Transition values must be comparable in value iteration")
+                    })
+                    .expect("No actions in a state");
+                values[0][i] = optimal_value;
+            }
+        }
+
+        let mut state_action_values: Vec<Vec<f64>> = vec![Vec::new(); transitions.len()];
+        state_action_values.reserve(transitions.len());
+        let mut policy: Vec<usize> = vec![0; transitions.len()];
+
+        values[max_time] = Array1::zeros(transitions.len());
+        values.rotate_right(1);
+        for (i, action) in transitions.iter().enumerate().rev() {
+            let action_values: Vec<f64> = action
+                .iter()
+                .map(|transitions| {
+                    transitions
+                        .iter()
+                        .map(|t| {
+                            let cost = t.cost * std::cmp::min(t.time, optimization_horizon) as f64;
+                            t.p * (cost + values[t.time][t.successor])
+                        })
+                        .sum()
+                })
+                .collect();
+            let (optimal_action, optimal_value) = action_values
+                .iter()
+                .enumerate()
+                .min_by(|a: &(usize, &f64), b: &(usize, &f64)| {
+                    a.1.partial_cmp(b.1)
+                        .expect("Transition values must be comparable in value iteration")
+                })
+                .expect("No actions in a state");
+            // This might be required for zero-timed transitions.
+            values[0][i] = *optimal_value;
+            state_action_values[i] = action_values;
+            policy[i] = optimal_action;
+        }
+        (state_action_values, policy)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,54 +393,125 @@ mod tests {
 
     #[test]
     fn naive_policy_test() {
-        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(
-            &vec![
-                vec![
-                    vec![RegularTransition {
-                        successor: 1,
-                        cost: 2.0,
-                        p: 1.0,
-                    }],
-                    vec![RegularTransition {
-                        successor: 1,
-                        cost: 0.5,
-                        p: 1.0,
-                    }],
-                ],
-                vec![vec![RegularTransition {
+        let transitions: Vec<Vec<Vec<RegularTransition>>> = vec![
+            vec![
+                vec![RegularTransition {
                     successor: 1,
-                    cost: 1.0,
+                    cost: 2.0,
                     p: 1.0,
-                }]],
+                }],
+                vec![RegularTransition {
+                    successor: 1,
+                    cost: 0.5,
+                    p: 1.0,
+                }],
             ],
-            10,
-        );
+            vec![vec![RegularTransition {
+                successor: 1,
+                cost: 1.0,
+                p: 1.0,
+            }]],
+        ];
+        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(&transitions, 10);
+        assert_eq!(values, vec![vec![11.0, 9.5], vec![10.0]]);
+        assert_eq!(actions, vec![1, 0]);
+        // Equivalence to TimedTransition with time = 1
+        let (values, actions) =
+            NaiveTimedPolicySynthesizer::synthesize_policy(&to_timed_transitions(&transitions), 10);
         assert_eq!(values, vec![vec![11.0, 9.5], vec![10.0]]);
         assert_eq!(actions, vec![1, 0]);
 
-        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(
-            &vec![
-                vec![vec![
-                    RegularTransition {
-                        successor: 1,
-                        cost: 2.0,
-                        p: 0.5,
-                    },
-                    RegularTransition {
-                        successor: 1,
-                        cost: 0.0,
-                        p: 0.5,
-                    },
-                ]],
-                vec![vec![RegularTransition {
+        let transitions: Vec<Vec<Vec<RegularTransition>>> = vec![
+            vec![vec![
+                RegularTransition {
+                    successor: 1,
+                    cost: 2.0,
+                    p: 0.5,
+                },
+                RegularTransition {
+                    successor: 1,
+                    cost: 0.0,
+                    p: 0.5,
+                },
+            ]],
+            vec![vec![RegularTransition {
+                successor: 1,
+                cost: 1.0,
+                p: 1.0,
+            }]],
+        ];
+        let (values, actions) = NaivePolicySynthesizer::synthesize_policy(&transitions, 10);
+        assert_eq!(values, vec![vec![10.0], vec![10.0]]);
+        assert_eq!(actions, vec![0, 0]);
+        // Equivalence to TimedTransition with time = 1
+        let (values, actions) =
+            NaiveTimedPolicySynthesizer::synthesize_policy(&to_timed_transitions(&transitions), 10);
+        assert_eq!(values, vec![vec![10.0], vec![10.0]]);
+        assert_eq!(actions, vec![0, 0]);
+    }
+
+    #[test]
+    fn timed_policy_test() {
+        let transitions: Vec<Vec<Vec<TimedTransition>>> = vec![
+            vec![
+                vec![TimedTransition {
+                    successor: 1,
+                    cost: 0.5,
+                    p: 1.0,
+                    time: 5,
+                }],
+                vec![TimedTransition {
                     successor: 1,
                     cost: 1.0,
                     p: 1.0,
-                }]],
+                    time: 1,
+                }],
             ],
-            10,
-        );
-        assert_eq!(values, vec![vec![10.0], vec![10.0]]);
+            vec![vec![TimedTransition {
+                successor: 1,
+                cost: 1.0,
+                p: 1.0,
+                time: 1,
+            }]],
+        ];
+        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&&transitions, 10);
+        assert_eq!(values, vec![vec![7.5, 10.0], vec![10.0]]);
         assert_eq!(actions, vec![0, 0]);
+    }
+
+    /// Test with zero-timed transitions at the start.
+    #[test]
+    fn zero_timed_policy_test() {
+        let transitions: Vec<Vec<Vec<TimedTransition>>> = vec![
+            vec![vec![
+                TimedTransition {
+                    successor: 1,
+                    cost: 0.0,
+                    p: 0.5,
+                    time: 0,
+                },
+                TimedTransition {
+                    successor: 2,
+                    cost: 0.0,
+                    p: 0.5,
+                    time: 0,
+                },
+            ]],
+            vec![vec![TimedTransition {
+                successor: 1,
+                cost: 1.0,
+                p: 1.0,
+                time: 1,
+            }]],
+            vec![vec![TimedTransition {
+                successor: 2,
+                cost: 2.0,
+                p: 1.0,
+                time: 1,
+            }]],
+        ];
+        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&&transitions, 10);
+        assert_eq!(values, vec![vec![15.0], vec![10.0], vec![20.0]]);
+        assert_eq!(actions, vec![0, 0, 0]);
     }
 }
