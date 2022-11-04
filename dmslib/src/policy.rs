@@ -133,9 +133,8 @@ impl Transition for TimedTransition {
             successor: index,
             p,
             cost: 0.0,
-            // NOTE: The policy synthesizer must handle zero-timed transitions correctly for this
-            // to work. See docstring of NaiveTimedPolicySynthesizer.
-            time: 0,
+            // NOTE: This should be 1 in order to mimic RegularTransition.
+            time: 1,
         }
     }
 
