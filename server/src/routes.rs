@@ -53,14 +53,13 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                     StatusCode::BAD_REQUEST,
                 );
             };
-            let problem = match graph.to_teams_problem(teams) {
+            let solution = match graph.solve_teams_problem(teams) {
                 Ok(x) => x,
                 Err(e) => {
-                    let error = format!("Error while parsing problem: {e}");
+                    let error = format!("Error while generating a solution: {e}");
                     return reply::with_status(reply::json(&error), StatusCode::BAD_REQUEST);
                 }
             };
-            let solution = problem.solve();
             reply::with_status(reply::json(&solution), StatusCode::OK)
         });
     let static_files = warp::any().and(warp::fs::dir(STATIC_PATH));

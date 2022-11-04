@@ -15,6 +15,7 @@ fn test_team_times() {
         branches: vec![],
         connected: vec![],
         pfs: ndarray::arr1(&[]),
+        team_nodes: Array2::default((0, 0)),
     };
 
     assert_eq!(

@@ -1,5 +1,11 @@
 //! This module contains structs to serialize and deserialize web client representation of graphs.
-use serde::{Deserialize, Serialize};
+use crate::policy::*;
+use crate::teams::state::{BusState, TeamState};
+use crate::Time;
+use ndarray::{Array2, ArrayView1};
+
+use serde::ser::{SerializeMap, SerializeSeq};
+use serde::{Deserialize, Serialize, Serializer};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BranchNodes(pub usize, pub usize);
@@ -67,6 +73,90 @@ pub struct Graph {
 pub struct Team {
     pub index: Option<usize>,
     pub latlng: Option<LatLng>,
+}
+
+/// This struct will be the response to a client's request to solve a field teams restoration
+/// problem.
+pub struct TeamSolution<T: Transition> {
+    /// Total time to generate the complete solution in seconds.
+    pub total_time: f64,
+    /// Total time to generate the MDP without policy synthesis in seconds.
+    pub generation_time: f64,
+
+    /// Latitude and longtitude values of vertices in team graph.
+    pub team_nodes: Array2<f64>,
+    /// Travel time between each node
+    pub travel_times: Array2<Time>,
+
+    /// Array of bus states.
+    pub states: Array2<BusState>,
+    /// Array of team states.
+    pub teams: Array2<TeamState>,
+    /// Array of actions for each state, each entry containing a list of transitions
+    /// This has to be triple Vec because each state has arbitrary number of actions and each
+    /// action has arbitrary number of transitions.
+    pub transitions: Vec<Vec<Vec<T>>>,
+
+    /// Value function for each action.
+    pub values: Vec<Vec<f64>>,
+    /// Index of optimal actions in each state.
+    pub policy: Vec<usize>,
+}
+
+impl<T: Transition> Serialize for TeamSolution<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(Some(8))?;
+        map.serialize_entry("totalTime", &self.total_time)?;
+        map.serialize_entry("generationTime", &self.generation_time)?;
+
+        map.serialize_entry("teamNodes", &Array2Serializer(&self.team_nodes))?;
+        map.serialize_entry("travelTimes", &Array2Serializer(&self.travel_times))?;
+
+        map.serialize_entry("states", &Array2Serializer(&self.states))?;
+        map.serialize_entry("teams", &Array2Serializer(&self.teams))?;
+        map.serialize_entry("transitions", &self.transitions)?;
+
+        map.serialize_entry("values", &self.values)?;
+        map.serialize_entry("policy", &self.policy)?;
+        map.end()
+    }
+}
+
+/// Private helper for 2D array serialization.
+/// Array is serialized as list of lists.
+struct Array2Serializer<'a, T>(&'a Array2<T>);
+
+/// Private helper for 2D array serialization.
+/// This is a row in array.
+struct ArrayRowSerializer<'a, T>(ArrayView1<'a, T>);
+
+impl<'a, T: Serialize> Serialize for Array2Serializer<'a, T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.shape()[0]))?;
+        for row in self.0.rows() {
+            seq.serialize_element(&ArrayRowSerializer(row))?;
+        }
+        seq.end()
+    }
+}
+
+impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for i in self.0.iter() {
+            seq.serialize_element(i)?;
+        }
+        seq.end()
+    }
 }
 
 #[cfg(test)]

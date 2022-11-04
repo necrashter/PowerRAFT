@@ -1,4 +1,6 @@
 use super::*;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 
 #[cfg(test)]
 mod tests;

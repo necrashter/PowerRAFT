@@ -1,10 +1,10 @@
 use super::*;
 
 /// Generic trait for the functions that explore the actions of a given state.
-pub trait Explorer<TT: Transition> {
+pub trait Explorer<'a, TT: Transition> {
     /// Explore the possible states starting from the given team state.
     fn explore<AA: ActionApplier<TT>>(
-        graph: &Graph,
+        graph: &'a Graph,
         teams: Vec<TeamState>,
     ) -> (Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>);
 }
@@ -103,9 +103,9 @@ impl<'a, TT: Transition, AI: ActionIterator<'a>> NaiveExplorer<'a, TT, AI> {
     }
 }
 
-impl<TT: Transition, AI: for<'a> ActionIterator<'a>> Explorer<TT> for NaiveExplorer<'_, TT, AI> {
+impl<'a, TT: Transition, AI: ActionIterator<'a>> Explorer<'a, TT> for NaiveExplorer<'a, TT, AI> {
     fn explore<AA: ActionApplier<TT>>(
-        graph: &Graph,
+        graph: &'a Graph,
         teams: Vec<TeamState>,
     ) -> (Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>) {
         let mut explorer = NaiveExplorer {

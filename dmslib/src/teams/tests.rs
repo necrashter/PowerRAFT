@@ -13,6 +13,7 @@ fn get_paper_example_graph() -> Graph {
         branches: vec![vec![1], vec![0, 2], vec![1], vec![4], vec![3, 5], vec![4]],
         connected: vec![true, false, false, true, false, false],
         pfs: ndarray::arr1(&[0.5, 0.5, 0.25, 0.25, 0.25, 0.25]),
+        team_nodes: Array2::default((0, 0)),
     }
 }
 
@@ -377,6 +378,7 @@ fn minimal_nonopt_permutations() {
         branches: vec![vec![], vec![]],
         connected: vec![true, true],
         pfs: ndarray::arr1(&[0.5, 0.5]),
+        team_nodes: Array2::default((0, 0)),
     };
 
     let state = State {

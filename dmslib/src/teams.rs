@@ -1,7 +1,7 @@
 //! Module for solving field teams restoration problem.
 mod action_iteration;
 mod exploration;
-mod state;
+pub mod state;
 
 use action_iteration::*;
 use exploration::*;
@@ -12,12 +12,9 @@ use crate::webclient;
 use crate::{Index, Time};
 
 use itertools::Itertools;
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
-
-use serde::ser::{SerializeMap, SerializeSeq};
-use serde::{Serialize, Serializer};
 
 /// Represents the actions of a single team.
 /// Wait: -1 (WAIT_ACTION constant), Continue: -2 (CONTINUE_ACTION constant), Move: index of the bus.
@@ -26,6 +23,7 @@ pub const WAIT_ACTION: isize = -1;
 pub const CONTINUE_ACTION: isize = -2;
 
 /// Contains information about the distribution system.
+#[derive(Clone)]
 pub struct Graph {
     /// Travel times between each edge.
     travel_times: Array2<Time>,
@@ -35,14 +33,16 @@ pub struct Graph {
     connected: Vec<bool>,
     /// Failure probabilities.
     pfs: Array1<f64>,
+    /// The latitude and longtitude for each vertex in team graph.
+    team_nodes: Array2<f64>,
 }
 
 /// Represents a field teams restoration problem.
 /// Convert your [`webclient::Graph`] to this form with an initial team state and call [`Problem::solve`].
+#[derive(Clone)]
 pub struct Problem {
     graph: Graph,
     initial_teams: Vec<TeamState>,
-    team_nodes: Array2<f64>,
 }
 
 impl webclient::Graph {
@@ -107,68 +107,63 @@ impl webclient::Graph {
             connected[x.node] = true;
         }
 
-        let graph = Graph {
-            travel_times,
-            branches,
-            connected,
-            pfs,
-        };
-
         let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
         for (i, location) in locations.into_iter().enumerate() {
             team_nodes[(i, 0)] = location.0;
             team_nodes[(i, 1)] = location.1;
         }
 
+        let graph = Graph {
+            travel_times,
+            branches,
+            connected,
+            pfs,
+            team_nodes,
+        };
+
         Ok(Problem {
             graph,
             initial_teams,
-            team_nodes,
         })
     }
-}
 
-impl Problem {
-    fn solve_generic<TT, E, AA, PS>(self) -> Solution<TT>
-    where
-        TT: Transition,
-        E: Explorer<TT>,
-        AA: ActionApplier<TT>,
-        PS: PolicySynthesizer<TT>,
-    {
-        let Problem {
-            graph,
-            initial_teams,
-            team_nodes,
-        } = self;
-
-        let start_time = Instant::now();
-        let (states, teams, transitions) = E::explore::<AA>(&graph, initial_teams);
-        let generation_time: f64 = start_time.elapsed().as_secs_f64();
-        let (values, policy) = PS::synthesize_policy(&transitions, 30);
-        let total_time: f64 = start_time.elapsed().as_secs_f64();
-
-        Solution {
-            total_time,
-            generation_time,
-            team_nodes,
-            travel_times: graph.travel_times,
-            states,
-            teams,
-            transitions,
-            values,
-            policy,
-        }
-    }
-
-    /// Generate a solution for this field teams restoration problem.
-    pub fn solve(self) -> Solution<RegularTransition> {
-        self.solve_generic::<
+    /// Solve a field teams restoration problem on this graph.
+    pub fn solve_teams_problem(
+        self,
+        teams: Vec<webclient::Team>,
+    ) -> Result<webclient::TeamSolution<RegularTransition>, String> {
+        let problem = self.to_teams_problem(teams)?;
+        let solution = solve_generic::<
             RegularTransition,
             NaiveExplorer<RegularTransition, NaiveIterator>,
             NaiveActionApplier,
             NaivePolicySynthesizer,
-            >()
+        >(&problem.graph, problem.initial_teams);
+        Ok(solution.to_webclient(problem.graph))
+    }
+}
+
+fn solve_generic<'a, TT, E, AA, PS>(graph: &'a Graph, initial_teams: Vec<TeamState>) -> Solution<TT>
+where
+    TT: Transition,
+    E: Explorer<'a, TT>,
+    AA: ActionApplier<TT>,
+    PS: PolicySynthesizer<TT>,
+{
+    let start_time = Instant::now();
+    let (states, teams, transitions) = E::explore::<AA>(graph, initial_teams);
+    let generation_time: f64 = start_time.elapsed().as_secs_f64();
+    let (values, policy) = PS::synthesize_policy(&transitions, 30);
+    let total_time: f64 = start_time.elapsed().as_secs_f64();
+
+    Solution {
+        total_time,
+        generation_time,
+        states,
+        teams,
+        transitions,
+        values,
+        policy,
     }
 }
 
@@ -178,11 +173,6 @@ pub struct Solution<T: Transition> {
     pub total_time: f64,
     /// Total time to generate the MDP without policy synthesis in seconds.
     pub generation_time: f64,
-
-    /// Latitude and longtitude values of vertices in team graph.
-    pub team_nodes: Array2<f64>,
-    /// Travel time between each node
-    pub travel_times: Array2<Time>,
 
     /// Array of bus states.
     pub states: Array2<BusState>,
@@ -199,59 +189,37 @@ pub struct Solution<T: Transition> {
     pub policy: Vec<usize>,
 }
 
-impl<T: Transition> Serialize for Solution<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(Some(8))?;
-        map.serialize_entry("totalTime", &self.total_time)?;
-        map.serialize_entry("generationTime", &self.generation_time)?;
-
-        map.serialize_entry("teamNodes", &Array2Serializer(&self.team_nodes))?;
-        map.serialize_entry("travelTimes", &Array2Serializer(&self.travel_times))?;
-
-        map.serialize_entry("states", &Array2Serializer(&self.states))?;
-        map.serialize_entry("teams", &Array2Serializer(&self.teams))?;
-        map.serialize_entry("transitions", &self.transitions)?;
-
-        map.serialize_entry("values", &self.values)?;
-        map.serialize_entry("policy", &self.policy)?;
-        map.end()
+impl<T: Transition> Solution<T> {
+    /// Get the minimum value of value function in the first state.
+    pub fn get_min_value(&self) -> f64 {
+        *self.values[0]
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap()
     }
-}
 
-/// Private helper for 2D array serialization.
-/// Array is serialized as list of lists.
-struct Array2Serializer<'a, T>(&'a Array2<T>);
-
-/// Private helper for 2D array serialization.
-/// This is a row in array.
-struct ArrayRowSerializer<'a, T>(ArrayView1<'a, T>);
-
-impl<'a, T: Serialize> Serialize for Array2Serializer<'a, T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(self.0.shape()[0]))?;
-        for row in self.0.rows() {
-            seq.serialize_element(&ArrayRowSerializer(row))?;
+    /// Convert the solution to the webclient representation together with the corresponding graph.
+    pub fn to_webclient(self, graph: Graph) -> webclient::TeamSolution<T> {
+        let Solution {
+            total_time,
+            generation_time,
+            states,
+            teams,
+            transitions,
+            values,
+            policy,
+        } = self;
+        webclient::TeamSolution {
+            total_time,
+            generation_time,
+            team_nodes: graph.team_nodes,
+            travel_times: graph.travel_times,
+            states,
+            teams,
+            transitions,
+            values,
+            policy,
         }
-        seq.end()
-    }
-}
-
-impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-        for i in self.0.iter() {
-            seq.serialize_element(i)?;
-        }
-        seq.end()
     }
 }
 
