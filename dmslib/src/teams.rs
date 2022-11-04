@@ -128,50 +128,52 @@ impl webclient::Graph {
     }
 }
 
-#[inline]
-fn solve(problem: Problem) -> Result<Solution, String> {
-    let start_time = Instant::now();
-    let Problem {
-        graph,
-        initial_teams,
-        team_nodes,
-    } = problem;
-    let generation_start_time = Instant::now();
-    let (states, transitions) = NaiveExplorer::<NaiveIterator, RegularTransition>::explore::<
-        NaiveActionApplier,
-    >(&graph, initial_teams);
-    let generation_time: f64 = generation_start_time.elapsed().as_secs_f64();
-    let (values, policy) = NaivePolicySynthesizer::synthesize_policy(&transitions, 30);
-
-    let (states, teams) = states.deconstruct();
-    let travel_times = graph.travel_times;
-
-    let total_time: f64 = start_time.elapsed().as_secs_f64();
-
-    Ok(Solution {
-        total_time,
-        generation_time,
-        team_nodes,
-        travel_times,
-        states,
-        teams,
-        transitions,
-        values,
-        policy,
-    })
-}
-
 impl Problem {
+    fn solve_generic<TT, E, AA, PS>(self) -> Solution<TT>
+    where
+        TT: Transition,
+        E: Explorer<TT>,
+        AA: ActionApplier<TT>,
+        PS: PolicySynthesizer<TT>,
+    {
+        let Problem {
+            graph,
+            initial_teams,
+            team_nodes,
+        } = self;
+
+        let start_time = Instant::now();
+        let (states, teams, transitions) = E::explore::<AA>(&graph, initial_teams);
+        let generation_time: f64 = start_time.elapsed().as_secs_f64();
+        let (values, policy) = PS::synthesize_policy(&transitions, 30);
+        let total_time: f64 = start_time.elapsed().as_secs_f64();
+
+        Solution {
+            total_time,
+            generation_time,
+            team_nodes,
+            travel_times: graph.travel_times,
+            states,
+            teams,
+            transitions,
+            values,
+            policy,
+        }
+    }
+
     /// Generate a solution for this field teams restoration problem.
-    /// Returns `Ok(Solution)` if successful. `Err(String)` with the error string if there was an
-    /// error.
-    pub fn solve(self) -> Result<Solution, String> {
-        solve(self)
+    pub fn solve(self) -> Solution<RegularTransition> {
+        self.solve_generic::<
+            RegularTransition,
+            NaiveExplorer<RegularTransition, NaiveIterator>,
+            NaiveActionApplier,
+            NaivePolicySynthesizer,
+            >()
     }
 }
 
 /// Stores the solution for a field teams restoration [`Problem`].
-pub struct Solution {
+pub struct Solution<T: Transition> {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,
     /// Total time to generate the MDP without policy synthesis in seconds.
@@ -189,7 +191,7 @@ pub struct Solution {
     /// Array of actions for each state, each entry containing a list of transitions
     /// This has to be triple Vec because each state has arbitrary number of actions and each
     /// action has arbitrary number of transitions.
-    pub transitions: Vec<Vec<Vec<RegularTransition>>>,
+    pub transitions: Vec<Vec<Vec<T>>>,
 
     /// Value function for each action.
     pub values: Vec<Vec<f64>>,
@@ -197,7 +199,7 @@ pub struct Solution {
     pub policy: Vec<usize>,
 }
 
-impl Serialize for Solution {
+impl<T: Transition> Serialize for Solution<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
