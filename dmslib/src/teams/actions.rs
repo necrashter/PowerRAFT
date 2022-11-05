@@ -2,14 +2,6 @@ use super::*;
 use crate::utils::{are_indices_sorted, get_repeating_indices, sorted_intersects};
 use itertools::structs::CombinationsWithReplacement;
 
-/// Simplified state of a team as fas as actions are concerned.
-#[derive(PartialEq, Eq, Debug, Clone)]
-pub enum TeamActionState {
-    OnUnknownBus,
-    OnKnownBus,
-    EnRoute,
-}
-
 /// Stores action-related information for a state.
 pub struct ActionState {
     /// Underlying state
@@ -19,22 +11,17 @@ pub struct ActionState {
     pub minbeta: Vec<Index>,
     /// This vector contains the elements in the set of reachable buses with Unknown
     /// status, beta(s), in ascending order.
-    pub target_buses: Vec<Index>,
+    target_buses: Vec<Index>,
     /// Each element of this list at position i will give the smallest j for which
     /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
-    pub target_minbeta: Vec<Index>,
-    /// State of the teams
-    pub team_states: Vec<TeamActionState>,
+    target_minbeta: Vec<Index>,
     /// Node (bus or initial position) at which each team is located, represented by its index.
     /// usize;:MAX if en-route.
-    pub team_nodes: Vec<Index>,
-    /// Bus at which each team is located, represented as index in target_buses.
-    /// usize;:MAX if en-route or not in target_buses.
-    pub team_buses_target: Vec<Index>,
+    team_nodes: Vec<Index>,
     /// Set of buses in beta_1
-    pub energizable_buses: Vec<Index>,
+    energizable_buses: Vec<Index>,
     /// True if the progress condition is satisfied by an en-route team.
-    pub progress_satisfied: bool,
+    progress_satisfied: bool,
 }
 
 impl State {
@@ -46,41 +33,11 @@ impl State {
             .enumerate()
             .filter(|(_i, &beta)| beta != 0 && beta != usize::MAX)
             .unzip();
-        let team_states: Vec<TeamActionState> = self
-            .teams
-            .iter()
-            .map(|team| match team {
-                TeamState::OnBus(i) => {
-                    let i = *i;
-                    if i >= self.buses.len() {
-                        // The team is at a starting position, so it has to move.
-                        // This is treated like a known bus.
-                        TeamActionState::OnKnownBus
-                    } else if self.buses[i] == BusState::Unknown {
-                        TeamActionState::OnUnknownBus
-                    } else {
-                        TeamActionState::OnKnownBus
-                    }
-                }
-                TeamState::EnRoute(_, _, _) => TeamActionState::EnRoute,
-            })
-            .collect();
         let team_nodes = self
             .teams
             .iter()
             .map(|team| match team {
                 TeamState::OnBus(i) => *i,
-                TeamState::EnRoute(_, _, _) => usize::MAX,
-            })
-            .collect();
-        let team_buses_target: Vec<Index> = self
-            .teams
-            .iter()
-            .map(|team| match team {
-                TeamState::OnBus(i) => match target_buses.binary_search(i) {
-                    Ok(j) => j,
-                    Err(_) => usize::MAX,
-                },
                 TeamState::EnRoute(_, _, _) => usize::MAX,
             })
             .collect();
@@ -101,9 +58,7 @@ impl State {
             minbeta,
             target_buses,
             target_minbeta,
-            team_states,
             team_nodes,
-            team_buses_target,
             energizable_buses,
             progress_satisfied,
         }
@@ -267,11 +222,6 @@ impl<'a> PermutationalIt<'a> {
             {
                 return self.next_bus_combination();
             }
-            // Get the intersection between team_nodes and targets.
-            // let bus_target_intersection = sorted_intersection(
-            //     &bus_combination,
-            //     &self.ready_team_nodes.iter().cloned().sorted().collect(),
-            // );
             let repeating_indices = get_repeating_indices(&bus_combination);
 
             // Permutation iterator
