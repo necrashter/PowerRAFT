@@ -42,7 +42,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>> NaiveExplorer<'a, TT, AI> {
             self.iterator
                 .prepare(&state)
                 .map(|action: Vec<TeamAction>| -> Vec<TT> {
-                    AA::apply(&state.state, cost, self.graph, &action)
+                    AA::apply(&state, cost, self.graph, &action)
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
@@ -87,7 +87,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>> NaiveExplorer<'a, TT, AI> {
             self.iterator
                 .prepare(&state)
                 .map(|action| {
-                    AA::apply(&state.state, cost, self.graph, &action)
+                    AA::apply(&state, cost, self.graph, &action)
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states

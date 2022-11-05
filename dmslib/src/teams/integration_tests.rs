@@ -61,7 +61,7 @@ fn pe0_1_team() {
     let solution = solve_generic::<
         TimedTransition,
         NaiveExplorer<TimedTransition, NaiveActions>,
-        TimedActionApplier,
+        TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), optimal_value);
@@ -70,7 +70,7 @@ fn pe0_1_team() {
     let solution = solve_generic::<
         TimedTransition,
         NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
-        TimedActionApplier,
+        TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), optimal_value);
@@ -137,7 +137,7 @@ fn pe0_2_team() {
     let solution = solve_generic::<
         TimedTransition,
         NaiveExplorer<TimedTransition, NaiveActions>,
-        TimedActionApplier,
+        TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), optimal_value);
@@ -146,7 +146,7 @@ fn pe0_2_team() {
     let solution = solve_generic::<
         TimedTransition,
         NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
-        TimedActionApplier,
+        TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), optimal_value);

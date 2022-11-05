@@ -290,6 +290,7 @@ impl StateIndexer {
 
 /// Get the minimum amount of time until a team arrives when the teams are ordered with the given
 /// action.
+#[inline]
 fn min_time_until_arrival(
     graph: &Graph,
     teams: &[TeamState],
@@ -315,6 +316,26 @@ fn min_time_until_arrival(
             }
         })
         .min()
+}
+
+/// Trait for functions that determine the amount of time to be passed when an action is applied.
+pub trait DetermineActionTime {
+    /// Get the amount of time to be passed when the given action is applied.
+    fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time;
+}
+
+/// Get the minimum amount of time until a team arrives when the teams are ordered with the given
+/// action.
+pub struct TimeUntilArrival;
+
+impl DetermineActionTime for TimeUntilArrival {
+    #[inline]
+    fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time {
+        min_time_until_arrival(graph, &action_state.state.teams, actions)
+            // NOTE: if there's no minimum time, it means that all teams are waiting,
+            // which shouldn't happen.
+            .expect("No minimum time in TimeUntilArrival (all waiting)")
+    }
 }
 
 /// Advance time for the teams when the given action is ordered.
@@ -435,11 +456,25 @@ pub trait ActionApplier<TransitionType: Transition> {
     /// Apply the action at given state, returning a list of transitions and the corresponding
     /// successor states.
     fn apply(
-        state: &State,
+        action_state: &ActionState,
         cost: f64,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(TransitionType, State)>;
+
+    /// Apply the action at given state, returning a list of transitions and the corresponding
+    /// successor states.
+    ///
+    /// Syntactic sugar for [`ActionApplier::apply`]
+    #[inline]
+    fn apply_state(
+        state: &State,
+        cost: f64,
+        graph: &Graph,
+        actions: &[TeamAction],
+    ) -> Vec<(TransitionType, State)> {
+        Self::apply(&state.clone().to_action_state(graph), cost, graph, actions)
+    }
 }
 
 /// The most basic action applier.
@@ -449,14 +484,14 @@ pub struct NaiveActionApplier;
 impl ActionApplier<RegularTransition> for NaiveActionApplier {
     #[inline]
     fn apply(
-        state: &State,
+        action_state: &ActionState,
         cost: f64,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(RegularTransition, State)> {
-        debug_assert_eq!(actions.len(), state.teams.len());
-        let teams = advance_time_for_teams(graph, &state.teams, actions, 1);
-        recursive_energization(graph, &teams, state.buses.clone())
+        debug_assert_eq!(actions.len(), action_state.state.teams.len());
+        let teams = advance_time_for_teams(graph, &action_state.state.teams, actions, 1);
+        recursive_energization(graph, &teams, action_state.state.buses.clone())
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = RegularTransition {
@@ -475,26 +510,27 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
 }
 
 /// Simple action applier that takes time into consideration.
-/// Determines the minimum amount of time until a team reaches its destination and advances time
-/// accordingly. Returns `TimedTransition`s.
-pub struct TimedActionApplier;
+/// Advances time according to the amount returned by [`DetermineActionTime`] generic.
+/// Returns [`TimedTransition`]s.
+///
+/// Never construct this struct. Use static methods only.
+pub struct TimedActionApplier<F: DetermineActionTime> {
+    _phantom: std::marker::PhantomData<F>,
+}
 
-impl ActionApplier<TimedTransition> for TimedActionApplier {
+impl<F: DetermineActionTime> ActionApplier<TimedTransition> for TimedActionApplier<F> {
     #[inline]
     fn apply(
-        state: &State,
+        action_state: &ActionState,
         cost: f64,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(TimedTransition, State)> {
-        debug_assert_eq!(actions.len(), state.teams.len());
+        debug_assert_eq!(actions.len(), action_state.state.teams.len());
         // Get minimum time until a team reaches its destination.
-        // NOTE: if there's no minimum time, it means that all teams are waiting, which shouldn't
-        // happen.
-        let time: Time = min_time_until_arrival(graph, &state.teams, actions)
-            .expect("Cannot get minimum time in TimedActionApplier");
-        let teams = advance_time_for_teams(graph, &state.teams, actions, time);
-        recursive_energization(graph, &teams, state.buses.clone())
+        let time: Time = F::get_time(graph, action_state, actions);
+        let teams = advance_time_for_teams(graph, &action_state.state.teams, actions, time);
+        recursive_energization(graph, &teams, action_state.state.buses.clone())
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = TimedTransition {

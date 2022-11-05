@@ -91,13 +91,14 @@ fn paper_example_4_1_1() {
             },
         ),
     ];
-    let outcomes: Vec<(f64, State)> = NaiveActionApplier::apply(&state, cost, &graph, &actions[0])
-        .into_iter()
-        .map(|(transition, state)| {
-            assert_eq!(transition.cost, cost);
-            (transition.p, state)
-        })
-        .collect();
+    let outcomes: Vec<(f64, State)> =
+        NaiveActionApplier::apply_state(&state, cost, &graph, &actions[0])
+            .into_iter()
+            .map(|(transition, state)| {
+                assert_eq!(transition.cost, cost);
+                (transition.p, state)
+            })
+            .collect();
     check_sets(&outcomes, &expected_outcomes);
 }
 
@@ -138,13 +139,14 @@ fn test_timed_action_applier() {
             ],
         },
     )];
-    let outcomes: Vec<(f64, State)> = NaiveActionApplier::apply(&state, cost, &graph, &action)
-        .into_iter()
-        .map(|(transition, state)| {
-            assert_eq!(transition.cost, cost);
-            (transition.p, state)
-        })
-        .collect();
+    let outcomes: Vec<(f64, State)> =
+        NaiveActionApplier::apply_state(&state, cost, &graph, &action)
+            .into_iter()
+            .map(|(transition, state)| {
+                assert_eq!(transition.cost, cost);
+                (transition.p, state)
+            })
+            .collect();
     check_sets(&outcomes, &expected_outcomes);
 
     // Timed action
@@ -193,14 +195,15 @@ fn test_timed_action_applier() {
             },
         ),
     ];
-    let outcomes: Vec<(f64, State)> = TimedActionApplier::apply(&state, cost, &graph, &action)
-        .into_iter()
-        .map(|(transition, state)| {
-            assert_eq!(transition.cost, cost);
-            assert_eq!(transition.time, 2);
-            (transition.p, state)
-        })
-        .collect();
+    let outcomes: Vec<(f64, State)> =
+        TimedActionApplier::<TimeUntilArrival>::apply_state(&state, cost, &graph, &action)
+            .into_iter()
+            .map(|(transition, state)| {
+                assert_eq!(transition.cost, cost);
+                assert_eq!(transition.time, 2);
+                (transition.p, state)
+            })
+            .collect();
     check_sets(&outcomes, &expected_outcomes);
 }
 
