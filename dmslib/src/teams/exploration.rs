@@ -10,7 +10,7 @@ pub trait Explorer<'a, TT: Transition> {
 }
 
 /// Naive action explorer.
-pub struct NaiveExplorer<'a, TT: Transition, AI: ActionIterator<'a>> {
+pub struct NaiveExplorer<'a, TT: Transition, AI: ActionSet<'a>> {
     /// Action iterator.
     iterator: AI,
     /// Reference to a graph.
@@ -23,7 +23,7 @@ pub struct NaiveExplorer<'a, TT: Transition, AI: ActionIterator<'a>> {
     transitions: Vec<Vec<Vec<TT>>>,
 }
 
-impl<'a, TT: Transition, AI: ActionIterator<'a>> NaiveExplorer<'a, TT, AI> {
+impl<'a, TT: Transition, AI: ActionSet<'a>> NaiveExplorer<'a, TT, AI> {
     /// Explore the actions and transitions of a state at the given index in the
     /// StateIndexer.
     #[inline]
@@ -38,10 +38,11 @@ impl<'a, TT: Transition, AI: ActionIterator<'a>> NaiveExplorer<'a, TT, AI> {
         let action_transitions: Vec<Vec<TT>> = if state.is_terminal(self.graph) {
             vec![vec![TT::terminal_transition(index, cost)]]
         } else {
+            let state = state.to_action_state(self.graph);
             self.iterator
-                .prepare_from_state(&state, self.graph)
-                .map(|action| {
-                    AA::apply(&state, cost, self.graph, &action)
+                .prepare(&state)
+                .map(|action: Vec<TeamAction>| -> Vec<TT> {
+                    AA::apply(&state.state, cost, self.graph, &action)
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
@@ -82,10 +83,11 @@ impl<'a, TT: Transition, AI: ActionIterator<'a>> NaiveExplorer<'a, TT, AI> {
                 })
                 .collect()]
         } else {
+            let state = state.to_action_state(self.graph);
             self.iterator
-                .prepare_from_state(&state, self.graph)
+                .prepare(&state)
                 .map(|action| {
-                    AA::apply(&state, cost, self.graph, &action)
+                    AA::apply(&state.state, cost, self.graph, &action)
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
@@ -103,7 +105,7 @@ impl<'a, TT: Transition, AI: ActionIterator<'a>> NaiveExplorer<'a, TT, AI> {
     }
 }
 
-impl<'a, TT: Transition, AI: ActionIterator<'a>> Explorer<'a, TT> for NaiveExplorer<'a, TT, AI> {
+impl<'a, TT: Transition, AI: ActionSet<'a>> Explorer<'a, TT> for NaiveExplorer<'a, TT, AI> {
     fn explore<AA: ActionApplier<TT>>(
         graph: &'a Graph,
         teams: Vec<TeamState>,

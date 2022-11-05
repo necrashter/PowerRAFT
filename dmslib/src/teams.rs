@@ -38,7 +38,6 @@ pub struct Graph {
 }
 
 /// Represents a field teams restoration problem.
-/// Convert your [`webclient::Graph`] to this form with an initial team state and call [`Problem::solve`].
 #[derive(Clone)]
 pub struct Problem {
     graph: Graph,
@@ -135,7 +134,7 @@ impl webclient::Graph {
         let problem = self.to_teams_problem(teams)?;
         let solution = solve_generic::<
             RegularTransition,
-            NaiveExplorer<RegularTransition, NaiveIterator>,
+            NaiveExplorer<RegularTransition, NaiveActions>,
             NaiveActionApplier,
             NaivePolicySynthesizer,
         >(&problem.graph, problem.initial_teams);

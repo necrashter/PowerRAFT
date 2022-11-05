@@ -41,8 +41,8 @@ fn paper_example_4_1_1() {
     let cost = state.get_cost();
     assert_eq!(cost, 4.0);
 
-    let mut iter = NaiveIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
 
     assert_eq!(actions, vec![vec![1, -2]]);
 
@@ -220,8 +220,8 @@ fn on_energized_bus_actions() {
 
     assert_eq!(state.get_cost(), 4.0);
 
-    let mut iter = NaiveIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     let expected_actions: Vec<Vec<TeamAction>> = vec![
         vec![1, 1],
         vec![1, 2],
@@ -238,8 +238,8 @@ fn on_energized_bus_actions() {
     ];
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![
@@ -253,12 +253,12 @@ fn on_energized_bus_actions() {
         vec![5, 4],
     ];
 
-    let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<OnWayIterator<NaiveIterator>>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<FilterEnergizedOnWay<NaiveActions>>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![
@@ -271,23 +271,23 @@ fn on_energized_bus_actions() {
         vec![5, 4],
     ];
 
-    let mut iter = PermutationalIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = PermutationalActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<PermutationalIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<PermutationalActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> =
         vec![vec![1, 1], vec![1, 2], vec![1, 4], vec![4, 4], vec![5, 4]];
 
-    let mut iter = OnWayIterator::<PermutationalIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<PermutationalActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<OnWayIterator<PermutationalIterator>>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<FilterEnergizedOnWay<PermutationalActions>>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 }
 
@@ -313,20 +313,20 @@ fn wait_moving_elimination() {
         vec![1, CONTINUE_ACTION],
     ];
 
-    let mut iter = NaiveIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
 
-    let mut iter = OnWayIterator::<WaitMovingIterator<NaiveIterator>>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<WaitMovingActions<NaiveActions>>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
 }
 
@@ -346,13 +346,16 @@ fn beta_values_on_paper_example() {
         ],
         teams: dummy_teams.clone(),
     };
-    assert_eq!(state.minbetas(&graph), vec![0, 1, 2, 0, 0, usize::MAX]);
+    assert_eq!(
+        state.compute_minbeta(&graph),
+        vec![0, 1, 2, 0, 0, usize::MAX]
+    );
 
     let state = State {
         buses: vec![BusState::Unknown; 6],
         teams: dummy_teams.clone(),
     };
-    assert_eq!(state.minbetas(&graph), vec![1, 2, 3, 1, 2, 3]);
+    assert_eq!(state.compute_minbeta(&graph), vec![1, 2, 3, 1, 2, 3]);
 
     let state = State {
         buses: vec![
@@ -366,7 +369,7 @@ fn beta_values_on_paper_example() {
         teams: dummy_teams.clone(),
     };
     assert_eq!(
-        state.minbetas(&graph),
+        state.compute_minbeta(&graph),
         vec![0, usize::MAX, usize::MAX, 0, usize::MAX, usize::MAX,]
     );
 }
@@ -386,43 +389,43 @@ fn minimal_nonopt_permutations() {
         teams: vec![TeamState::OnBus(2), TeamState::OnBus(3)],
     };
 
-    assert_eq!(state.minbetas(&graph), vec![1, 1]);
+    assert_eq!(state.compute_minbeta(&graph), vec![1, 1]);
 
     let expected_actions: Vec<Vec<TeamAction>> =
         vec![vec![0, 0], vec![1, 0], vec![0, 1], vec![1, 1]];
-    let mut iter = NaiveIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 1]];
-    let mut iter = OnWayIterator::<NaiveIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<NaiveActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = OnWayIterator::<WaitMovingIterator<NaiveIterator>>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<WaitMovingActions<NaiveActions>>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 0], vec![0, 1], vec![1, 1]];
-    let mut iter = PermutationalIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = PermutationalActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = WaitMovingIterator::<PermutationalIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = WaitMovingActions::<PermutationalActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 1]];
-    let mut iter = OnWayIterator::<PermutationalIterator>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<PermutationalActions>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 
-    let mut iter = OnWayIterator::<WaitMovingIterator<PermutationalIterator>>::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = FilterEnergizedOnWay::<WaitMovingActions<PermutationalActions>>::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     check_sets(&actions, &expected_actions);
 }
 
@@ -448,8 +451,8 @@ fn eliminating_cycle_permutations() {
 
     let eliminated_action = vec![1, 5, 2];
 
-    let mut iter = NaiveIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert!(actions.contains(&eliminated_action));
     for action in &actions {
         // Ensure that no team is sent to the bus on which it's standing
@@ -457,8 +460,8 @@ fn eliminating_cycle_permutations() {
         assert_ne!(action[2], 5);
     }
 
-    let mut iter = PermutationalIterator::setup(&graph);
-    let actions: Vec<_> = iter.prepare_from_state(&state, &graph).collect();
+    let iter = PermutationalActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert!(!actions.contains(&eliminated_action));
     for action in &actions {
         // Ensure that no team is sent to the bus on which it's standing

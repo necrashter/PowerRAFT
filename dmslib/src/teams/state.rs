@@ -18,6 +18,7 @@ impl Default for TeamState {
     }
 }
 
+/// State of a single bus.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum BusState {
     Damaged = -1,
@@ -31,85 +32,13 @@ impl Default for BusState {
     }
 }
 
+/// Struct representing a state in MDP.
 #[derive(Eq, Clone)]
 pub struct State {
+    /// The state of each bus.
     pub buses: Vec<BusState>,
+    /// The state of each team.
     pub teams: Vec<TeamState>,
-}
-
-/// Performs recursive energization with given team and bus state on the given graph.
-/// Outcomes are a list of probability and bus state pairs.
-fn recursive_energization(
-    graph: &Graph,
-    teams: &[TeamState],
-    buses: Vec<BusState>,
-) -> Vec<(f64, Vec<BusState>)> {
-    // Buses on which a team is present
-    let team_buses: Vec<usize> = teams
-        .iter()
-        .filter_map(|team| match team {
-            TeamState::OnBus(i) => {
-                let i = *i;
-                if i < buses.len() {
-                    Some(i)
-                } else {
-                    None
-                }
-            }
-            TeamState::EnRoute(_, _, _) => None,
-        })
-        .unique()
-        .collect();
-    // All energization outcomes with probability.
-    let mut outcomes: Vec<(f64, Vec<BusState>)> = Vec::new();
-    // Recursive energization process
-    let mut queue: Vec<(f64, Vec<BusState>)> = vec![(1.0, buses)];
-    while let Some(next) = queue.pop() {
-        let (p, mut state) = next;
-        // Alpha as defined in paper
-        let alpha: Vec<usize> = team_buses
-            .clone()
-            .into_iter()
-            .filter(|i| {
-                let i = *i;
-                state[i] == BusState::Unknown && {
-                    graph.connected[i]
-                        || graph.branches[i]
-                            .iter()
-                            .any(|j| state[*j] == BusState::Energized)
-                }
-            })
-            .collect();
-        if alpha.is_empty() {
-            outcomes.push((p, state));
-            continue;
-        }
-
-        for &i in &alpha {
-            state[i] = BusState::Damaged;
-        }
-        'permutations: loop {
-            let p = alpha.iter().fold(p, |acc, &i| {
-                let pf = graph.pfs[i];
-                acc * if state[i] == BusState::Damaged {
-                    pf
-                } else {
-                    1.0 - pf
-                }
-            });
-            queue.push((p, state.clone()));
-            for &i in &alpha {
-                if state[i] == BusState::Damaged {
-                    state[i] = BusState::Energized;
-                    continue 'permutations;
-                } else {
-                    state[i] = BusState::Damaged;
-                }
-            }
-            break 'permutations;
-        }
-    }
-    outcomes
 }
 
 impl State {
@@ -158,9 +87,7 @@ impl State {
             false
         })
     }
-}
 
-impl State {
     /// Returns a vector such that the value at index i contains:
     /// 1. If the status of bus at index i is unknown,
     ///    a. the smallest j value such that bus at index i is in beta_j(s)
@@ -172,7 +99,7 @@ impl State {
     /// energizable buses, we determine minbeta values and hence unreachable buses,
     /// for which minbeta = infinity.
     #[inline]
-    pub fn minbetas(&self, graph: &Graph) -> Vec<Index> {
+    pub fn compute_minbeta(&self, graph: &Graph) -> Vec<Index> {
         let mut minbeta: Vec<Index> = self
             .buses
             .iter()
@@ -431,6 +358,81 @@ fn advance_time_for_teams(
             }
         })
         .collect()
+}
+
+/// Performs recursive energization with given team and bus state on the given graph.
+/// Outcomes are a list of probability and bus state pairs.
+fn recursive_energization(
+    graph: &Graph,
+    teams: &[TeamState],
+    buses: Vec<BusState>,
+) -> Vec<(f64, Vec<BusState>)> {
+    // Buses on which a team is present
+    let team_buses: Vec<usize> = teams
+        .iter()
+        .filter_map(|team| match team {
+            TeamState::OnBus(i) => {
+                let i = *i;
+                if i < buses.len() {
+                    Some(i)
+                } else {
+                    None
+                }
+            }
+            TeamState::EnRoute(_, _, _) => None,
+        })
+        .unique()
+        .collect();
+    // All energization outcomes with probability.
+    let mut outcomes: Vec<(f64, Vec<BusState>)> = Vec::new();
+    // Recursive energization process
+    let mut queue: Vec<(f64, Vec<BusState>)> = vec![(1.0, buses)];
+    while let Some(next) = queue.pop() {
+        let (p, mut state) = next;
+        // Alpha as defined in paper
+        let alpha: Vec<usize> = team_buses
+            .clone()
+            .into_iter()
+            .filter(|i| {
+                let i = *i;
+                state[i] == BusState::Unknown && {
+                    graph.connected[i]
+                        || graph.branches[i]
+                            .iter()
+                            .any(|j| state[*j] == BusState::Energized)
+                }
+            })
+            .collect();
+        if alpha.is_empty() {
+            outcomes.push((p, state));
+            continue;
+        }
+
+        for &i in &alpha {
+            state[i] = BusState::Damaged;
+        }
+        'permutations: loop {
+            let p = alpha.iter().fold(p, |acc, &i| {
+                let pf = graph.pfs[i];
+                acc * if state[i] == BusState::Damaged {
+                    pf
+                } else {
+                    1.0 - pf
+                }
+            });
+            queue.push((p, state.clone()));
+            for &i in &alpha {
+                if state[i] == BusState::Damaged {
+                    state[i] = BusState::Energized;
+                    continue 'permutations;
+                } else {
+                    state[i] = BusState::Damaged;
+                }
+            }
+            break 'permutations;
+        }
+    }
+    outcomes
 }
 
 /// Trait that contains methods to apply given actions at a given state.
