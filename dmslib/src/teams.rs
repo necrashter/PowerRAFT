@@ -1,9 +1,9 @@
 //! Module for solving field teams restoration problem.
-mod action_iteration;
+mod actions;
 mod exploration;
 pub mod state;
 
-use action_iteration::*;
+use actions::*;
 use exploration::*;
 use state::*;
 
