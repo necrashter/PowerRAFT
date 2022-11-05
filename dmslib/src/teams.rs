@@ -2,10 +2,12 @@
 mod actions;
 mod exploration;
 pub mod state;
+pub mod transitions;
 
 use actions::*;
 use exploration::*;
 use state::*;
+use transitions::*;
 
 use crate::policy::*;
 use crate::webclient;
