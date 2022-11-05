@@ -16,16 +16,19 @@ use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-/// Represents the actions of a single team.
-/// Wait: -1 (WAIT_ACTION constant), Continue: -2 (CONTINUE_ACTION constant), Move: index of the bus.
-pub type TeamAction = isize;
-pub const WAIT_ACTION: isize = -1;
-pub const CONTINUE_ACTION: isize = -2;
+/// Represents the action of a single team with the index of the destination bus.
+/// For waiting teams, this is the index of the current bus.
+/// For en-route teams (continue action), this must be the index of the destination bus.
+pub type TeamAction = usize;
 
 /// Contains information about the distribution system.
 #[derive(Clone)]
 pub struct Graph {
     /// Travel times between each edge.
+    ///
+    /// All diagonal entries must be zero, i.e., distance of each edge to itself is 0.
+    ///
+    /// Triangle inequality is assumed by some [`ActionSet`]s.
     travel_times: Array2<Time>,
     /// Adjacency list for branch connections.
     branches: Vec<Vec<Index>>,

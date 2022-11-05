@@ -137,7 +137,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::OnBus(0)
             ],
-            &[-1, 19, -1],
+            &[0, 19, 0],
         ),
         Some(19)
     );
@@ -150,7 +150,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::OnBus(1)
             ],
-            &[5, -1, 4],
+            &[5, 0, 4],
         ),
         Some(3)
     );
@@ -163,7 +163,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::EnRoute(1, 4, 2)
             ],
-            &[5, 8, CONTINUE_ACTION],
+            &[5, 8, 4],
         ),
         Some(1)
     );
@@ -176,7 +176,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::EnRoute(1, 4, 2)
             ],
-            &[-1, 8, CONTINUE_ACTION],
+            &[0, 8, 4],
         ),
         Some(1)
     );
@@ -188,7 +188,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::EnRoute(1, 4, 2)
             ],
-            &[-1, 8, CONTINUE_ACTION],
+            &[0, 8, 4],
             1
         ),
         vec![
@@ -205,7 +205,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::EnRoute(1, 4, 2)
             ],
-            &[-1, 8, CONTINUE_ACTION],
+            &[0, 8, 4],
             3
         ),
         vec![
@@ -222,7 +222,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::EnRoute(1, 4, 2)
             ],
-            &[-1, 8, CONTINUE_ACTION],
+            &[0, 8, 4],
             8
         ),
         vec![
@@ -236,7 +236,7 @@ fn test_team_times() {
         min_time_until_arrival(
             &graph,
             &[TeamState::EnRoute(1, 4, 2), TeamState::EnRoute(1, 15, 2)],
-            &[CONTINUE_ACTION, CONTINUE_ACTION],
+            &[4, 15],
         ),
         Some(1)
     );
@@ -249,7 +249,7 @@ fn test_team_times() {
                 TeamState::EnRoute(1, 4, 2),
                 TeamState::EnRoute(1, 15, 2)
             ],
-            &[-1, CONTINUE_ACTION, CONTINUE_ACTION],
+            &[0, 4, 15],
         ),
         Some(1)
     );
@@ -261,7 +261,7 @@ fn test_team_times() {
                 TeamState::EnRoute(1, 4, 2),
                 TeamState::EnRoute(1, 15, 2)
             ],
-            &[-1, CONTINUE_ACTION, CONTINUE_ACTION],
+            &[0, 4, 15],
             1
         ),
         vec![
@@ -278,7 +278,7 @@ fn test_team_times() {
                 TeamState::EnRoute(1, 4, 2),
                 TeamState::EnRoute(1, 15, 2)
             ],
-            &[-1, CONTINUE_ACTION, CONTINUE_ACTION],
+            &[0, 4, 15],
             12
         ),
         vec![
@@ -297,7 +297,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::OnBus(1)
             ],
-            &[-1, -1, -1],
+            &[0, 0, 1],
         ),
         None
     );
@@ -309,7 +309,7 @@ fn test_team_times() {
                 TeamState::OnBus(0),
                 TeamState::OnBus(1)
             ],
-            &[-1, -1, -1],
+            &[0, 0, 1],
             20
         ),
         vec![

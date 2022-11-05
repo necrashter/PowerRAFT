@@ -300,17 +300,16 @@ fn min_time_until_arrival(
         .zip(actions.iter())
         .filter_map(|(team, &action)| match team {
             TeamState::OnBus(source) => {
-                if action == WAIT_ACTION {
+                if action == *source {
                     None
                 } else {
-                    debug_assert!(action != CONTINUE_ACTION);
                     let dest = action as usize;
                     let travel_time = graph.travel_times[(*source, dest)];
                     Some(travel_time)
                 }
             }
             TeamState::EnRoute(source, dest, t) => {
-                debug_assert!(action == CONTINUE_ACTION);
+                debug_assert!(action == *dest);
                 let travel_time = graph.travel_times[(*source, *dest)];
                 Some(travel_time - t)
             }
@@ -333,21 +332,16 @@ fn advance_time_for_teams(
             let team = team.clone();
             match team {
                 TeamState::OnBus(source) => {
-                    if action == WAIT_ACTION {
-                        TeamState::OnBus(source)
+                    let dest = action as usize;
+                    let travel_time = graph.travel_times[(source, dest)];
+                    if time >= travel_time {
+                        TeamState::OnBus(dest)
                     } else {
-                        debug_assert!(action != CONTINUE_ACTION);
-                        let dest = action as usize;
-                        let travel_time = graph.travel_times[(source, dest)];
-                        if time >= travel_time {
-                            TeamState::OnBus(dest)
-                        } else {
-                            TeamState::EnRoute(source, dest, time)
-                        }
+                        TeamState::EnRoute(source, dest, time)
                     }
                 }
                 TeamState::EnRoute(source, dest, t) => {
-                    debug_assert!(action == CONTINUE_ACTION);
+                    debug_assert!(action == dest);
                     let travel_time = graph.travel_times[(source, dest)];
                     if time + t >= travel_time {
                         TeamState::OnBus(dest)

@@ -1,9 +1,6 @@
 use super::*;
-use crate::utils::{
-    are_indices_sorted, get_repeating_indices, is_graph_cyclic, sorted_intersection,
-    sorted_intersects,
-};
-use itertools::structs::{Combinations, CombinationsWithReplacement};
+use crate::utils::{are_indices_sorted, get_repeating_indices, sorted_intersects};
+use itertools::structs::CombinationsWithReplacement;
 
 /// Simplified state of a team as fas as actions are concerned.
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -144,12 +141,12 @@ impl<'a> NaiveIt<'a> {
     fn reset(&mut self) {
         let mut next: Option<Vec<TeamAction>> = Some(
             self.action_state
-                .team_states
+                .state
+                .teams
                 .iter()
                 .map(|team_state| match team_state {
-                    TeamActionState::OnUnknownBus => WAIT_ACTION,
-                    TeamActionState::OnKnownBus => 0,
-                    TeamActionState::EnRoute => CONTINUE_ACTION,
+                    TeamState::OnBus(_) => 0,
+                    TeamState::EnRoute(_, _, _) => usize::MAX,
                 })
                 .collect(),
         );
@@ -164,26 +161,14 @@ impl<'a> NaiveIt<'a> {
     /// Returns True if actions wrapped around.
     fn next_action(&self, mut action: Vec<TeamAction>) -> Option<Vec<TeamAction>> {
         for i in 0..action.len() {
-            if action[i] == CONTINUE_ACTION {
-                debug_assert_eq!(self.action_state.team_states[i], TeamActionState::EnRoute);
+            if let TeamState::EnRoute(_, _, _) = self.action_state.state.teams[i] {
                 continue;
             }
             action[i] += 1;
-            if (action[i] as usize) == self.action_state.team_buses_target[i] {
-                // TODO: Encode this as wait?
-                action[i] += 1;
-            }
             if (action[i] as usize) < self.action_state.target_buses.len() {
                 return Some(action);
             } else {
-                action[i] = if self.action_state.team_states[i] == TeamActionState::OnUnknownBus {
-                    WAIT_ACTION
-                } else if self.action_state.team_buses_target[i] == 0 {
-                    debug_assert!(1 < self.action_state.target_buses.len());
-                    1
-                } else {
-                    0
-                };
+                action[i] = 0;
             }
         }
         // If we reach this point every action is wait -> we wrapped around; no more actions
@@ -196,7 +181,7 @@ impl<'a> NaiveIt<'a> {
         self.action_state.progress_satisfied
             || action
                 .iter()
-                .any(|&i| i >= 0 && self.action_state.target_minbeta[i as usize] == 1)
+                .any(|&i| i != usize::MAX && self.action_state.target_minbeta[i] == 1)
     }
 }
 
@@ -206,13 +191,17 @@ impl Iterator for NaiveIt<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let current = self.next.take();
         if let Some(action) = current {
-            let current: Vec<TeamAction> = action
+            let current: Vec<TeamAction> = self
+                .action_state
+                .state
+                .teams
                 .iter()
-                .map(|&i| {
-                    if i == CONTINUE_ACTION || i == WAIT_ACTION {
-                        i
+                .zip(action.iter())
+                .map(|(team, &target)| {
+                    if let TeamState::EnRoute(_, destination, _) = team {
+                        *destination
                     } else {
-                        self.action_state.target_buses[i as usize] as isize
+                        self.action_state.target_buses[target]
                     }
                 })
                 .collect();
@@ -249,60 +238,25 @@ impl<'a> ActionSet<'a> for NaiveActions {
 
 /// An action iterator that eliminates non-optimal permutations.
 pub struct PermutationalIt<'a> {
+    /// ActionState reference
+    action_state: &'a ActionState,
     /// Travel times between each edge.
     travel_times: &'a Array2<Time>,
-    action_state: &'a ActionState,
-    /// Teams that have to move, i.e., standing on a known bus or an initial location outside bus.
-    must_move_teams: Vec<usize>,
-    /// Teams that are allowed to wait, but can also move.
-    can_move_teams: Vec<usize>,
-    /// The number of team that are currently moving from can_move_teams
-    moving_team_count: usize,
-    /// Iterator over which additional teams will move from the set of teams that can wait.
-    moving_team_iter: Combinations<std::vec::IntoIter<usize>>,
+    /// Teams that are ready to receive orders, i.e., not en-route.
+    ready_teams: Vec<usize>,
+    /// The node on which each ready team is located.
+    ready_team_nodes: Vec<usize>,
+    /// Iterator over bus combinations
     bus_combination_iter: CombinationsWithReplacement<std::vec::IntoIter<usize>>,
-    /// Currently ordered teams
-    ordered_teams: Vec<usize>,
     /// Stack of next actions from the permutations of last team-bus combination.
     next_actions: Vec<Vec<TeamAction>>,
 }
 
 impl<'a> PermutationalIt<'a> {
-    /// Call this function after changing moving_team_count
-    fn prepare_moving_team_iter(&mut self) -> bool {
-        self.moving_team_iter = self
-            .can_move_teams
-            .clone()
-            .into_iter()
-            .combinations(self.moving_team_count);
-        self.next_team_combination()
-    }
-
-    /// Get the next moving team combination from `self.moving_team_iter`.
-    fn next_team_combination(&mut self) -> bool {
-        let next_combination = self.moving_team_iter.next();
-        if let Some(combination) = next_combination {
-            // Total moving teams: must_move_teams + combination
-            self.ordered_teams = self
-                .must_move_teams
-                .iter()
-                .cloned()
-                .chain(combination.into_iter())
-                .collect();
-            self.bus_combination_iter = self
-                .action_state
-                .target_buses
-                .clone()
-                .into_iter()
-                .combinations_with_replacement(self.ordered_teams.len());
-            self.next_bus_combination()
-        } else {
-            false
-        }
-    }
-
     /// Get the next target bus combination from `self.bus_combination_iter`.
     /// Consider the permutations and eliminate non-optimal ones.
+    ///
+    /// Called when self.next_actions is empty.
     fn next_bus_combination(&mut self) -> bool {
         if let Some(bus_combination) = self.bus_combination_iter.next() {
             // Check progress condition
@@ -313,55 +267,21 @@ impl<'a> PermutationalIt<'a> {
             {
                 return self.next_bus_combination();
             }
-            // The node on which each ordered team is located.
-            let ordered_team_nodes = self
-                .ordered_teams
-                .iter()
-                .map(|&i| self.action_state.team_nodes[i])
-                .collect_vec();
             // Get the intersection between team_nodes and targets.
-            let bus_target_intersection = sorted_intersection(
-                &bus_combination,
-                &ordered_team_nodes.iter().cloned().sorted().collect(),
-            );
+            // let bus_target_intersection = sorted_intersection(
+            //     &bus_combination,
+            //     &self.ready_team_nodes.iter().cloned().sorted().collect(),
+            // );
             let repeating_indices = get_repeating_indices(&bus_combination);
 
             // Permutation iterator
-            let permutations = (0..self.ordered_teams.len())
-                .permutations(self.ordered_teams.len())
+            let permutations = (0..self.ready_teams.len())
+                .permutations(self.ready_teams.len())
                 .filter(|permutation| {
                     // Remove the permutations that are equivalent due to repeating elements in
                     // combination.
                     if !are_indices_sorted(permutation, &repeating_indices) {
                         return false;
-                    }
-                    // Remove the permutations that send a team to the bus on which it's located.
-                    for (&team_index, &target) in permutation.iter().zip(bus_combination.iter()) {
-                        if ordered_team_nodes[team_index] == target {
-                            return false;
-                        }
-                    }
-                    // Check cycles (teams changing buses with each other)
-                    // There cannot be cycles if intersection is not greater than 1.
-                    if bus_target_intersection.len() > 1 {
-                        let edges: Vec<(usize, usize)> = permutation
-                            .iter()
-                            .cloned()
-                            .zip(bus_combination.iter().cloned())
-                            .filter_map(|(a, b)| {
-                                let a = ordered_team_nodes[a];
-                                let a = bus_target_intersection.binary_search(&a);
-                                let b = bus_target_intersection.binary_search(&b);
-                                match (a, b) {
-                                    (Ok(x), Ok(y)) => Some((x, y)),
-                                    _ => None,
-                                }
-                            })
-                            .sorted()
-                            .collect();
-                        if is_graph_cyclic(bus_target_intersection.len(), &edges) {
-                            return false;
-                        }
                     }
                     true
                 })
@@ -381,12 +301,12 @@ impl<'a> PermutationalIt<'a> {
                     let a = permutations[i]
                         .iter()
                         .zip(bus_combination.iter())
-                        .map(|(&x, &y)| self.travel_times[[ordered_team_nodes[x], y]])
+                        .map(|(&x, &y)| self.travel_times[[self.ready_team_nodes[x], y]])
                         .collect_vec();
                     let b = permutations[j]
                         .iter()
                         .zip(bus_combination.iter())
-                        .map(|(&x, &y)| self.travel_times[[ordered_team_nodes[x], y]])
+                        .map(|(&x, &y)| self.travel_times[[self.ready_team_nodes[x], y]])
                         .collect_vec();
                     let mut all_smaller_eq = true;
                     let mut all_greater_eq = true;
@@ -413,11 +333,12 @@ impl<'a> PermutationalIt<'a> {
 
             let action_template = self
                 .action_state
-                .team_states
+                .state
+                .teams
                 .iter()
                 .map(|s| match s {
-                    TeamActionState::EnRoute => CONTINUE_ACTION,
-                    _ => WAIT_ACTION,
+                    TeamState::OnBus(_) => usize::MAX,
+                    TeamState::EnRoute(_, destination, _) => *destination,
                 })
                 .collect_vec();
             self.next_actions = eliminated
@@ -430,7 +351,7 @@ impl<'a> PermutationalIt<'a> {
                     } else {
                         let mut action = action_template.clone();
                         for (&perm_i, &bus) in permutation.iter().zip(bus_combination.iter()) {
-                            let team_index = self.ordered_teams[perm_i];
+                            let team_index = self.ready_teams[perm_i];
                             action[team_index] = bus as TeamAction;
                         }
                         Some(action)
@@ -438,18 +359,6 @@ impl<'a> PermutationalIt<'a> {
                 })
                 .collect_vec();
             true
-        } else {
-            false
-        }
-    }
-
-    /// Called when self.next_actions is empty. Changes bus or team combination.
-    fn get_next_permutations(&mut self) -> bool {
-        if self.next_bus_combination() || self.next_team_combination() {
-            true
-        } else if self.moving_team_count < self.can_move_teams.len() {
-            self.moving_team_count += 1;
-            self.prepare_moving_team_iter()
         } else {
             false
         }
@@ -462,7 +371,7 @@ impl<'a> Iterator for PermutationalIt<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(action) = self.next_actions.pop() {
             Some(action)
-        } else if self.get_next_permutations() {
+        } else if self.next_bus_combination() {
             self.next()
         } else {
             None
@@ -483,28 +392,32 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
 
     type IT<'b> = PermutationalIt<'b> where Self: 'b;
 
+    /// TODO: What happens ready_teams = 0?
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
-        let mut must_move_teams = Vec::new();
-        let mut can_move_teams = Vec::new();
-        for (i, state) in action_state.team_states.iter().enumerate() {
-            match state {
-                TeamActionState::OnUnknownBus => can_move_teams.push(i),
-                TeamActionState::OnKnownBus => must_move_teams.push(i),
-                TeamActionState::EnRoute => {}
-            }
-        }
+        let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<usize>) = action_state
+            .state
+            .teams
+            .iter()
+            .enumerate()
+            .filter_map(|(i, t)| match t {
+                TeamState::OnBus(b) => Some((i, b)),
+                TeamState::EnRoute(_, _, _) => None,
+            })
+            .unzip();
+        let bus_combination_iter = action_state
+            .target_buses
+            .clone()
+            .into_iter()
+            .combinations_with_replacement(ready_teams.len());
         let mut it = PermutationalIt {
-            travel_times: self.travel_times,
             action_state,
-            must_move_teams,
-            can_move_teams,
-            moving_team_count: 0,
-            moving_team_iter: Vec::new().into_iter().combinations(0),
-            bus_combination_iter: Vec::new().into_iter().combinations_with_replacement(0),
-            ordered_teams: Vec::new(),
+            travel_times: self.travel_times,
+            ready_teams,
+            ready_team_nodes,
+            bus_combination_iter,
             next_actions: Vec::new(),
         };
-        it.prepare_moving_team_iter();
+        it.next_bus_combination();
         it
     }
 }
@@ -555,16 +468,24 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         let action: Vec<TeamAction> = action_state
-            .team_states
+            .state
+            .teams
             .iter()
             .filter_map(|t| match t {
-                TeamActionState::EnRoute => Some(CONTINUE_ACTION),
-                TeamActionState::OnUnknownBus => Some(WAIT_ACTION),
-                TeamActionState::OnKnownBus => None,
+                TeamState::OnBus(b) => {
+                    if *b >= action_state.state.buses.len()
+                        || action_state.state.buses[*b] != BusState::Unknown
+                    {
+                        None
+                    } else {
+                        Some(*b)
+                    }
+                }
+                TeamState::EnRoute(_, destination, _) => Some(*destination),
             })
             .collect_vec();
         let waiting_state =
-            action_state.progress_satisfied && action.len() == action_state.team_states.len();
+            action_state.progress_satisfied && action.len() == action_state.state.teams.len();
         let iter = self.base.prepare(action_state);
         let wait_action = if waiting_state { Some(action) } else { None };
         WaitMovingIterator {
@@ -601,7 +522,7 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
                     .iter()
                     .zip(action.iter())
                     .any(|(&i, &j)| {
-                        if i == usize::MAX || j == CONTINUE_ACTION || j == WAIT_ACTION {
+                        if i == usize::MAX {
                             false
                         } else {
                             sorted_intersects(

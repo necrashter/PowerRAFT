@@ -44,7 +44,7 @@ fn paper_example_4_1_1() {
     let iter = NaiveActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
 
-    assert_eq!(actions, vec![vec![1, -2]]);
+    assert_eq!(actions, vec![vec![1, 2]]);
 
     let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
     let expected_outcomes: Vec<(f64, State)> = vec![
@@ -119,7 +119,7 @@ fn test_timed_action_applier() {
     let cost = state.get_cost();
     assert_eq!(cost, 4.0);
 
-    let action: Vec<TeamAction> = vec![1, -2];
+    let action: Vec<TeamAction> = vec![1, 2];
 
     // Naive action
     let expected_team_outcome: Vec<TeamState> =
@@ -307,11 +307,7 @@ fn wait_moving_elimination() {
 
     assert_eq!(state.get_cost(), 3.0);
 
-    let expected_actions: Vec<Vec<TeamAction>> = vec![
-        vec![WAIT_ACTION, CONTINUE_ACTION],
-        vec![0, CONTINUE_ACTION],
-        vec![1, CONTINUE_ACTION],
-    ];
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 0], vec![0, 0], vec![1, 0]];
 
     let iter = NaiveActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
@@ -323,11 +319,11 @@ fn wait_moving_elimination() {
 
     let iter = WaitMovingActions::<NaiveActions>::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
-    check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
+    check_sets(&actions, &vec![vec![2, 0]]);
 
     let iter = FilterEnergizedOnWay::<WaitMovingActions<NaiveActions>>::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
-    check_sets(&actions, &vec![vec![WAIT_ACTION, CONTINUE_ACTION]]);
+    check_sets(&actions, &vec![vec![2, 0]]);
 }
 
 #[test]
@@ -454,20 +450,10 @@ fn eliminating_cycle_permutations() {
     let iter = NaiveActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert!(actions.contains(&eliminated_action));
-    for action in &actions {
-        // Ensure that no team is sent to the bus on which it's standing
-        assert_ne!(action[1], 2);
-        assert_ne!(action[2], 5);
-    }
 
     let iter = PermutationalActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert!(!actions.contains(&eliminated_action));
-    for action in &actions {
-        // Ensure that no team is sent to the bus on which it's standing
-        assert_ne!(action[1], 2);
-        assert_ne!(action[2], 5);
-    }
 }
 
 /// Team cannot wait on a bus if all paths to an energy source is broken, i.e., it's not in the
