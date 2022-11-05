@@ -68,6 +68,7 @@ impl State {
 /// Trait that represents an iterator for feasible action set.
 /// A(s) in paper.
 pub trait ActionSet<'a> {
+    /// The type of the iterator for this action set type.
     type IT<'b>: Iterator<Item = Vec<TeamAction>> + Sized + 'b
     where
         Self: 'b;
@@ -78,6 +79,8 @@ pub trait ActionSet<'a> {
     /// Prepare an iterator from state action info.
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b>;
 
+    /// Return all actions in a state as a `Vec`.
+    #[inline]
     fn all_actions_in_state(&self, state: &State, graph: &Graph) -> Vec<Vec<TeamAction>> {
         let action_state = state.clone().to_action_state(graph);
         self.prepare(&action_state).collect()
@@ -85,14 +88,16 @@ pub trait ActionSet<'a> {
 }
 
 /// Naive action iterator without any action-eliminating optimizations.
-pub struct NaiveIt<'a> {
+///
+/// See [`NaiveActions`].
+pub struct NaiveIterator<'a> {
     action_state: &'a ActionState,
     /// Next action
     next: Option<Vec<TeamAction>>,
 }
 
-impl<'a> NaiveIt<'a> {
-    // Reset the iterator
+impl<'a> NaiveIterator<'a> {
+    /// Reset the iterator
     fn reset(&mut self) {
         let mut next: Option<Vec<TeamAction>> = Some(
             self.action_state
@@ -140,7 +145,7 @@ impl<'a> NaiveIt<'a> {
     }
 }
 
-impl Iterator for NaiveIt<'_> {
+impl Iterator for NaiveIterator<'_> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -172,17 +177,18 @@ impl Iterator for NaiveIt<'_> {
     }
 }
 
+/// Naive action set definition without any action-eliminating optimizations.
 pub struct NaiveActions;
 
 impl<'a> ActionSet<'a> for NaiveActions {
-    type IT<'b> = NaiveIt<'b>;
+    type IT<'b> = NaiveIterator<'b>;
 
     fn setup(_graph: &Graph) -> Self {
         NaiveActions
     }
 
     fn prepare<'b>(&self, action_state: &'b ActionState) -> Self::IT<'b> {
-        let mut it = NaiveIt {
+        let mut it = NaiveIterator {
             action_state,
             next: None,
         };
@@ -191,8 +197,8 @@ impl<'a> ActionSet<'a> for NaiveActions {
     }
 }
 
-/// An action iterator that eliminates non-optimal permutations.
-pub struct PermutationalIt<'a> {
+/// See [`PermutationalActions`].
+pub struct PermutationalIterator<'a> {
     /// ActionState reference
     action_state: &'a ActionState,
     /// Travel times between each edge.
@@ -207,7 +213,7 @@ pub struct PermutationalIt<'a> {
     next_actions: Vec<Vec<TeamAction>>,
 }
 
-impl<'a> PermutationalIt<'a> {
+impl<'a> PermutationalIterator<'a> {
     /// Get the next target bus combination from `self.bus_combination_iter`.
     /// Consider the permutations and eliminate non-optimal ones.
     ///
@@ -315,7 +321,7 @@ impl<'a> PermutationalIt<'a> {
     }
 }
 
-impl<'a> Iterator for PermutationalIt<'a> {
+impl<'a> Iterator for PermutationalIterator<'a> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -329,6 +335,14 @@ impl<'a> Iterator for PermutationalIt<'a> {
     }
 }
 
+/// An action set definition that eliminates non-optimal permutations of orders.
+///
+/// For example, if action (1, 2) takes (2, 2) time for each team and (2, 1) takes (1, 1), then
+/// the first action is eliminated. Likewise, an action with time (2, 2) would be eliminated in
+/// favor of actions with time (1, 2) or (2, 1).
+///
+/// If both take the same amount of time, e.g., time (2, 2) and (2, 2),  then one of them is
+/// eliminated.
 pub struct PermutationalActions<'a> {
     travel_times: &'a Array2<Time>,
 }
@@ -340,7 +354,7 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
         }
     }
 
-    type IT<'b> = PermutationalIt<'b> where Self: 'b;
+    type IT<'b> = PermutationalIterator<'b> where Self: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<usize>) = action_state
@@ -358,7 +372,7 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
             .clone()
             .into_iter()
             .combinations_with_replacement(ready_teams.len());
-        let mut it = PermutationalIt {
+        let mut it = PermutationalIterator {
             action_state,
             travel_times: self.travel_times,
             ready_teams,
@@ -374,6 +388,8 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
 /// An action iterator that wraps around another action iterator and checks for "wait for moving
 /// teams" condition during initialization. If the condition is met, only wait action will be
 /// issued. Otherwise, the underlying iterator will be initialized and used.
+///
+/// NOTE: This doesn't work correctly under all conditions.
 pub struct WaitMovingIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> {
     /// Underlying iterator.
     iter: T,
@@ -398,6 +414,7 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for WaitMovingIte
     }
 }
 
+/// NOTE: This doesn't work correctly under all conditions.
 pub struct WaitMovingActions<'a, T: ActionSet<'a>> {
     base: T,
     /// This struct semantically stores a reference with `'a` lifetime due to wrapped
@@ -451,6 +468,8 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
 ///
 /// If an energizable component (i.e., in beta_1) that is on the way is skipped in an action, it
 /// will be eliminated.
+///
+/// See [`FilterEnergizedOnWay`].
 pub struct EnergizedOnWayIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> {
     /// Underlying iterator.
     iter: T,
@@ -489,6 +508,10 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
     }
 }
 
+/// A struct that wraps another action set definition and eliminates the actions in which a
+/// team skips an energizable component (i.e., in `beta_1`) on its way.
+///
+/// TODO: Implement the generalized version of this `FilterOnWay`.
 pub struct FilterEnergizedOnWay<'a, T: ActionSet<'a>> {
     base: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
