@@ -469,3 +469,30 @@ fn eliminating_cycle_permutations() {
         assert_ne!(action[2], 5);
     }
 }
+
+/// Team cannot wait on a bus if all paths to an energy source is broken, i.e., it's not in the
+/// beta set.
+#[test]
+fn cannot_wait_if_no_path() {
+    let graph = get_paper_example_graph();
+    let buses: Vec<BusState> = vec![
+        BusState::Energized,
+        BusState::Energized,
+        BusState::Unknown,
+        BusState::Energized,
+        BusState::Damaged,
+        BusState::Unknown,
+    ];
+    let teams: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(5)];
+    let state = State { buses, teams };
+
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 2]];
+
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    assert_eq!(actions, expected_actions);
+
+    let iter = PermutationalActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    assert_eq!(actions, expected_actions);
+}
