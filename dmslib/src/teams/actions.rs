@@ -342,7 +342,6 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
 
     type IT<'b> = PermutationalIt<'b> where Self: 'b;
 
-    /// TODO: What happens ready_teams = 0?
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<usize>) = action_state
             .state

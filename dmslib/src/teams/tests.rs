@@ -482,3 +482,29 @@ fn cannot_wait_if_no_path() {
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert_eq!(actions, expected_actions);
 }
+
+/// Checks the action set when all teams are en-route.
+#[test]
+fn all_enroute_actions() {
+    let graph = get_paper_example_graph();
+    let buses: Vec<BusState> = vec![
+        BusState::Energized,
+        BusState::Energized,
+        BusState::Unknown,
+        BusState::Energized,
+        BusState::Damaged,
+        BusState::Unknown,
+    ];
+    let teams: Vec<TeamState> = vec![TeamState::EnRoute(0, 2, 1), TeamState::EnRoute(3, 2, 1)];
+    let state = State { buses, teams };
+
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 2]];
+
+    let iter = NaiveActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    assert_eq!(actions, expected_actions);
+
+    let iter = PermutationalActions::setup(&graph);
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    assert_eq!(actions, expected_actions);
+}
