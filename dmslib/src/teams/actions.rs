@@ -7,7 +7,9 @@ pub struct ActionState {
     /// Underlying state
     pub state: State,
     /// Each element of this list at position i will give the smallest j for which
-    /// `i` is an element of beta_j(s). j=0 is there's no such j.
+    /// `i` is an element of beta_j(s).
+    /// j=0 if the bus is not Unknown,
+    /// `usize::MAX` if unreachable.
     pub minbeta: Vec<Index>,
     /// This vector contains the elements in the set of reachable buses with Unknown
     /// status, beta(s), in ascending order.

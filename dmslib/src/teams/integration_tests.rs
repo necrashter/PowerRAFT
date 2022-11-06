@@ -17,8 +17,7 @@ fn pe0_1_team() {
             latlng: None,
         }])
         .unwrap();
-
-    let optimal_value = 129.283203125;
+    const OPTIMAL_VALUE: f64 = 129.283203125;
 
     let solution = solve_generic::<
         RegularTransition,
@@ -26,7 +25,7 @@ fn pe0_1_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
     let solution = solve_generic::<
@@ -35,7 +34,7 @@ fn pe0_1_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
     let solution = solve_generic::<
@@ -44,7 +43,7 @@ fn pe0_1_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
     let solution = solve_generic::<
@@ -53,7 +52,27 @@ fn pe0_1_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 544);
+
+    // TimedTransition equivalence with time = 1
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, NaiveActions>,
+        TimedActionApplier<ConstantTime>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 645);
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        TimedActionApplier<ConstantTime>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
     // Timed
@@ -64,7 +83,7 @@ fn pe0_1_team() {
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 433);
 
     let solution = solve_generic::<
@@ -73,7 +92,7 @@ fn pe0_1_team() {
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 }
 
@@ -93,8 +112,7 @@ fn pe0_2_team() {
             },
         ])
         .unwrap();
-
-    let optimal_value = 132.0810546875;
+    const OPTIMAL_VALUE: f64 = 132.0810546875;
 
     let solution = solve_generic::<
         RegularTransition,
@@ -102,7 +120,7 @@ fn pe0_2_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 11545);
 
     let solution = solve_generic::<
@@ -111,7 +129,7 @@ fn pe0_2_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 9039);
 
     let solution = solve_generic::<
@@ -120,7 +138,7 @@ fn pe0_2_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 8234);
 
     let solution = solve_generic::<
@@ -129,7 +147,27 @@ fn pe0_2_team() {
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 6551);
+
+    // TimedTransition equivalence with time = 1
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, NaiveActions>,
+        TimedActionApplier<ConstantTime>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 11545);
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        TimedActionApplier<ConstantTime>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 6551);
 
     // Timed
@@ -140,7 +178,7 @@ fn pe0_2_team() {
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 9089);
 
     let solution = solve_generic::<
@@ -149,6 +187,6 @@ fn pe0_2_team() {
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
-    assert_eq!(solution.get_min_value(), optimal_value);
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5762);
 }

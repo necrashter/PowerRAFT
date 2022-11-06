@@ -39,10 +39,20 @@ pub trait DetermineActionTime {
     fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time;
 }
 
+/// Dummy [`DetermineActionTime`] implementation that always returns 1.
+/// This essentially mimics [`RegularTransition`] with [`TimedTransition`].
+/// Used to test their equivalence when all transitions have time = 1.
+pub struct ConstantTime;
+impl DetermineActionTime for ConstantTime {
+    #[inline]
+    fn get_time(_graph: &Graph, _action_state: &ActionState, _actions: &[TeamAction]) -> Time {
+        1
+    }
+}
+
 /// Get the minimum amount of time until a team arrives when the teams are ordered with the given
 /// action.
 pub struct TimeUntilArrival;
-
 impl DetermineActionTime for TimeUntilArrival {
     #[inline]
     fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time {
