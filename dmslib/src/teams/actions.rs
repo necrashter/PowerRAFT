@@ -285,6 +285,8 @@ impl<'a> PermutationalIterator<'a> {
                     } else if all_greater_eq {
                         // All travel times in b is smaller, eliminate a
                         eliminated[i] = true;
+                        // i has been eliminated.
+                        break;
                     }
                 }
             }
