@@ -9,7 +9,7 @@ fn get_distance_matrix(size: usize) -> Array2<Time> {
 }
 
 #[test]
-fn test_team_times() {
+fn test_min_time_until_arrival() {
     let graph = Graph {
         travel_times: get_distance_matrix(20),
         branches: vec![],
@@ -317,5 +317,159 @@ fn test_team_times() {
             TeamState::OnBus(0),
             TeamState::OnBus(1)
         ],
+    );
+}
+
+/// 10 bus system, everything in on a line
+fn ten_bus_linear_system() -> (Graph, Vec<BusState>) {
+    let graph = Graph {
+        travel_times: get_distance_matrix(10),
+        branches: vec![
+            vec![1],
+            vec![2],
+            vec![3],
+            vec![4],
+            vec![5],
+            vec![6],
+            vec![7],
+            vec![8],
+            vec![9],
+            vec![],
+        ],
+        connected: vec![
+            true, false, false, false, false, false, false, false, false, false,
+        ],
+        pfs: ndarray::arr1(&[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]),
+        team_nodes: Array2::default((0, 0)),
+    };
+
+    let bus_state = vec![
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+        BusState::Unknown,
+    ];
+
+    (graph, bus_state)
+}
+
+#[test]
+fn test_time_until_energization() {
+    let (graph, bus_state) = ten_bus_linear_system();
+
+    assert_eq!(
+        TimeUntilArrival::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![
+                    TeamState::OnBus(3),
+                    TeamState::EnRoute(4, 2, 1),
+                    TeamState::EnRoute(5, 0, 1),
+                ],
+            },
+            &vec![0, 2, 0]
+        ),
+        1
+    );
+
+    assert_eq!(
+        TimeUntilEnergization::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![
+                    TeamState::OnBus(3),
+                    TeamState::EnRoute(4, 2, 1),
+                    TeamState::EnRoute(5, 0, 1),
+                ],
+            },
+            &vec![0, 2, 0]
+        ),
+        3
+    );
+
+    assert_eq!(
+        TimeUntilEnergization::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![
+                    TeamState::OnBus(3),
+                    TeamState::EnRoute(4, 2, 1),
+                    TeamState::EnRoute(3, 0, 1),
+                ],
+            },
+            &vec![0, 2, 0]
+        ),
+        2
+    );
+
+    assert_eq!(
+        TimeUntilArrival::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
+            },
+            &vec![0, 0]
+        ),
+        2
+    );
+
+    assert_eq!(
+        ConstantTime::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
+            },
+            &vec![0, 0]
+        ),
+        1
+    );
+}
+
+#[test]
+fn test_time_until_arrival_progress() {
+    let (graph, bus_state) = ten_bus_linear_system();
+    assert_eq!(
+        TimeUntilArrival::get_time_state(
+            &graph,
+            State {
+                buses: bus_state.clone(),
+                teams: vec![
+                    TeamState::OnBus(3),
+                    TeamState::EnRoute(4, 2, 1),
+                    TeamState::EnRoute(3, 6, 1),
+                ],
+            },
+            &vec![1, 2, 6]
+        ),
+        1
+    );
+}
+
+#[test]
+#[should_panic(expected = "progress condition")]
+fn test_time_until_energization_progress() {
+    let (graph, bus_state) = ten_bus_linear_system();
+    let _time = TimeUntilEnergization::get_time_state(
+        &graph,
+        State {
+            buses: bus_state.clone(),
+            teams: vec![
+                TeamState::OnBus(3),
+                TeamState::EnRoute(4, 2, 1),
+                TeamState::EnRoute(3, 6, 1),
+            ],
+        },
+        &vec![1, 2, 6],
     );
 }

@@ -94,6 +94,15 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        TimedActionApplier<TimeUntilEnergization>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 367);
 }
 
 #[test]
@@ -189,4 +198,13 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone());
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5762);
+
+    let solution = solve_generic::<
+        TimedTransition,
+        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        TimedActionApplier<TimeUntilEnergization>,
+        NaiveTimedPolicySynthesizer,
+    >(&problem.graph, problem.initial_teams.clone());
+    assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
+    assert_eq!(solution.transitions.len(), 4751);
 }

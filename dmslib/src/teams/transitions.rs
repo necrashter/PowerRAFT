@@ -37,6 +37,13 @@ fn min_time_until_arrival(
 pub trait DetermineActionTime {
     /// Get the amount of time to be passed when the given action is applied.
     fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time;
+
+    /// Get the amount of time to be passed when the given action is applied at the given state.
+    ///
+    /// Syntactic sugar for [`DetermineActionTime::get_time`].
+    fn get_time_state(graph: &Graph, state: State, actions: &[TeamAction]) -> Time {
+        Self::get_time(graph, &state.to_action_state(graph), actions)
+    }
 }
 
 /// Dummy [`DetermineActionTime`] implementation that always returns 1.
@@ -60,6 +67,46 @@ impl DetermineActionTime for TimeUntilArrival {
             // NOTE: if there's no minimum time, it means that all teams are waiting,
             // which shouldn't happen.
             .expect("No minimum time in TimeUntilArrival (all waiting)")
+    }
+}
+
+/// Get the minimum amount of time until an energization attempt happens when the teams are
+/// ordered with the given action.
+///
+/// This yields the longest time by which we can advance without potential loss of optimality.
+pub struct TimeUntilEnergization;
+impl DetermineActionTime for TimeUntilEnergization {
+    #[inline]
+    fn get_time(graph: &Graph, action_state: &ActionState, actions: &[TeamAction]) -> Time {
+        action_state
+            .state
+            .teams
+            .iter()
+            .zip(actions.iter())
+            .filter_map(|(team, &action)| {
+                // Only consider buses that are energizable.
+                let beta = action_state.minbeta[action];
+                if beta != 1 {
+                    return None;
+                }
+                match team {
+                    TeamState::OnBus(source) => {
+                        debug_assert_ne!(
+                            action, *source,
+                            "A team cannot reach & wait on a bus without energizing it."
+                        );
+                        let travel_time = graph.travel_times[(*source, action)];
+                        Some(travel_time)
+                    }
+                    TeamState::EnRoute(source, dest, t) => {
+                        debug_assert!(action == *dest);
+                        let travel_time = graph.travel_times[(*source, *dest)];
+                        Some(travel_time - t)
+                    }
+                }
+            })
+            .min()
+            .expect("Cannot get time until energization: progress condition is not satisfied")
     }
 }
 
