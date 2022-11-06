@@ -468,10 +468,9 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
 }
 
 /// An action iterator that wraps around another action iterator and eliminates actions according
-/// to the "components on the way" condition.
-///
-/// If an energizable component (i.e., in beta_1) that is on the way is skipped in an action, it
-/// will be eliminated.
+/// to the "energized components on the way" condition:
+/// - If an energizable component (i.e., in `beta_1` set) that is on the way is skipped in an
+/// action, it will be eliminated.
 ///
 /// See [`FilterEnergizedOnWay`].
 pub struct EnergizedOnWayIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> {
@@ -498,7 +497,7 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
                             false
                         } else {
                             sorted_intersects(
-                                self.on_way[[i, j as usize]].iter(),
+                                self.on_way[(i, j)].iter(),
                                 self.action_state.energizable_buses.iter(),
                             )
                         }
@@ -513,9 +512,7 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
 }
 
 /// A struct that wraps another action set definition and eliminates the actions in which a
-/// team skips an energizable component (i.e., in `beta_1`) on its way.
-///
-/// TODO: Implement the generalized version of this `FilterOnWay`.
+/// team skips an energizable component (i.e., in `beta_1` set ) on its way.
 pub struct FilterEnergizedOnWay<'a, T: ActionSet<'a>> {
     base: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
@@ -528,22 +525,7 @@ pub struct FilterEnergizedOnWay<'a, T: ActionSet<'a>> {
 
 impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterEnergizedOnWay<'a, T> {
     fn setup(graph: &'a Graph) -> Self {
-        let bus_count = graph.branches.len();
-        let mut on_way: Array2<Vec<Index>> = Array2::default(graph.travel_times.raw_dim());
-        for (((i, j), elem), &direct) in on_way.indexed_iter_mut().zip(graph.travel_times.iter()) {
-            if i == j {
-                continue;
-            }
-            for k in 0..bus_count {
-                if i == k || j == k {
-                    continue;
-                }
-                let through_k = graph.travel_times[[i, k]] + graph.travel_times[[k, j]];
-                if through_k <= direct {
-                    elem.push(k);
-                }
-            }
-        }
+        let on_way = graph.get_components_on_way();
         Self {
             base: T::setup(graph),
             on_way,
@@ -559,5 +541,86 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterEnergizedOnWay<'a, T> {
             action_state,
             on_way: &self.on_way,
         }
+    }
+}
+
+/// A struct that wraps another action set definition and eliminates a given action if
+/// there's another action that sends teams to the same buses or buses on the way.
+///
+/// Unlike other action sets, this one collects all actions and compares them with one another.
+///
+/// Complexity is O(actions^2 * teams).
+pub struct FilterOnWay<'a, T: ActionSet<'a>> {
+    base: T,
+    /// For each path i to j, there's an entry for the list of components on that path in ascending
+    /// order.
+    on_way: Array2<Vec<Index>>,
+    /// This struct semantically stores a reference with `'a` lifetime due to wrapped ActionSet.
+    _phantom: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterOnWay<'a, T> {
+    fn setup(graph: &'a Graph) -> Self {
+        let on_way = graph.get_components_on_way();
+        Self {
+            base: T::setup(graph),
+            on_way,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    type IT<'b> = std::vec::IntoIter<Vec<TeamAction>>
+    where
+        Self: 'b;
+
+    fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
+        let actions = self.base.prepare(action_state).collect_vec();
+        let mut eliminated = vec![false; actions.len()];
+        let team_nodes = &action_state.team_nodes;
+
+        for i in 0..actions.len() {
+            if eliminated[i] {
+                continue;
+            }
+            for j in (i + 1)..actions.len() {
+                if eliminated[j] {
+                    continue;
+                }
+                let mut j_is_on_way = true;
+                let mut i_is_on_way = true;
+                for (&team, (&ai, &aj)) in team_nodes
+                    .iter()
+                    .zip(actions[i].iter().zip(actions[j].iter()))
+                {
+                    if ai == aj {
+                        continue;
+                    }
+                    if self.on_way[(team, ai)].binary_search(&aj).is_err() {
+                        // aj is NOT on way
+                        j_is_on_way = false;
+                    }
+                    if self.on_way[(team, aj)].binary_search(&ai).is_err() {
+                        // ai is NOT on way
+                        i_is_on_way = false;
+                    }
+                }
+                if i_is_on_way {
+                    debug_assert!(!j_is_on_way);
+                    eliminated[j] = true;
+                } else if j_is_on_way {
+                    // All travel times in b is smaller, eliminate a
+                    eliminated[i] = true;
+                    // i has been eliminated.
+                    break;
+                }
+            }
+        }
+
+        actions
+            .into_iter()
+            .zip(eliminated.into_iter())
+            .filter_map(|(action, e)| if e { None } else { Some(action) })
+            .collect_vec()
+            .into_iter()
     }
 }

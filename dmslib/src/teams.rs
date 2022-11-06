@@ -42,6 +42,33 @@ pub struct Graph {
     team_nodes: Array2<f64>,
 }
 
+impl Graph {
+    /// Create a matrix that maps each path (i, j) in this graph to a list of buses on that path,
+    /// sorted in ascending order.
+    ///
+    /// A bus k is on path (i, j) if w(i, k) + w(k, j) is smaller or equal to w(i, j) where w is
+    /// the travel time function.
+    pub fn get_components_on_way(&self) -> Array2<Vec<Index>> {
+        let bus_count = self.branches.len();
+        let mut on_way: Array2<Vec<Index>> = Array2::default(self.travel_times.raw_dim());
+        for (((i, j), elem), &direct) in on_way.indexed_iter_mut().zip(self.travel_times.iter()) {
+            if i == j {
+                continue;
+            }
+            for k in 0..bus_count {
+                if i == k || j == k {
+                    continue;
+                }
+                let through_k = self.travel_times[[i, k]] + self.travel_times[[k, j]];
+                if through_k <= direct {
+                    elem.push(k);
+                }
+            }
+        }
+        on_way
+    }
+}
+
 /// Represents a field teams restoration problem.
 #[derive(Clone)]
 pub struct Problem {
@@ -139,7 +166,7 @@ impl webclient::Graph {
         let problem = self.to_teams_problem(teams)?;
         let solution = solve_generic::<
             RegularTransition,
-            NaiveExplorer<RegularTransition, NaiveActions>,
+            NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
             NaiveActionApplier,
             NaivePolicySynthesizer,
         >(&problem.graph, problem.initial_teams);
