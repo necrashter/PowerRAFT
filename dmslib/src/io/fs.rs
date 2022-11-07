@@ -2,6 +2,8 @@
 use super::{GraphEntry, View};
 use crate::EXPERIMENTS_PATH;
 
+use itertools::Itertools;
+
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::path::Path;
@@ -75,6 +77,13 @@ pub fn list_graphs(dir: &Path) -> std::io::Result<HashMap<String, Vec<GraphEntry
     Ok(all_graphs)
 }
 
+/// Convert a string to sanitized JSON filename.
+pub fn name_to_json(name: &str) -> String {
+    let name = name.split_whitespace().join("-");
+    let name = name + ".json";
+    sanitize_filename::sanitize(name)
+}
+
 /// Given a `serde_json::Value`, save it to the [`EXPERIMENTS_PATH`] as a human-readable (pretty)
 /// JSON file.
 pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
@@ -95,7 +104,7 @@ pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
             ));
         }
     };
-    let name = name + ".json";
+    let name = name_to_json(&name);
     let path = Path::new(EXPERIMENTS_PATH).join(name);
     let path = path.as_path();
     let mut file = std::fs::File::options()
@@ -112,4 +121,25 @@ pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
     file.write_all(content.as_bytes())?;
     log::info!("Saved experiment: {}", path.display());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name_to_json() {
+        assert_eq!(
+            name_to_json("WSCC 9-bus System Test 1"),
+            "WSCC-9-bus-System-Test-1.json"
+        );
+        assert_eq!(
+            name_to_json("/WSCC    9-bus System Test 1"),
+            "WSCC-9-bus-System-Test-1.json"
+        );
+        assert_eq!(
+            name_to_json("\\/?WSCC    9-?bus System    Test 1"),
+            "WSCC-9-bus-System-Test-1.json"
+        );
+    }
 }
