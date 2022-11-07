@@ -115,6 +115,15 @@ impl TeamProblem {
         let solution = crate::teams::solve_naive(&problem.graph, problem.initial_teams);
         Ok(solution.to_webclient(problem.graph))
     }
+
+    /// Solve this field teams restoration problem with the given optimizations and return a
+    /// [`TeamSolution`] on success.
+    pub fn solve_custom(self, action_set: &str) -> Result<TeamSolution<RegularTransition>, String> {
+        let problem = self.graph.to_teams_problem(self.teams)?;
+        let solution =
+            crate::teams::solve_custom(&problem.graph, problem.initial_teams, action_set)?;
+        Ok(solution.to_webclient(problem.graph))
+    }
 }
 
 /// Parses a field-teams distribution system restoration problem from JSON.
