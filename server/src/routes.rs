@@ -51,42 +51,8 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::post())
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
-            .map(|req: serde_json::Value| {
-                let graph: dmslib::io::Graph = if let Some(field) = req.get("graph") {
-                    match serde_json::from_value(field.clone()) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            let error = format!("Failed to parse graph: {e}");
-                            return reply::with_status(
-                                reply::json(&error),
-                                StatusCode::BAD_REQUEST,
-                            );
-                        }
-                    }
-                } else {
-                    return reply::with_status(
-                        reply::json(&"No graph given"),
-                        StatusCode::BAD_REQUEST,
-                    );
-                };
-                let teams: Vec<dmslib::io::Team> = if let Some(field) = req.get("teams") {
-                    match serde_json::from_value(field.clone()) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            let error = format!("Failed to parse teams: {e}");
-                            return reply::with_status(
-                                reply::json(&error),
-                                StatusCode::BAD_REQUEST,
-                            );
-                        }
-                    }
-                } else {
-                    return reply::with_status(
-                        reply::json(&"No team info is given"),
-                        StatusCode::BAD_REQUEST,
-                    );
-                };
-                let solution = match graph.solve_teams_problem(teams) {
+            .map(|req: dmslib::io::TeamProblem| {
+                let solution = match req.solve_naive() {
                     Ok(x) => x,
                     Err(e) => {
                         let error = format!("Error while generating a solution: {e}");

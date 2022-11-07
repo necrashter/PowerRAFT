@@ -72,8 +72,8 @@ impl Graph {
 /// Represents a field teams restoration problem.
 #[derive(Clone)]
 pub struct Problem {
-    graph: Graph,
-    initial_teams: Vec<TeamState>,
+    pub graph: Graph,
+    pub initial_teams: Vec<TeamState>,
 }
 
 impl io::Graph {
@@ -157,21 +157,6 @@ impl io::Graph {
             initial_teams,
         })
     }
-
-    /// Solve a field teams restoration problem on this graph.
-    pub fn solve_teams_problem(
-        self,
-        teams: Vec<io::Team>,
-    ) -> Result<io::TeamSolution<RegularTransition>, String> {
-        let problem = self.to_teams_problem(teams)?;
-        let solution = solve_generic::<
-            RegularTransition,
-            NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
-            NaiveActionApplier,
-            NaivePolicySynthesizer,
-        >(&problem.graph, problem.initial_teams);
-        Ok(solution.to_webclient(problem.graph))
-    }
 }
 
 fn solve_generic<'a, TT, E, AA, PS>(graph: &'a Graph, initial_teams: Vec<TeamState>) -> Solution<TT>
@@ -196,6 +181,17 @@ where
         values,
         policy,
     }
+}
+
+/// Solve a field-team restoration problem on this graph with the given teams without any
+/// action elimination or optimizations.
+pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<RegularTransition> {
+    solve_generic::<
+        RegularTransition,
+        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
+        NaiveActionApplier,
+        NaivePolicySynthesizer,
+        >(graph, initial_teams)
 }
 
 /// Stores the solution for a field teams restoration [`Problem`].

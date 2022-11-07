@@ -100,6 +100,50 @@ pub struct Team {
     pub latlng: Option<LatLng>,
 }
 
+/// Represents a field teams restoration problem.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TeamProblem {
+    pub graph: Graph,
+    pub teams: Vec<Team>,
+}
+
+impl TeamProblem {
+    /// Solve this field teams restoration problem without any optimizations and return a
+    /// [`TeamSolution`] on success.
+    pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, String> {
+        let problem = self.graph.to_teams_problem(self.teams)?;
+        let solution = crate::teams::solve_naive(&problem.graph, problem.initial_teams);
+        Ok(solution.to_webclient(problem.graph))
+    }
+}
+
+/// Parses a field-teams distribution system restoration problem from JSON.
+/// Takes input by reference and clones the fields.
+pub fn parse_teams_problem(req: &serde_json::Value) -> Result<(Graph, Vec<Team>), String> {
+    let graph: Graph = if let Some(field) = req.get("graph") {
+        match serde_json::from_value(field.clone()) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(format!("Failed to parse graph: {e}"));
+            }
+        }
+    } else {
+        return Err("No graph is given".to_string());
+    };
+    let teams: Vec<Team> = if let Some(field) = req.get("teams") {
+        match serde_json::from_value(field.clone()) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(format!("Failed to parse teams: {e}"));
+            }
+        }
+    } else {
+        return Err("No team info is given".to_string());
+    };
+    Ok((graph, teams))
+}
+
+
 /// This struct will be the response to a client's request to solve a field teams restoration
 /// problem.
 pub struct TeamSolution<T: Transition> {
