@@ -143,7 +143,6 @@ pub fn parse_teams_problem(req: &serde_json::Value) -> Result<(Graph, Vec<Team>)
     Ok((graph, teams))
 }
 
-
 /// This struct will be the response to a client's request to solve a field teams restoration
 /// problem.
 pub struct TeamSolution<T: Transition> {

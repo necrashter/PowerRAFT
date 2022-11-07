@@ -125,6 +125,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dmscli"
+version = "0.1.0"
+dependencies = [
+ "dmslib",
+]
+
+[[package]]
 name = "dmslib"
 version = "0.1.0"
 dependencies = [

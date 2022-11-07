@@ -191,7 +191,7 @@ pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<Reg
         NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
-        >(graph, initial_teams)
+    >(graph, initial_teams)
 }
 
 /// Stores the solution for a field teams restoration [`Problem`].
