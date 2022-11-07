@@ -1,17 +1,31 @@
-//! This module contains structs to serialize and deserialize web client representation of graphs.
+//! Input output module.
+//!
+//! Contains structs to serialize and deserialize various representation of graphs.
 use crate::policy::*;
 use crate::teams::state::{BusState, TeamState};
 use crate::Time;
-use ndarray::{Array2, ArrayView1};
 
+use ndarray::{Array2, ArrayView1};
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Deserialize, Serialize, Serializer};
+
+pub mod fs;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BranchNodes(pub usize, pub usize);
 
+/// Holds latitude and longitude values as a tuple.
+/// Serialized to JSON as an array of length 2.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LatLng(pub f64, pub f64);
+
+/// Holds latitude and longtitude values of `view` field in graphs.
+/// Unlike [`LatLng`], this one serializes to a JSON Object with `lat` and `lng` fields.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct View {
+    lat: f32,
+    lng: f32,
+}
 
 impl LatLng {
     /// Given 2 latitude and longitude values, returns the distance in kilometers.
@@ -59,6 +73,7 @@ pub struct Resource {
     pub kind: Option<String>,
 }
 
+/// JSON representation of a distribution system graph.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Graph {
     pub name: String,
@@ -67,6 +82,16 @@ pub struct Graph {
     pub external: Vec<ExtBranch>,
     pub nodes: Vec<Node>,
     pub resources: Vec<Resource>,
+}
+
+/// Summarized information about a distribution system [`Graph`].
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GraphEntry {
+    pub filename: String,
+    pub name: String,
+    #[serde(rename = "solutionFile")]
+    pub solution_file: Option<String>,
+    pub view: View,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

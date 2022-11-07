@@ -10,9 +10,9 @@ const SYSTEM_PAPER_EXAMPLE_0: &'static str =
 #[test]
 #[ignore]
 fn pe0_1_team() {
-    let input_graph: webclient::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
+    let input_graph: io::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
     let problem: Problem = input_graph
-        .to_teams_problem(vec![webclient::Team {
+        .to_teams_problem(vec![io::Team {
             index: Some(0),
             latlng: None,
         }])
@@ -144,14 +144,14 @@ fn pe0_1_team() {
 #[test]
 #[ignore]
 fn pe0_2_team() {
-    let input_graph: webclient::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
+    let input_graph: io::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
     let problem: Problem = input_graph
         .to_teams_problem(vec![
-            webclient::Team {
+            io::Team {
                 index: Some(1),
                 latlng: None,
             },
-            webclient::Team {
+            io::Team {
                 index: Some(6),
                 latlng: None,
             },

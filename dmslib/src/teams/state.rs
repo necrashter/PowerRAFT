@@ -199,7 +199,7 @@ impl Serialize for TeamState {
                 map.serialize_entry("time", t)?;
                 // NOTE: An older version put travel time here.
                 // Now we put it in a separate field in output.
-                // See travel_times matrix in webclient::TeamSolution.
+                // See travel_times matrix in io::TeamSolution.
                 map.end()
             }
         }

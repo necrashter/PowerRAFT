@@ -9,8 +9,8 @@ use exploration::*;
 use state::*;
 use transitions::*;
 
+use crate::io;
 use crate::policy::*;
-use crate::webclient;
 use crate::{Index, Time};
 
 use itertools::Itertools;
@@ -76,10 +76,10 @@ pub struct Problem {
     initial_teams: Vec<TeamState>,
 }
 
-impl webclient::Graph {
+impl io::Graph {
     /// Convert this graph for solving a restoration problem with teams.
-    pub fn to_teams_problem(self, teams: Vec<webclient::Team>) -> Result<Problem, String> {
-        let mut locations: Vec<webclient::LatLng> =
+    pub fn to_teams_problem(self, teams: Vec<io::Team>) -> Result<Problem, String> {
+        let mut locations: Vec<io::LatLng> =
             self.nodes.iter().map(|node| node.latlng.clone()).collect();
         let pfs: Array1<f64> = self.nodes.iter().map(|node| node.pf).collect();
 
@@ -161,8 +161,8 @@ impl webclient::Graph {
     /// Solve a field teams restoration problem on this graph.
     pub fn solve_teams_problem(
         self,
-        teams: Vec<webclient::Team>,
-    ) -> Result<webclient::TeamSolution<RegularTransition>, String> {
+        teams: Vec<io::Team>,
+    ) -> Result<io::TeamSolution<RegularTransition>, String> {
         let problem = self.to_teams_problem(teams)?;
         let solution = solve_generic::<
             RegularTransition,
@@ -229,8 +229,8 @@ impl<T: Transition> Solution<T> {
             .unwrap()
     }
 
-    /// Convert the solution to the webclient representation together with the corresponding graph.
-    pub fn to_webclient(self, graph: Graph) -> webclient::TeamSolution<T> {
+    /// Convert the solution to the io representation together with the corresponding graph.
+    pub fn to_webclient(self, graph: Graph) -> io::TeamSolution<T> {
         let Solution {
             total_time,
             generation_time,
@@ -240,7 +240,7 @@ impl<T: Transition> Solution<T> {
             values,
             policy,
         } = self;
-        webclient::TeamSolution {
+        io::TeamSolution {
             total_time,
             generation_time,
             team_nodes: graph.team_nodes,
