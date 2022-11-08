@@ -1,11 +1,28 @@
+use std::path::PathBuf;
+
 use dmslib::io::TeamProblem;
 
-fn main() {
-    let mut args = std::env::args().skip(1);
-    let path = args.next().unwrap();
+use clap::Parser;
 
-    println!("Solving team problem: {}", path);
-    let problem = match TeamProblem::read_from_file(&path) {
+/// Command line arguments
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Path to the experiment JSON file
+    path: PathBuf,
+
+    /// Action set class to use
+    action_set: String,
+
+    /// Action applier class to use. When omitted (default), NaiveActionApplier will be used.
+    action_applier: Option<String>,
+}
+
+fn main() {
+    let args = Args::parse();
+
+    println!("Solving team problem: {}", args.path.to_str().unwrap());
+    let problem = match TeamProblem::read_from_file(args.path) {
         Ok(x) => x,
         Err(err) => {
             eprintln!("Cannot read team problem: {}", err);
@@ -13,9 +30,9 @@ fn main() {
         }
     };
 
-    let action_set = args.next().unwrap();
+    let action_set = args.action_set;
 
-    if let Some(action_applier) = args.next() {
+    if let Some(action_applier) = args.action_applier {
         let solution = match problem.solve_custom_timed(&action_set, &action_applier) {
             Ok(s) => s,
             Err(err) => {

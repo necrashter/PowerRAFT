@@ -124,8 +124,8 @@ pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
 }
 
 impl TeamProblem {
-    pub fn read_from_file(path: &str) -> std::io::Result<TeamProblem> {
-        let content = std::fs::read_to_string(path)?;
+    pub fn read_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<TeamProblem> {
+        let content = std::fs::read_to_string::<P>(path)?;
         let team_problem: TeamProblem = serde_json::from_str(&content)?;
         Ok(team_problem)
     }

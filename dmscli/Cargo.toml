@@ -2,8 +2,9 @@
 name = "dmscli"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["İlker Işık <iiilker99@gmail.com>"]
+description = "CLI for the disaster management system."
 
 [dependencies]
+clap = { version = "4.0.22", features = ["derive"] }
 dmslib = { path = "../dmslib" }
