@@ -175,3 +175,48 @@ pub fn benchmark_custom(
         )
     }
 }
+
+const BENCHMARK_ACTION_APPLIERS: &[&str] = &[
+    "NaiveActionApplier",
+    "TimedActionApplier<TimeUntilArrival>",
+    "TimedActionApplier<TimeUntilEnergization>",
+];
+
+const BENCHMARK_ACTION_SETS: &[&str] = &[
+    "NaiveActions",
+    "PermutationalActions",
+    "FilterOnWay<NaiveActions>",
+    "FilterOnWay<PermutationalActions>",
+    "FilterEnergizedOnWay<NaiveActions>",
+    "FilterEnergizedOnWay<PermutationalActions>",
+];
+
+/// Return an iterator to all possible optimization combinations in `(action_set, action_applier)`
+/// form.
+pub fn iter_optimizations() -> itertools::Product<
+    std::slice::Iter<'static, &'static str>,
+    std::slice::Iter<'static, &'static str>,
+> {
+    itertools::iproduct!(BENCHMARK_ACTION_SETS, BENCHMARK_ACTION_APPLIERS)
+}
+
+/// Run all optimization combination possibilities on this field-teams restoration problem.
+pub fn benchmark_all(
+    graph: &Graph,
+    initial_teams: Vec<TeamState>,
+) -> Vec<io::OptimizationBenchmarkResult> {
+    iter_optimizations()
+        .map(|(action_applier, action_set)| {
+            let result = benchmark_custom(graph, initial_teams.clone(), action_set, action_applier)
+                .expect("Invalid optimization constant class name");
+            let optimizations = io::OptimizationInfo {
+                actions: action_set.to_string(),
+                transitions: action_applier.to_string(),
+            };
+            io::OptimizationBenchmarkResult {
+                optimizations,
+                result,
+            }
+        })
+        .collect()
+}

@@ -108,10 +108,18 @@ pub struct TeamProblem {
 }
 
 impl TeamProblem {
+    /// Prepare this problem before solving.
+    /// - Add nodes for initial team positions.
+    /// - Compute travel times matrix.
+    /// - ...and so on.
+    pub fn prepare(self) -> Result<crate::teams::Problem, String> {
+        self.graph.to_teams_problem(self.teams)
+    }
+
     /// Solve this field teams restoration problem without any optimizations and return a
     /// [`TeamSolution`] on success.
     pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, String> {
-        let problem = self.graph.to_teams_problem(self.teams)?;
+        let problem = self.prepare()?;
         let solution = crate::teams::solve_naive(&problem.graph, problem.initial_teams);
         Ok(solution.to_webclient(problem.graph))
     }
@@ -124,7 +132,7 @@ impl TeamProblem {
         self,
         action_set: &str,
     ) -> Result<TeamSolution<RegularTransition>, String> {
-        let problem = self.graph.to_teams_problem(self.teams)?;
+        let problem = self.prepare()?;
         let solution =
             crate::teams::solve_custom_regular(&problem.graph, problem.initial_teams, action_set)?;
         Ok(solution.to_webclient(problem.graph))
@@ -140,7 +148,7 @@ impl TeamProblem {
         action_set: &str,
         action_applier: &str,
     ) -> Result<TeamSolution<TimedTransition>, String> {
-        let problem = self.graph.to_teams_problem(self.teams)?;
+        let problem = self.prepare()?;
         let solution = crate::teams::solve_custom_timed(
             &problem.graph,
             problem.initial_teams,
@@ -160,7 +168,7 @@ impl TeamProblem {
         action_set: &str,
         action_applier: &str,
     ) -> Result<BenchmarkResult, String> {
-        let problem = self.graph.to_teams_problem(self.teams)?;
+        let problem = self.prepare()?;
         let solution = crate::teams::benchmark_custom(
             &problem.graph,
             problem.initial_teams,
@@ -168,6 +176,15 @@ impl TeamProblem {
             action_applier,
         )?;
         Ok(solution)
+    }
+
+    /// Run all optimization combination possibilities on this field-teams restoration problem.
+    pub fn benchmark_all(self) -> Result<Vec<OptimizationBenchmarkResult>, String> {
+        let problem = self.prepare()?;
+        Ok(crate::teams::benchmark_all(
+            &problem.graph,
+            problem.initial_teams,
+        ))
     }
 }
 
@@ -282,7 +299,7 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
 }
 
 /// Simplified solution struct for storing benchmark-related data.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct BenchmarkResult {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,
@@ -292,6 +309,20 @@ pub struct BenchmarkResult {
     pub states: usize,
     /// Minimum value in the initial state.
     pub value: f64,
+}
+
+#[derive(Serialize, Debug)]
+pub struct OptimizationInfo {
+    /// Action set definition
+    pub actions: String,
+    /// Action applier
+    pub transitions: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct OptimizationBenchmarkResult {
+    pub optimizations: OptimizationInfo,
+    pub result: BenchmarkResult,
 }
 
 #[cfg(test)]
