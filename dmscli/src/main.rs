@@ -15,7 +15,7 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-    /// Run the given experiment with custom optimizations and print benchmark results.
+    /// Run an experiment with custom optimizations.
     BenchmarkSingle {
         /// Path to the experiment JSON file.
         path: PathBuf,
@@ -26,7 +26,7 @@ enum Command {
         #[arg(short, long, default_value = "NaiveActionApplier")]
         transition: String,
     },
-    /// Run the given experiment for all optimization combinations and print results.
+    /// Run an experiment for all optimization combinations.
     Benchmark {
         /// Path to the experiment JSON file.
         path: PathBuf,
@@ -56,7 +56,7 @@ fn main() {
                 Ok(x) => x,
                 Err(err) => {
                     eprintln!("Cannot read team problem: {}", err);
-                    return;
+                    std::process::exit(1);
                 }
             };
 
@@ -64,7 +64,7 @@ fn main() {
                 Ok(s) => s,
                 Err(err) => {
                     eprintln!("Cannot solve team problem: {}", err);
-                    return;
+                    std::process::exit(1);
                 }
             };
 
@@ -81,14 +81,14 @@ fn main() {
                 Ok(x) => x,
                 Err(err) => {
                     eprintln!("Cannot read team problem: {}", err);
-                    return;
+                    std::process::exit(1);
                 }
             };
             let problem = match problem.prepare() {
                 Ok(x) => x,
                 Err(err) => {
                     eprintln!("Error while parsing team problem: {}", err);
-                    return;
+                    std::process::exit(1);
                 }
             };
 
@@ -123,7 +123,7 @@ fn main() {
                     Ok(s) => s,
                     Err(e) => {
                         eprintln!("Error while serializing results: {}", e);
-                        return;
+                        std::process::exit(1);
                     }
                 };
                 println!("{}", serialized);
