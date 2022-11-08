@@ -116,12 +116,37 @@ impl TeamProblem {
         Ok(solution.to_webclient(problem.graph))
     }
 
-    /// Solve this field teams restoration problem with the given optimizations and return a
-    /// [`TeamSolution`] on success.
-    pub fn solve_custom(self, action_set: &str) -> Result<TeamSolution<RegularTransition>, String> {
+    /// Solve the field-teams restoration problem with [`RegularTransition`]s (classic MDP
+    /// transitions without time) and the given action set class.
+    ///
+    /// Returns a [`TeamSolution`] on success.
+    pub fn solve_custom_regular(
+        self,
+        action_set: &str,
+    ) -> Result<TeamSolution<RegularTransition>, String> {
         let problem = self.graph.to_teams_problem(self.teams)?;
         let solution =
-            crate::teams::solve_custom(&problem.graph, problem.initial_teams, action_set)?;
+            crate::teams::solve_custom_regular(&problem.graph, problem.initial_teams, action_set)?;
+        Ok(solution.to_webclient(problem.graph))
+    }
+
+    /// Solve the field-teams restoration problem with [`TimedTransition`]s and the given:
+    /// - action applier class (variations of `TimedActionApplier<T>` where `T` determines time)
+    /// - action set class
+    ///
+    /// Returns a [`TeamSolution`] on success.
+    pub fn solve_custom_timed(
+        self,
+        action_set: &str,
+        action_applier: &str,
+    ) -> Result<TeamSolution<TimedTransition>, String> {
+        let problem = self.graph.to_teams_problem(self.teams)?;
+        let solution = crate::teams::solve_custom_timed(
+            &problem.graph,
+            problem.initial_teams,
+            action_set,
+            action_applier,
+        )?;
         Ok(solution.to_webclient(problem.graph))
     }
 }

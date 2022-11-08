@@ -1,11 +1,13 @@
 //! Module for solving field teams restoration problem.
 mod actions;
 mod exploration;
+mod solve_variations;
 pub mod state;
 pub mod transitions;
 
 use actions::*;
 use exploration::*;
+pub use solve_variations::*;
 use state::*;
 use transitions::*;
 
@@ -180,64 +182,6 @@ where
         transitions,
         values,
         policy,
-    }
-}
-
-/// Solve a field-team restoration problem on this graph with the given teams without any
-/// action elimination or optimizations.
-pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<RegularTransition> {
-    solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(graph, initial_teams)
-}
-
-pub fn solve_custom(
-    graph: &Graph,
-    initial_teams: Vec<TeamState>,
-    action_set: &str,
-) -> Result<Solution<RegularTransition>, String> {
-    macro_rules! generate_code {
-        ($tt:ty; $ps:ty; $aa:ty; $act:ty;) => {
-            Ok(solve_generic::<
-                $tt,
-                NaiveExplorer<$tt, $act>,
-                $aa,
-                $ps,
-            >(graph, initial_teams))
-        };
-        ($tt:ty; $ps:ty; $aa:ty; $act1:ty;) => {
-            if action_set == stringify!($act1) {
-                generate_code!($tt; $ps; $aa; $act1;)
-            } else {
-                Err(format!("Undefined action set: {}", action_set))
-            }
-        };
-        ($tt:ty; $ps:ty; $aa:ty; $act1:ty, $($rem:ty),+;) => {
-            if action_set == stringify!($act1) {
-                generate_code!($tt; $ps; $aa; $act1;)
-            } else {
-                generate_code!($tt; $ps; $aa; $($rem),+;)
-            }
-        };
-        (NaiveActionApplier; $($acts:ty),+;) => {
-            generate_code! {
-                RegularTransition; NaivePolicySynthesizer; NaiveActionApplier; $($acts),+;
-            }
-        };
-    }
-
-    generate_code! {
-        NaiveActionApplier;
-
-        NaiveActions,
-        PermutationalActions,
-        FilterOnWay<NaiveActions>,
-        FilterOnWay<PermutationalActions>,
-        FilterEnergizedOnWay<NaiveActions>,
-        FilterEnergizedOnWay<PermutationalActions>;
     }
 }
 
