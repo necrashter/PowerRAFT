@@ -154,3 +154,24 @@ pub fn solve_custom_timed(
         solve(graph, initial_teams)
     }
 }
+
+/// Solve the field-teams restoration problem with the given:
+/// - action applier class
+/// - action set class
+///
+/// Returns a [`io::BenchmarkResult`] on success.
+pub fn benchmark_custom(
+    graph: &Graph,
+    initial_teams: Vec<TeamState>,
+    action_set: &str,
+    action_applier: &str,
+) -> Result<io::BenchmarkResult, String> {
+    if action_applier == stringify!(NaiveActionApplier) {
+        Ok(solve_custom_regular(graph, initial_teams, action_set)?.to_benchmark_result())
+    } else {
+        Ok(
+            solve_custom_timed(graph, initial_teams, action_set, action_applier)?
+                .to_benchmark_result(),
+        )
+    }
+}

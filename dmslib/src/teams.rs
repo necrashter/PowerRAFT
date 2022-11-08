@@ -239,6 +239,16 @@ impl<T: Transition> Solution<T> {
             policy,
         }
     }
+
+    /// Convert the solution to a [`io::BenchmarkResult`].
+    pub fn to_benchmark_result(self) -> io::BenchmarkResult {
+        io::BenchmarkResult {
+            total_time: self.total_time,
+            generation_time: self.generation_time,
+            states: self.transitions.len(),
+            value: self.get_min_value(),
+        }
+    }
 }
 
 #[cfg(test)]

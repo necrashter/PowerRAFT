@@ -149,6 +149,26 @@ impl TeamProblem {
         )?;
         Ok(solution.to_webclient(problem.graph))
     }
+
+    /// Solve the field-teams restoration problem with the given:
+    /// - action applier class
+    /// - action set class
+    ///
+    /// Returns a [`BenchmarkResult`] on success.
+    pub fn benchmark_custom(
+        self,
+        action_set: &str,
+        action_applier: &str,
+    ) -> Result<BenchmarkResult, String> {
+        let problem = self.graph.to_teams_problem(self.teams)?;
+        let solution = crate::teams::benchmark_custom(
+            &problem.graph,
+            problem.initial_teams,
+            action_set,
+            action_applier,
+        )?;
+        Ok(solution)
+    }
 }
 
 /// Parses a field-teams distribution system restoration problem from JSON.
@@ -259,6 +279,19 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
         }
         seq.end()
     }
+}
+
+/// Simplified solution struct for storing benchmark-related data.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BenchmarkResult {
+    /// Total time to generate the complete solution in seconds.
+    pub total_time: f64,
+    /// Total time to generate the MDP without policy synthesis in seconds.
+    pub generation_time: f64,
+    /// Number of states.
+    pub states: usize,
+    /// Minimum value in the initial state.
+    pub value: f64,
 }
 
 #[cfg(test)]
