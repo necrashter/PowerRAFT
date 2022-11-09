@@ -185,10 +185,10 @@ const BENCHMARK_ACTION_APPLIERS: &[&str] = &[
 const BENCHMARK_ACTION_SETS: &[&str] = &[
     "NaiveActions",
     "PermutationalActions",
-    "FilterOnWay<NaiveActions>",
-    "FilterOnWay<PermutationalActions>",
     "FilterEnergizedOnWay<NaiveActions>",
     "FilterEnergizedOnWay<PermutationalActions>",
+    "FilterOnWay<NaiveActions>",
+    "FilterOnWay<PermutationalActions>",
 ];
 
 /// Return an iterator to all possible optimization combinations in `(action_set, action_applier)`
