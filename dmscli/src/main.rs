@@ -21,12 +21,15 @@ enum Command {
     BenchmarkSingle {
         /// Path to the experiment JSON file.
         path: PathBuf,
-        /// Action set class to use.
+        /// Action set class.
         #[arg(short, long, default_value = "NaiveActions")]
         action: String,
-        /// Action applier class to use.
+        /// Action applier class.
         #[arg(short, long, default_value = "NaiveActionApplier")]
         transition: String,
+        /// Print the results as JSON (Hint: redirect stdout)
+        #[arg(short, long, default_value_t = false)]
+        json: bool,
     },
     /// Run an experiment for all optimization combinations.
     Benchmark {
@@ -107,23 +110,30 @@ fn print_benchmark_result(
     Ok(())
 }
 
-fn benchmark(problem: &dmslib::teams::Problem, action: &str, transition: &str) -> BenchmarkResult {
+fn benchmark(problem: &dmslib::teams::Problem, action: &str, transition: &str) -> OptimizationBenchmarkResult {
     let result = dmslib::teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
         action,
         transition,
     );
-    match result {
+    let result = match result {
         Ok(s) => s,
         Err(err) => fatal_error!(1, "Cannot solve team problem: {}", err),
+    };
+
+    OptimizationBenchmarkResult {
+        result,
+        optimizations: OptimizationInfo {
+            actions: action.to_string(),
+            transitions: transition.to_string(),
+        },
     }
 }
 
 fn main() {
     let args = Args::parse();
 
-    let mut stdout = StandardStream::stdout(ColorChoice::Auto);
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
@@ -131,15 +141,16 @@ fn main() {
             path,
             action,
             transition,
+            json,
         } => {
             let (name, problem) = read_and_parse_team_problem(path);
 
-            stdout.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stdout, "Experiment Name:  ").unwrap();
-            stdout.reset().unwrap();
-            writeln!(&mut stdout, "{}", name).unwrap();
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(&mut stderr, "{}", name).unwrap();
 
-            print_optimizations(&mut stdout, &action, &transition).unwrap();
+            print_optimizations(&mut stderr, &action, &transition).unwrap();
 
             stderr
                 .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -150,27 +161,32 @@ fn main() {
 
             let result = benchmark(&problem, &action, &transition);
 
-            print_benchmark_result(&mut stdout, &result).unwrap();
+            print_benchmark_result(&mut stderr, &result.result).unwrap();
+
+            if json {
+                let serialized = match serde_json::to_string_pretty(&result) {
+                    Ok(s) => s,
+                    Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+                };
+                println!("{}", serialized);
+            }
         }
 
         Command::Benchmark { path, json } => {
             let (name, problem) = read_and_parse_team_problem(path);
 
-            let mut out = if json { stderr } else { stdout };
-            let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-
-            out.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut out, "Experiment Name:  ").unwrap();
-            out.reset().unwrap();
-            writeln!(&mut out, "{}", name).unwrap();
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(&mut stderr, "{}", name).unwrap();
 
             let total_optimizations = iter_optimizations().count();
 
             let results: Vec<OptimizationBenchmarkResult> = iter_optimizations()
                 .enumerate()
                 .map(|(i, (action_set, action_applier))| {
-                    writeln!(&mut out).unwrap();
-                    print_optimizations(&mut out, action_set, action_applier).unwrap();
+                    writeln!(&mut stderr).unwrap();
+                    print_optimizations(&mut stderr, action_set, action_applier).unwrap();
 
                     stderr
                         .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -187,15 +203,9 @@ fn main() {
 
                     let result = benchmark(&problem, action_set, action_applier);
 
-                    print_benchmark_result(&mut out, &result).unwrap();
+                    print_benchmark_result(&mut stderr, &result.result).unwrap();
 
-                    OptimizationBenchmarkResult {
-                        result,
-                        optimizations: OptimizationInfo {
-                            actions: action_set.to_string(),
-                            transitions: action_applier.to_string(),
-                        },
-                    }
+                    result
                 })
                 .collect();
 
