@@ -38,21 +38,26 @@ enum Command {
     },
 }
 
+macro_rules! fatal_error {
+    ($ec:expr, $($arg:tt)*) => {{
+        let mut stderr = StandardStream::stderr(ColorChoice::Auto);
+        stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true)).unwrap();
+        write!(&mut stderr, "FATAL ERROR: ").unwrap();
+        stderr.reset().unwrap();
+        writeln!(&mut stderr, $($arg)*).unwrap();
+        std::process::exit($ec);
+    }};
+}
+
 fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, dmslib::teams::Problem) {
     let mut problem = match TeamProblem::read_from_file(path) {
         Ok(x) => x,
-        Err(err) => {
-            eprintln!("Cannot read team problem: {}", err);
-            std::process::exit(1);
-        }
+        Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
     };
     let name = problem.name.take().unwrap_or("-".to_string());
     let problem = match problem.prepare() {
         Ok(x) => x,
-        Err(err) => {
-            eprintln!("Error while parsing team problem: {}", err);
-            std::process::exit(1);
-        }
+        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
     };
     (name, problem)
 }
@@ -111,10 +116,7 @@ fn benchmark(problem: &dmslib::teams::Problem, action: &str, transition: &str) -
     );
     match result {
         Ok(s) => s,
-        Err(err) => {
-            eprintln!("Cannot solve team problem: {}", err);
-            std::process::exit(1);
-        }
+        Err(err) => fatal_error!(1, "Cannot solve team problem: {}", err),
     }
 }
 
@@ -165,7 +167,7 @@ fn main() {
             let results: Vec<OptimizationBenchmarkResult> = iter_optimizations()
                 .enumerate()
                 .map(|(i, (action_set, action_applier))| {
-                    eprintln!();
+                    writeln!(&mut out).unwrap();
                     print_optimizations(&mut out, &action_set, &action_applier).unwrap();
 
                     stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
@@ -190,10 +192,7 @@ fn main() {
             if json {
                 let serialized = match serde_json::to_string_pretty(&results) {
                     Ok(s) => s,
-                    Err(e) => {
-                        eprintln!("Error while serializing results: {}", e);
-                        std::process::exit(1);
-                    }
+                    Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
                 };
                 println!("{}", serialized);
             }
