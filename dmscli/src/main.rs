@@ -54,7 +54,7 @@ fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, dmslib::team
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
     };
-    let name = problem.name.take().unwrap_or("-".to_string());
+    let name = problem.name.take().unwrap_or_else(|| "-".to_string());
     let problem = match problem.prepare() {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
@@ -141,7 +141,9 @@ fn main() {
 
             print_optimizations(&mut stdout, &action, &transition).unwrap();
 
-            stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
+            stderr
+                .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                .unwrap();
             write!(&mut stderr, "Solving...\r").unwrap();
             stderr.reset().unwrap();
             stderr.flush().unwrap();
@@ -168,14 +170,22 @@ fn main() {
                 .enumerate()
                 .map(|(i, (action_set, action_applier))| {
                     writeln!(&mut out).unwrap();
-                    print_optimizations(&mut out, &action_set, &action_applier).unwrap();
+                    print_optimizations(&mut out, action_set, action_applier).unwrap();
 
-                    stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
-                    write!(&mut stderr, "Solving {}/{}...\r", i + 1, total_optimizations).unwrap();
+                    stderr
+                        .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                        .unwrap();
+                    write!(
+                        &mut stderr,
+                        "Solving {}/{}...\r",
+                        i + 1,
+                        total_optimizations
+                    )
+                    .unwrap();
                     stderr.reset().unwrap();
                     stderr.flush().unwrap();
 
-                    let result = benchmark(&problem, &action_set, &action_applier);
+                    let result = benchmark(&problem, action_set, action_applier);
 
                     print_benchmark_result(&mut out, &result).unwrap();
 
@@ -197,7 +207,9 @@ fn main() {
                 println!("{}", serialized);
             }
 
-            stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
+            stderr
+                .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                .unwrap();
             writeln!(&mut stderr, "\nDone!").unwrap();
             stderr.reset().unwrap();
         }

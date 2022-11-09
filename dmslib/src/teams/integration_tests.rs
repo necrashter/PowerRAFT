@@ -4,8 +4,7 @@
 
 use super::*;
 
-const SYSTEM_PAPER_EXAMPLE_0: &'static str =
-    include_str!("../../../graphs/FieldTeams/paperE0.json");
+const SYSTEM_PAPER_EXAMPLE_0: &str = include_str!("../../../graphs/FieldTeams/paperE0.json");
 
 #[test]
 #[ignore]

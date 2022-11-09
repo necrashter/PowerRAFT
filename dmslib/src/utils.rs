@@ -190,6 +190,7 @@ pub fn get_repeating_indices<T: PartialEq>(v: &[T]) -> Vec<usize> {
 }
 
 #[cfg(test)]
+#[allow(clippy::bool_assert_comparison)]
 mod tests {
     use super::*;
 
@@ -262,17 +263,11 @@ mod tests {
 
     #[test]
     fn are_indices_sorted_test() {
-        assert_eq!(are_indices_sorted(&vec![0], &vec![0]), true,);
+        assert_eq!(are_indices_sorted(&[0], &vec![0]), true,);
+        assert_eq!(are_indices_sorted(&[900, 1, 2, 0, 3], &vec![1, 2, 4]), true,);
+        assert_eq!(are_indices_sorted(&[900, 1, 2, 0, 3], &vec![0, 1]), false,);
         assert_eq!(
-            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![1, 2, 4]),
-            true,
-        );
-        assert_eq!(
-            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![0, 1]),
-            false,
-        );
-        assert_eq!(
-            are_indices_sorted(&vec![900, 1, 2, 0, 3], &vec![1, 2, 3]),
+            are_indices_sorted(&[900, 1, 2, 0, 3], &vec![1, 2, 3]),
             false,
         );
     }
@@ -283,18 +278,15 @@ mod tests {
             get_repeating_indices(&Vec::<usize>::new()),
             Vec::<usize>::new(),
         );
-        assert_eq!(get_repeating_indices(&vec![1]), Vec::<usize>::new(),);
+        assert_eq!(get_repeating_indices(&[1]), Vec::<usize>::new(),);
         assert_eq!(
-            get_repeating_indices(&vec![1, 2, 3, 4, 5, 4]),
+            get_repeating_indices(&[1, 2, 3, 4, 5, 4]),
             Vec::<usize>::new(),
         );
+        assert_eq!(get_repeating_indices(&[1, 2, 3, 3, 3, 4]), vec![2, 3, 4],);
+        assert_eq!(get_repeating_indices(&[0, 0, 0, 0]), vec![0, 1, 2, 3],);
         assert_eq!(
-            get_repeating_indices(&vec![1, 2, 3, 3, 3, 4]),
-            vec![2, 3, 4],
-        );
-        assert_eq!(get_repeating_indices(&vec![0, 0, 0, 0]), vec![0, 1, 2, 3],);
-        assert_eq!(
-            get_repeating_indices(&vec![1, 2, 3, 3, 3, 4, 1, 1, 1, 1]),
+            get_repeating_indices(&[1, 2, 3, 3, 3, 4, 1, 1, 1, 1]),
             vec![2, 3, 4, 6, 7, 8, 9],
         );
     }

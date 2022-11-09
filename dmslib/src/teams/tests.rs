@@ -79,7 +79,7 @@ fn paper_example_4_1_1() {
         (
             0.5 * 0.75,
             State {
-                teams: expected_team_outcome.clone(),
+                teams: expected_team_outcome,
                 buses: vec![
                     BusState::Energized,
                     BusState::Energized,
@@ -183,7 +183,7 @@ fn test_timed_action_applier() {
         (
             0.5 * 0.75,
             State {
-                teams: expected_team_outcome.clone(),
+                teams: expected_team_outcome,
                 buses: vec![
                     BusState::Energized,
                     BusState::Energized,
@@ -365,7 +365,7 @@ fn beta_values_on_paper_example() {
             BusState::Unknown,
             BusState::Unknown,
         ],
-        teams: dummy_teams.clone(),
+        teams: dummy_teams,
     };
     assert_eq!(
         state.compute_minbeta(&graph),

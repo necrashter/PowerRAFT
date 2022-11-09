@@ -473,7 +473,7 @@ mod tests {
                 time: 1,
             }]],
         ];
-        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&&transitions, 10);
+        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&transitions, 10);
         assert_eq!(values, vec![vec![7.5, 10.0], vec![10.0]]);
         assert_eq!(actions, vec![0, 0]);
     }
@@ -509,7 +509,7 @@ mod tests {
                 time: 1,
             }]],
         ];
-        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&&transitions, 10);
+        let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&transitions, 10);
         assert_eq!(values, vec![vec![15.0], vec![10.0], vec![20.0]]);
         assert_eq!(actions, vec![0, 0, 0]);
     }

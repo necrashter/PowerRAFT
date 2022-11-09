@@ -5,7 +5,7 @@ fn get_distance_matrix(size: usize) -> Array2<Time> {
     for ((x, y), v) in a.indexed_iter_mut() {
         *v = x.abs_diff(y);
     }
-    return a;
+    a
 }
 
 #[test]
@@ -374,7 +374,7 @@ fn test_time_until_energization() {
                     TeamState::EnRoute(5, 0, 1),
                 ],
             },
-            &vec![0, 2, 0]
+            &[0, 2, 0]
         ),
         1
     );
@@ -390,7 +390,7 @@ fn test_time_until_energization() {
                     TeamState::EnRoute(5, 0, 1),
                 ],
             },
-            &vec![0, 2, 0]
+            &[0, 2, 0]
         ),
         3
     );
@@ -406,7 +406,7 @@ fn test_time_until_energization() {
                     TeamState::EnRoute(3, 0, 1),
                 ],
             },
-            &vec![0, 2, 0]
+            &[0, 2, 0]
         ),
         2
     );
@@ -418,7 +418,7 @@ fn test_time_until_energization() {
                 buses: bus_state.clone(),
                 teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
             },
-            &vec![0, 0]
+            &[0, 0]
         ),
         2
     );
@@ -427,10 +427,10 @@ fn test_time_until_energization() {
         ConstantTime::get_time_state(
             &graph,
             State {
-                buses: bus_state.clone(),
+                buses: bus_state,
                 teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
             },
-            &vec![0, 0]
+            &[0, 0]
         ),
         1
     );
@@ -443,14 +443,14 @@ fn test_time_until_arrival_progress() {
         TimeUntilArrival::get_time_state(
             &graph,
             State {
-                buses: bus_state.clone(),
+                buses: bus_state,
                 teams: vec![
                     TeamState::OnBus(3),
                     TeamState::EnRoute(4, 2, 1),
                     TeamState::EnRoute(3, 6, 1),
                 ],
             },
-            &vec![1, 2, 6]
+            &[1, 2, 6]
         ),
         1
     );
@@ -463,13 +463,13 @@ fn test_time_until_energization_progress() {
     let _time = TimeUntilEnergization::get_time_state(
         &graph,
         State {
-            buses: bus_state.clone(),
+            buses: bus_state,
             teams: vec![
                 TeamState::OnBus(3),
                 TeamState::EnRoute(4, 2, 1),
                 TeamState::EnRoute(3, 6, 1),
             ],
         },
-        &vec![1, 2, 6],
+        &[1, 2, 6],
     );
 }
