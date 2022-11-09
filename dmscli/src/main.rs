@@ -5,6 +5,7 @@ use dmslib::io::{BenchmarkResult, OptimizationBenchmarkResult, OptimizationInfo,
 use dmslib::teams::iter_optimizations;
 
 use clap::{Parser, Subcommand};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 /// Command line arguments
 #[derive(Parser, Debug)]
@@ -37,14 +38,15 @@ enum Command {
     },
 }
 
-fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> dmslib::teams::Problem {
-    let problem = match TeamProblem::read_from_file(path) {
+fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, dmslib::teams::Problem) {
+    let mut problem = match TeamProblem::read_from_file(path) {
         Ok(x) => x,
         Err(err) => {
             eprintln!("Cannot read team problem: {}", err);
             std::process::exit(1);
         }
     };
+    let name = problem.name.take().unwrap_or("-".to_string());
     let problem = match problem.prepare() {
         Ok(x) => x,
         Err(err) => {
@@ -52,43 +54,75 @@ fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> dmslib::teams::Proble
             std::process::exit(1);
         }
     };
-    problem
+    (name, problem)
 }
 
-fn benchmark<F: FnOnce()>(
-    problem: &dmslib::teams::Problem,
+fn print_optimizations(
+    out: &mut StandardStream,
     action: &str,
     transition: &str,
-    loading_indicator: F,
-) -> BenchmarkResult {
-    eprintln!("Action:           {}", action);
-    eprintln!("Transition:       {}", transition);
+) -> std::io::Result<()> {
+    let mut bold = ColorSpec::new();
+    bold.set_bold(true);
 
-    loading_indicator();
+    out.set_color(&bold)?;
+    write!(out, "Action:           ")?;
+    out.reset()?;
+    writeln!(out, "{}", action)?;
+    out.set_color(&bold)?;
+    write!(out, "Transition:       ")?;
+    out.reset()?;
+    writeln!(out, "{}", transition)?;
+    Ok(())
+}
 
-    let result = match dmslib::teams::benchmark_custom(
+fn print_benchmark_result(
+    out: &mut StandardStream,
+    result: &BenchmarkResult,
+) -> std::io::Result<()> {
+    let mut bold = ColorSpec::new();
+    bold.set_bold(true);
+
+    out.set_color(&bold)?;
+    write!(out, "Number of states: ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.states)?;
+    out.set_color(&bold)?;
+    write!(out, "Generation time:  ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.generation_time)?;
+    out.set_color(&bold)?;
+    write!(out, "Total time:       ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.total_time)?;
+    out.set_color(&bold)?;
+    write!(out, "Min Value:        ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.value)?;
+    Ok(())
+}
+
+fn benchmark(problem: &dmslib::teams::Problem, action: &str, transition: &str) -> BenchmarkResult {
+    let result = dmslib::teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
         action,
         transition,
-    ) {
+    );
+    match result {
         Ok(s) => s,
         Err(err) => {
             eprintln!("Cannot solve team problem: {}", err);
             std::process::exit(1);
         }
-    };
-
-    eprintln!("Number of states: {}", result.states);
-    eprintln!("Generation time:  {}", result.generation_time);
-    eprintln!("Total time:       {}", result.total_time);
-    eprintln!("Min Value:        {}", result.value);
-
-    result
+    }
 }
 
 fn main() {
     let args = Args::parse();
+
+    let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
         Command::BenchmarkSingle {
@@ -96,20 +130,35 @@ fn main() {
             action,
             transition,
         } => {
-            eprintln!("Benchmarking team problem: {}", path.to_str().unwrap());
-            eprintln!();
+            let (name, problem) = read_and_parse_team_problem(path);
 
-            let problem = read_and_parse_team_problem(path);
-            let _ = benchmark(&problem, &action, &transition, || {
-                eprint!("Solving...\r");
-                let _ = std::io::stderr().flush();
-            });
+            stdout.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stdout, "Experiment Name:  ").unwrap();
+            stdout.reset().unwrap();
+            writeln!(&mut stdout, "{}", name).unwrap();
+
+            print_optimizations(&mut stdout, &action, &transition).unwrap();
+
+            stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
+            write!(&mut stderr, "Solving...\r").unwrap();
+            stderr.reset().unwrap();
+            stderr.flush().unwrap();
+
+            let result = benchmark(&problem, &action, &transition);
+
+            print_benchmark_result(&mut stdout, &result).unwrap();
         }
 
         Command::Benchmark { path, json } => {
-            eprintln!("Benchmarking team problem: {}", path.to_str().unwrap());
+            let (name, problem) = read_and_parse_team_problem(path);
 
-            let problem = read_and_parse_team_problem(path);
+            let mut out = if json { stderr } else { stdout };
+            let mut stderr = StandardStream::stderr(ColorChoice::Auto);
+
+            out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut out, "Experiment Name:  ").unwrap();
+            out.reset().unwrap();
+            writeln!(&mut out, "{}", name).unwrap();
 
             let total_optimizations = iter_optimizations().count();
 
@@ -117,10 +166,16 @@ fn main() {
                 .enumerate()
                 .map(|(i, (action_set, action_applier))| {
                     eprintln!();
-                    let result = benchmark(&problem, &action_set, &action_applier, || {
-                        eprint!("Solving {}/{}...\r", i + 1, total_optimizations);
-                        let _ = std::io::stderr().flush();
-                    });
+                    print_optimizations(&mut out, &action_set, &action_applier).unwrap();
+
+                    stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
+                    write!(&mut stderr, "Solving {}/{}...\r", i + 1, total_optimizations).unwrap();
+                    stderr.reset().unwrap();
+                    stderr.flush().unwrap();
+
+                    let result = benchmark(&problem, &action_set, &action_applier);
+
+                    print_benchmark_result(&mut out, &result).unwrap();
 
                     OptimizationBenchmarkResult {
                         result,
@@ -143,8 +198,9 @@ fn main() {
                 println!("{}", serialized);
             }
 
-            eprintln!();
-            eprintln!("Done!");
+            stderr.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true)).unwrap();
+            writeln!(&mut stderr, "\nDone!").unwrap();
+            stderr.reset().unwrap();
         }
     }
 }

@@ -103,6 +103,7 @@ pub struct Team {
 /// Represents a field teams restoration problem.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TeamProblem {
+    pub name: Option<String>,
     pub graph: Graph,
     pub teams: Vec<Team>,
 }

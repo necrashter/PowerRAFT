@@ -9,3 +9,4 @@ description = "CLI for the disaster management system."
 clap = { version = "4.0.22", features = ["derive"] }
 dmslib = { path = "../dmslib" }
 serde_json = "1.0"
+termcolor = "1.1"
