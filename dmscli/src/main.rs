@@ -1,6 +1,7 @@
+use std::path::Path;
 use std::{io::Write, path::PathBuf};
 
-use dmslib::io::{TeamProblem, OptimizationBenchmarkResult, OptimizationInfo};
+use dmslib::io::{BenchmarkResult, OptimizationBenchmarkResult, OptimizationInfo, TeamProblem};
 use dmslib::teams::iter_optimizations;
 
 use clap::{Parser, Subcommand};
@@ -36,6 +37,56 @@ enum Command {
     },
 }
 
+fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> dmslib::teams::Problem {
+    let problem = match TeamProblem::read_from_file(path) {
+        Ok(x) => x,
+        Err(err) => {
+            eprintln!("Cannot read team problem: {}", err);
+            std::process::exit(1);
+        }
+    };
+    let problem = match problem.prepare() {
+        Ok(x) => x,
+        Err(err) => {
+            eprintln!("Error while parsing team problem: {}", err);
+            std::process::exit(1);
+        }
+    };
+    problem
+}
+
+fn benchmark<F: FnOnce()>(
+    problem: &dmslib::teams::Problem,
+    action: &str,
+    transition: &str,
+    loading_indicator: F,
+) -> BenchmarkResult {
+    eprintln!("Action:           {}", action);
+    eprintln!("Transition:       {}", transition);
+
+    loading_indicator();
+
+    let result = match dmslib::teams::benchmark_custom(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        action,
+        transition,
+    ) {
+        Ok(s) => s,
+        Err(err) => {
+            eprintln!("Cannot solve team problem: {}", err);
+            std::process::exit(1);
+        }
+    };
+
+    eprintln!("Number of states: {}", result.states);
+    eprintln!("Generation time:  {}", result.generation_time);
+    eprintln!("Total time:       {}", result.total_time);
+    eprintln!("Min Value:        {}", result.value);
+
+    result
+}
+
 fn main() {
     let args = Args::parse();
 
@@ -46,79 +97,42 @@ fn main() {
             transition,
         } => {
             eprintln!("Benchmarking team problem: {}", path.to_str().unwrap());
-            println!("Action:           {}", action);
-            println!("Transition:       {}", transition);
+            eprintln!();
 
-            eprint!("Solving...\r");
-            let _ = std::io::stderr().flush();
-
-            let problem = match TeamProblem::read_from_file(path) {
-                Ok(x) => x,
-                Err(err) => {
-                    eprintln!("Cannot read team problem: {}", err);
-                    std::process::exit(1);
-                }
-            };
-
-            let result = match problem.benchmark_custom(&action, &transition) {
-                Ok(s) => s,
-                Err(err) => {
-                    eprintln!("Cannot solve team problem: {}", err);
-                    std::process::exit(1);
-                }
-            };
-
-            println!("Number of states: {}", result.states);
-            println!("Generation time:  {}", result.generation_time);
-            println!("Total time:       {}", result.total_time);
-            println!("Min Value:        {}", result.value);
+            let problem = read_and_parse_team_problem(path);
+            let _ = benchmark(&problem, &action, &transition, || {
+                eprint!("Solving...\r");
+                let _ = std::io::stderr().flush();
+            });
         }
 
         Command::Benchmark { path, json } => {
             eprintln!("Benchmarking team problem: {}", path.to_str().unwrap());
 
-            let problem = match TeamProblem::read_from_file(path) {
-                Ok(x) => x,
-                Err(err) => {
-                    eprintln!("Cannot read team problem: {}", err);
-                    std::process::exit(1);
-                }
-            };
-            let problem = match problem.prepare() {
-                Ok(x) => x,
-                Err(err) => {
-                    eprintln!("Error while parsing team problem: {}", err);
-                    std::process::exit(1);
-                }
-            };
+            let problem = read_and_parse_team_problem(path);
 
             let total_optimizations = iter_optimizations().count();
 
+            let results: Vec<OptimizationBenchmarkResult> = iter_optimizations()
+                .enumerate()
+                .map(|(i, (action_set, action_applier))| {
+                    eprintln!();
+                    let result = benchmark(&problem, &action_set, &action_applier, || {
+                        eprint!("Solving {}/{}...\r", i + 1, total_optimizations);
+                        let _ = std::io::stderr().flush();
+                    });
+
+                    OptimizationBenchmarkResult {
+                        result,
+                        optimizations: OptimizationInfo {
+                            actions: action_set.to_string(),
+                            transitions: action_applier.to_string(),
+                        },
+                    }
+                })
+                .collect();
+
             if json {
-                let results: Vec<OptimizationBenchmarkResult>  = iter_optimizations()
-                    .enumerate()
-                    .map(|(i, (action_set, action_applier))| {
-                    eprint!("Solving {}/{}...\r", i + 1, total_optimizations);
-                    let _ = std::io::stderr().flush();
-
-                        let result = dmslib::teams::benchmark_custom(
-                            &problem.graph,
-                            problem.initial_teams.clone(),
-                            action_set,
-                            action_applier,
-                            )
-                            .expect("Invalid optimization class name from iter_optimizations");
-
-                        OptimizationBenchmarkResult {
-                            result,
-                            optimizations: OptimizationInfo {
-                                actions: action_set.to_string(),
-                                transitions: action_applier.to_string(),
-                            }
-                        }
-                    })
-                    .collect();
-                eprintln!("Done!");
                 let serialized = match serde_json::to_string_pretty(&results) {
                     Ok(s) => s,
                     Err(e) => {
@@ -127,29 +141,10 @@ fn main() {
                     }
                 };
                 println!("{}", serialized);
-            } else {
-                for (i, (action_set, action_applier)) in iter_optimizations().enumerate() {
-                    println!();
-                    println!("Actions:          {}", action_set);
-                    println!("Transitions:      {}", action_applier);
-
-                    eprint!("Solving {}/{}...\r", i + 1, total_optimizations);
-                    let _ = std::io::stderr().flush();
-
-                    let result = dmslib::teams::benchmark_custom(
-                        &problem.graph,
-                        problem.initial_teams.clone(),
-                        action_set,
-                        action_applier,
-                        )
-                        .expect("Invalid optimization class name from iter_optimizations");
-
-                    println!("Number of states: {}", result.states);
-                    println!("Generation time:  {}", result.generation_time);
-                    println!("Total time:       {}", result.total_time);
-                    println!("Min Value:        {}", result.value);
-                }
             }
+
+            eprintln!();
+            eprintln!("Done!");
         }
     }
 }
