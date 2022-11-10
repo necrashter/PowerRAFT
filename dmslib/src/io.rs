@@ -5,7 +5,7 @@ use crate::policy::*;
 use crate::teams::state::{BusState, TeamState};
 use crate::Time;
 
-use ndarray::{Array2, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1};
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -100,12 +100,70 @@ pub struct Team {
     pub latlng: Option<LatLng>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum TimeFunc {
+    /// Calculate "as the crow flies" distance between two points, multiply it with the given
+    /// factor, and round it up (to avoid 0) to find travel times.
+    DirectDistance { multiplier: f64 },
+    /// Use a constant value to build travel time matrix (except for diagonal entries).
+    Constant { constant: Time },
+}
+
+impl TimeFunc {
+    /// Get distance between two points according to this function.
+    pub fn get_distance(&self, a: &LatLng, b: &LatLng) -> Time {
+        match self {
+            TimeFunc::DirectDistance { multiplier } => {
+                (a.distance_to(b) * multiplier).ceil() as Time
+            }
+            TimeFunc::Constant { constant } => *constant,
+        }
+    }
+
+    /// Get the travel time matrix for the given locations according to this function.
+    pub fn get_travel_times(&self, locations: &Vec<LatLng>) -> Array2<Time> {
+        let lnodes = locations.len();
+        let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
+
+        match self {
+            TimeFunc::DirectDistance { multiplier } => {
+                for (i1, l1) in locations.iter().enumerate() {
+                    for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
+                        let time = (l1.distance_to(l2) * multiplier).ceil() as Time;
+                        travel_times[(i1, i2)] = time;
+                        travel_times[(i2, i1)] = time;
+                    }
+                }
+            }
+            TimeFunc::Constant { constant } => {
+                let mut travel_times = Array2::<Time>::from_elem((lnodes, lnodes), *constant);
+
+                for i in 0..lnodes {
+                    travel_times[(i, i)] = 0;
+                }
+            }
+        };
+
+        travel_times
+    }
+}
+
+impl Default for TimeFunc {
+    fn default() -> Self {
+        Self::DirectDistance { multiplier: 1.0 }
+    }
+}
+
 /// Represents a field teams restoration problem.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TeamProblem {
     pub name: Option<String>,
     pub graph: Graph,
     pub teams: Vec<Team>,
+    /// Travel time function.
+    #[serde(default, rename = "timeFunction")]
+    pub time_func: TimeFunc,
 }
 
 impl TeamProblem {
@@ -114,7 +172,81 @@ impl TeamProblem {
     /// - Compute travel times matrix.
     /// - ...and so on.
     pub fn prepare(self) -> Result<crate::teams::Problem, String> {
-        self.graph.to_teams_problem(self.teams)
+        let TeamProblem {
+            name: _,
+            graph,
+            teams,
+            time_func,
+        } = self;
+
+        let mut locations: Vec<LatLng> =
+            graph.nodes.iter().map(|node| node.latlng.clone()).collect();
+        let pfs: Array1<f64> = graph.nodes.iter().map(|node| node.pf).collect();
+
+        for (i, team) in teams.iter().enumerate() {
+            if team.index.is_none() && team.latlng.is_none() {
+                return Err(format!("Team {i} has neither index nor latlng!"));
+            }
+        }
+
+        for res in graph.resources.iter() {
+            if res.kind.is_some() {
+                return Err(String::from(
+                    "Only transmission grid is supported for teams!",
+                ));
+            }
+        }
+
+        let initial_teams: Vec<TeamState> = teams
+            .into_iter()
+            .map(|t| {
+                if let Some(i) = t.index {
+                    TeamState::OnBus(i)
+                } else {
+                    let i = locations.len();
+                    // We did error checking above
+                    locations.push(t.latlng.as_ref().unwrap().clone());
+                    TeamState::OnBus(i)
+                }
+            })
+            .collect();
+
+        let travel_times = time_func.get_travel_times(&locations);
+
+        let mut branches = vec![Vec::new(); graph.nodes.len()];
+
+        for branch in graph.branches.iter() {
+            let a = branch.nodes.0;
+            let b = branch.nodes.1;
+            // TODO: throw error on duplicate branch?
+            branches[a].push(b);
+            branches[b].push(a);
+        }
+
+        let mut connected: Vec<bool> = vec![false; graph.nodes.len()];
+
+        for x in graph.external.iter() {
+            connected[x.node] = true;
+        }
+
+        let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
+        for (i, location) in locations.into_iter().enumerate() {
+            team_nodes[(i, 0)] = location.0;
+            team_nodes[(i, 1)] = location.1;
+        }
+
+        let graph = crate::teams::Graph {
+            travel_times,
+            branches,
+            connected,
+            pfs,
+            team_nodes,
+        };
+
+        Ok(crate::teams::Problem {
+            graph,
+            initial_teams,
+        })
     }
 
     /// Solve this field teams restoration problem without any optimizations and return a
