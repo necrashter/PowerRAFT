@@ -81,83 +81,14 @@ pub struct Problem {
 impl io::Graph {
     /// Convert this graph for solving a restoration problem with teams.
     pub fn to_teams_problem(self, teams: Vec<io::Team>) -> Result<Problem, String> {
-        let mut locations: Vec<io::LatLng> =
-            self.nodes.iter().map(|node| node.latlng.clone()).collect();
-        let pfs: Array1<f64> = self.nodes.iter().map(|node| node.pf).collect();
-
-        for (i, team) in teams.iter().enumerate() {
-            if team.index.is_none() && team.latlng.is_none() {
-                return Err(format!("Team {i} has neither index nor latlng!"));
-            }
-        }
-
-        for res in self.resources.iter() {
-            if res.kind.is_some() {
-                return Err(String::from(
-                    "Only transmission grid is supported for teams!",
-                ));
-            }
-        }
-
-        let initial_teams: Vec<TeamState> = teams
-            .into_iter()
-            .map(|t| {
-                if let Some(i) = t.index {
-                    TeamState::OnBus(i)
-                } else {
-                    let i = locations.len();
-                    // We did error checking above
-                    locations.push(t.latlng.as_ref().unwrap().clone());
-                    TeamState::OnBus(i)
-                }
-            })
-            .collect();
-
-        let lnodes = locations.len();
-        let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
-
-        for (i1, l1) in locations.iter().enumerate() {
-            for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
-                let time = l1.distance_to(l2).ceil() as Time;
-                travel_times[(i1, i2)] = time;
-                travel_times[(i2, i1)] = time;
-            }
-        }
-
-        let mut branches = vec![Vec::new(); self.nodes.len()];
-
-        for branch in self.branches.iter() {
-            let a = branch.nodes.0;
-            let b = branch.nodes.1;
-            // TODO: throw error on duplicate branch?
-            branches[a].push(b);
-            branches[b].push(a);
-        }
-
-        let mut connected: Vec<bool> = vec![false; self.nodes.len()];
-
-        for x in self.external.iter() {
-            connected[x.node] = true;
-        }
-
-        let mut team_nodes = Array2::<f64>::zeros((locations.len(), 2));
-        for (i, location) in locations.into_iter().enumerate() {
-            team_nodes[(i, 0)] = location.0;
-            team_nodes[(i, 1)] = location.1;
-        }
-
-        let graph = Graph {
-            travel_times,
-            branches,
-            connected,
-            pfs,
-            team_nodes,
+        let team_problem = crate::io::TeamProblem {
+            name: None,
+            graph: self,
+            teams,
+            time_func: io::TimeFunc::default(),
         };
 
-        Ok(Problem {
-            graph,
-            initial_teams,
-        })
+        team_problem.prepare()
     }
 }
 
