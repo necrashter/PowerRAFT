@@ -33,15 +33,15 @@ pub struct Graph {
     /// All diagonal entries must be zero, i.e., distance of each edge to itself is 0.
     ///
     /// Triangle inequality is assumed by some [`ActionSet`]s.
-    travel_times: Array2<Time>,
+    pub travel_times: Array2<Time>,
     /// Adjacency list for branch connections.
-    branches: Vec<Vec<Index>>,
+    pub branches: Vec<Vec<Index>>,
     /// True if a bus at given index is directly connected to energy resource.
-    connected: Vec<bool>,
+    pub connected: Vec<bool>,
     /// Failure probabilities.
-    pfs: Array1<f64>,
+    pub pfs: Array1<f64>,
     /// The latitude and longtitude for each vertex in team graph.
-    team_nodes: Array2<f64>,
+    pub team_nodes: Array2<f64>,
 }
 
 impl Graph {

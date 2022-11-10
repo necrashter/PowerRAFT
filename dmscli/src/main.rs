@@ -39,6 +39,11 @@ enum Command {
         #[arg(short, long, default_value_t = false)]
         json: bool,
     },
+    /// Print the travel time matrix for an experiment.
+    Tt {
+        /// Path to the experiment JSON file.
+        path: PathBuf,
+    },
 }
 
 macro_rules! fatal_error {
@@ -110,7 +115,11 @@ fn print_benchmark_result(
     Ok(())
 }
 
-fn benchmark(problem: &dmslib::teams::Problem, action: &str, transition: &str) -> OptimizationBenchmarkResult {
+fn benchmark(
+    problem: &dmslib::teams::Problem,
+    action: &str,
+    transition: &str,
+) -> OptimizationBenchmarkResult {
     let result = dmslib::teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
@@ -222,6 +231,29 @@ fn main() {
                 .unwrap();
             writeln!(&mut stderr, "\nDone!").unwrap();
             stderr.reset().unwrap();
+        }
+        Command::Tt { path } => {
+            let (name, problem) = read_and_parse_team_problem(path);
+            let travel_times = problem.graph.travel_times;
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(&mut stderr, "{}", name).unwrap();
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Average Time: ").unwrap();
+            stderr.reset().unwrap();
+            let avg: f64 = travel_times.sum() as f64
+                / (travel_times.shape()[0] * travel_times.shape()[1]) as f64;
+            writeln!(&mut stderr, "{}", avg).unwrap();
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Maximum Time: ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(&mut stderr, "{}", travel_times.iter().max().unwrap()).unwrap();
+
+            println!("{}", &travel_times);
         }
     }
 }
