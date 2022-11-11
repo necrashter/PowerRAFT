@@ -48,6 +48,9 @@ enum Command {
     D {
         /// Path to the experiment JSON file.
         path: PathBuf,
+        /// Number of decimal places in output.
+        #[arg(short, long, default_value_t = 3)]
+        precision: usize,
     },
 }
 
@@ -259,7 +262,7 @@ fn main() {
 
             println!("{}", &travel_times);
         }
-        Command::D { path } => {
+        Command::D { path, precision } => {
             let mut problem = match TeamProblem::read_from_file(path) {
                 Ok(x) => x,
                 Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
@@ -297,7 +300,7 @@ fn main() {
             )
             .unwrap();
 
-            println!("{}", &distances);
+            println!("{:.1$}", &distances, precision);
         }
     }
 }
