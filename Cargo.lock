@@ -178,6 +178,7 @@ dependencies = [
  "itertools",
  "log",
  "ndarray",
+ "num-traits",
  "sanitize-filename",
  "serde",
  "serde_json",

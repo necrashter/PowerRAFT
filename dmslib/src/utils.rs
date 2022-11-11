@@ -1,5 +1,7 @@
 //! Various utility functions.
 
+use ndarray::Array2;
+
 /// Given 2 sorted iterators, returns true if at least one element is common.
 pub fn sorted_intersects<'a, T, IT>(mut a: IT, mut b: IT) -> bool
 where
@@ -189,6 +191,18 @@ pub fn get_repeating_indices<T: PartialEq>(v: &[T]) -> Vec<usize> {
     out
 }
 
+/// For a distance matrix, return the average value, excluding diagonal entries.
+pub fn distance_matrix_average<T>(matrix: &Array2<T>) -> f64
+where
+    T: Clone + num_traits::identities::Zero + num_traits::cast::AsPrimitive<f64>,
+{
+    let size = matrix.shape()[0];
+    debug_assert_eq!(size, matrix.shape()[1]);
+    let sum = matrix.sum();
+    let n_nondiag_elements = size * (size - 1);
+    sum.as_() / n_nondiag_elements as f64
+}
+
 #[cfg(test)]
 #[allow(clippy::bool_assert_comparison)]
 mod tests {
@@ -289,5 +303,13 @@ mod tests {
             get_repeating_indices(&[1, 2, 3, 3, 3, 4, 1, 1, 1, 1]),
             vec![2, 3, 4, 6, 7, 8, 9],
         );
+    }
+
+    #[test]
+    fn test_distance_matrix_average() {
+        let a: Array2<usize> = ndarray::arr2(&[[0, 2], [1, 0]]);
+        assert_eq!(distance_matrix_average(&a), 1.5);
+        let a: Array2<f64> = ndarray::arr2(&[[0.0, 3.5], [1.5, 0.0]]);
+        assert_eq!(distance_matrix_average(&a), 2.5);
     }
 }

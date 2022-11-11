@@ -244,8 +244,7 @@ fn main() {
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
             write!(&mut stderr, "Average Time: ").unwrap();
             stderr.reset().unwrap();
-            let avg: f64 = travel_times.sum() as f64
-                / (travel_times.shape()[0] * travel_times.shape()[1]) as f64;
+            let avg: f64 = dmslib::utils::distance_matrix_average(&travel_times);
             writeln!(&mut stderr, "{}", avg).unwrap();
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
