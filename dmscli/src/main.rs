@@ -44,6 +44,11 @@ enum Command {
         /// Path to the experiment JSON file.
         path: PathBuf,
     },
+    /// Print the direct distance matrix for an experiment.
+    D {
+        /// Path to the experiment JSON file.
+        path: PathBuf,
+    },
 }
 
 macro_rules! fatal_error {
@@ -253,6 +258,46 @@ fn main() {
             writeln!(&mut stderr, "{}", travel_times.iter().max().unwrap()).unwrap();
 
             println!("{}", &travel_times);
+        }
+        Command::D { path } => {
+            let mut problem = match TeamProblem::read_from_file(path) {
+                Ok(x) => x,
+                Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
+            };
+            let name = problem.name.take().unwrap_or_else(|| "-".to_string());
+            let distances = match problem.get_distances() {
+                Ok(x) => x,
+                Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+            };
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(&mut stderr, "{}", name).unwrap();
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Average Distance: ").unwrap();
+            stderr.reset().unwrap();
+            let avg: f64 = dmslib::utils::distance_matrix_average(&distances);
+            writeln!(&mut stderr, "{}", avg).unwrap();
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Maximum Distance: ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(
+                &mut stderr,
+                "{}",
+                distances
+                    .iter()
+                    .max_by(|a, b| {
+                        a.partial_cmp(b)
+                            .expect("Distance values must be comparable (not NaN)")
+                    })
+                    .unwrap()
+            )
+            .unwrap();
+
+            println!("{}", &distances);
         }
     }
 }

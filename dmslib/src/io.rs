@@ -167,6 +167,38 @@ pub struct TeamProblem {
 }
 
 impl TeamProblem {
+    /// Get the distance matrix for the system components + any additional starting positions for
+    /// the teams.
+    pub fn get_distances(&self) -> Result<Array2<f64>, String> {
+        let mut locations: Vec<LatLng> = self
+            .graph
+            .nodes
+            .iter()
+            .map(|node| node.latlng.clone())
+            .collect();
+
+        for (i, team) in self.teams.iter().enumerate() {
+            if let Some(latlng) = &team.latlng {
+                locations.push(latlng.clone());
+            } else if team.index.is_none() {
+                return Err(format!("Team {i} has neither index nor latlng!"));
+            }
+        }
+
+        let lnodes = locations.len();
+        let mut distances = Array2::<f64>::zeros((lnodes, lnodes));
+
+        for (i1, l1) in locations.iter().enumerate() {
+            for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
+                let distance = l1.distance_to(l2);
+                distances[(i1, i2)] = distance;
+                distances[(i2, i1)] = distance;
+            }
+        }
+
+        Ok(distances)
+    }
+
     /// Prepare this problem before solving.
     /// - Add nodes for initial team positions.
     /// - Compute travel times matrix.

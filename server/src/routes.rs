@@ -52,7 +52,13 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
             .map(|req: dmslib::io::TeamProblem| {
-                let solution = match req.solve_naive() {
+                // TODO: Make this configurable from UI
+                let solution = req.solve_naive();
+                // let solution = req.solve_custom_timed(
+                //     "FilterOnWay<PermutationalActions>",
+                //     "TimedActionApplier<TimeUntilEnergization>",
+                // );
+                let solution = match solution {
                     Ok(x) => x,
                     Err(e) => {
                         let error = format!("Error while generating a solution: {e}");
