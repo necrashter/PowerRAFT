@@ -17,9 +17,9 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-    /// Run an experiment with custom optimizations.
-    BenchmarkSingle {
-        /// Path to the experiment JSON file.
+    /// Solve a problem with custom optimizations.
+    Solve {
+        /// Path to the JSON file containing the problem.
         path: PathBuf,
         /// Action set class.
         #[arg(short, long, default_value = "NaiveActions")]
@@ -31,22 +31,22 @@ enum Command {
         #[arg(short, long, default_value_t = false)]
         json: bool,
     },
-    /// Run an experiment for all optimization combinations.
+    /// Solve a problem for all optimization combinations.
     Benchmark {
-        /// Path to the experiment JSON file.
+        /// Path to the JSON file containing the problem.
         path: PathBuf,
         /// Print the results as JSON (Hint: redirect stdout)
         #[arg(short, long, default_value_t = false)]
         json: bool,
     },
-    /// Print the travel time matrix for an experiment.
+    /// Print the travel time matrix for a field-teams problem.
     Tt {
-        /// Path to the experiment JSON file.
+        /// Path to the JSON file containing the problem.
         path: PathBuf,
     },
-    /// Print the direct distance matrix for an experiment.
+    /// Print the direct distance matrix for a field-teams problem.
     D {
-        /// Path to the experiment JSON file.
+        /// Path to the JSON file containing the problem.
         path: PathBuf,
         /// Number of decimal places in output.
         #[arg(short, long, default_value_t = 3)]
@@ -154,7 +154,7 @@ fn main() {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
-        Command::BenchmarkSingle {
+        Command::Solve {
             path,
             action,
             transition,
@@ -163,7 +163,7 @@ fn main() {
             let (name, problem) = read_and_parse_team_problem(path);
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            write!(&mut stderr, "Problem Name:     ").unwrap();
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
@@ -193,7 +193,7 @@ fn main() {
             let (name, problem) = read_and_parse_team_problem(path);
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            write!(&mut stderr, "Problem Name:     ").unwrap();
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
@@ -245,7 +245,7 @@ fn main() {
             let travel_times = problem.graph.travel_times;
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            write!(&mut stderr, "Problem Name: ").unwrap();
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
@@ -274,7 +274,7 @@ fn main() {
             };
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            write!(&mut stderr, "Problem Name:     ").unwrap();
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
