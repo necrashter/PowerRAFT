@@ -11,7 +11,7 @@ pub type Time = usize;
 /// Must end with `/`, or all subdirectory names will start with `/`.
 pub const GRAPHS_PATH: &str = "../graphs/";
 
-/// Path where experiments are stored.
+/// Path where the problems and experiments are stored.
 pub const EXPERIMENTS_PATH: &str = "../experiments/";
 
 pub mod io;

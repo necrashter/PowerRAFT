@@ -86,21 +86,21 @@ pub fn name_to_json(name: &str) -> String {
 
 /// Given a `serde_json::Value`, save it to the [`EXPERIMENTS_PATH`] as a human-readable (pretty)
 /// JSON file.
-pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
+pub fn save_problem(content: &serde_json::Value) -> std::io::Result<()> {
     let name: String = match content.get("name") {
         Some(name) => match name.as_str() {
             Some(s) => s.to_owned(),
             None => {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "Experiment has no name".to_string(),
+                    "Problem has no name".to_string(),
                 ));
             }
         },
         None => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Experiment has no name".to_string(),
+                "Problem has no name".to_string(),
             ));
         }
     };
@@ -119,7 +119,7 @@ pub fn save_experiment(content: &serde_json::Value) -> std::io::Result<()> {
         }
     };
     file.write_all(content.as_bytes())?;
-    log::info!("Saved experiment: {}", path.display());
+    log::info!("Saved problem: {}", path.display());
     Ok(())
 }
 

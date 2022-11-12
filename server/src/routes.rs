@@ -77,11 +77,12 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                 }
             }
         }))
-        .or(warp::path!("save-experiment")
+        .or(warp::path!("save-problem")
             .and(warp::post())
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
             .map(|mut req: serde_json::Value| {
+                dbg!(&req);
                 match req.as_object_mut() {
                     Some(map) => {
                         map.remove("benchmark");
@@ -95,7 +96,7 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                         );
                     }
                 }
-                match save_experiment(&req) {
+                match save_problem(&req) {
                     Ok(_) => reply::with_status(
                         reply::json(&GenericOperationResult::success()),
                         StatusCode::OK,
