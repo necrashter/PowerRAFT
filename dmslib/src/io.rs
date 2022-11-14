@@ -9,7 +9,9 @@ use ndarray::{Array1, Array2, ArrayView1};
 use serde::ser::{SerializeMap, SerializeSeq};
 use serde::{Deserialize, Serialize, Serializer};
 
+mod experiments;
 pub mod fs;
+pub use experiments::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BranchNodes(pub usize, pub usize);
@@ -487,20 +489,6 @@ pub struct BenchmarkResult {
     pub states: usize,
     /// Minimum value in the initial state.
     pub value: f64,
-}
-
-#[derive(Serialize, Debug)]
-pub struct OptimizationInfo {
-    /// Action set definition
-    pub actions: String,
-    /// Action applier
-    pub transitions: String,
-}
-
-#[derive(Serialize, Debug)]
-pub struct OptimizationBenchmarkResult {
-    pub optimizations: OptimizationInfo,
-    pub result: BenchmarkResult,
 }
 
 #[cfg(test)]

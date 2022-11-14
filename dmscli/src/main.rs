@@ -1,7 +1,10 @@
 use std::path::Path;
 use std::{io::Write, path::PathBuf};
 
-use dmslib::io::{BenchmarkResult, OptimizationBenchmarkResult, OptimizationInfo, TeamProblem};
+use dmslib::io::{
+    read_experiments_from_file, BenchmarkResult, OptimizationBenchmarkResult, OptimizationInfo,
+    TeamProblem,
+};
 use dmslib::teams::iter_optimizations;
 
 use clap::{Parser, Subcommand};
@@ -17,6 +20,14 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Run an experiment.
+    Run {
+        /// Path to the experiment JSON file.
+        path: PathBuf,
+        /// Print the results as JSON (Hint: redirect stdout)
+        #[arg(short, long, default_value_t = false)]
+        json: bool,
+    },
     /// Solve a problem with custom optimizations.
     Solve {
         /// Path to the JSON file containing the problem.
@@ -155,6 +166,14 @@ fn main() {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
+        Command::Run { path, json: _ } => {
+            let experiments = match read_experiments_from_file(path) {
+                Ok(s) => s,
+                Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
+            };
+            dbg!(experiments);
+        }
+
         Command::Solve {
             path,
             action,

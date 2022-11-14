@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 use std::collections::HashMap;
 use std::io::prelude::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Yields a list of the graph `.json` files for the root directory and each subdirectory,
 /// Root directory will have an empty string key in the HashMap, and others will have their
@@ -123,10 +123,35 @@ pub fn save_problem(content: &serde_json::Value) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Given a `serde_json::Value`, read its given `field` from the path it specifies if it's a
+/// string, relative to the given `path`.
+pub fn read_field_from_file<P: AsRef<Path>>(
+    value: &mut serde_json::Value,
+    field: &str,
+    path: P,
+) -> std::io::Result<bool> {
+    let field = value.get_mut(field);
+    if let Some(serde_json::Value::String(s)) = field {
+        let mut graph_path = PathBuf::new();
+        graph_path.push(path);
+        graph_path.pop();
+        graph_path.push(s);
+        *field.unwrap() = {
+            let content = std::fs::read_to_string(&graph_path)?;
+            serde_json::from_str(&content)?
+        };
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 impl TeamProblem {
     pub fn read_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<TeamProblem> {
-        let content = std::fs::read_to_string::<P>(path)?;
-        let team_problem: TeamProblem = serde_json::from_str(&content)?;
+        let content = std::fs::read_to_string(&path)?;
+        let mut value: serde_json::Value = serde_json::from_str(&content)?;
+        read_field_from_file(&mut value, "graph", path)?;
+        let team_problem: TeamProblem = serde_json::from_value(value)?;
         Ok(team_problem)
     }
 }
