@@ -14,6 +14,10 @@ pub trait Transition: Serialize {
     fn costless_transition(index: usize, p: f64) -> Self;
     /// Set the index of successor state.
     fn set_successor(&mut self, index: usize);
+    /// Determine the optimization horizon from transition space.
+    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
+    where
+        Self: Sized;
 }
 
 /// A regular MDP transition with probability and cost.
@@ -50,6 +54,27 @@ impl Transition for RegularTransition {
     #[inline]
     fn set_successor(&mut self, index: usize) {
         self.successor = index;
+    }
+
+    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
+    where
+        Self: Sized,
+    {
+        fn visit(index: usize, transitions: &[Vec<Vec<RegularTransition>>]) -> usize {
+            let mut max_depth = 0;
+            for action in transitions[index].iter() {
+                for t in action.iter() {
+                    let depth: usize = if t.successor == index {
+                        1
+                    } else {
+                        visit(t.successor, transitions) + 1
+                    };
+                    max_depth = std::cmp::max(max_depth, depth);
+                }
+            }
+            max_depth
+        }
+        visit(0, transitions)
     }
 }
 
@@ -141,6 +166,27 @@ impl Transition for TimedTransition {
     #[inline]
     fn set_successor(&mut self, index: usize) {
         self.successor = index;
+    }
+
+    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
+    where
+        Self: Sized,
+    {
+        fn visit(index: usize, transitions: &[Vec<Vec<TimedTransition>>]) -> usize {
+            let mut max_depth = 0;
+            for action in transitions[index].iter() {
+                for t in action.iter() {
+                    let depth: usize = if t.successor == index {
+                        t.time
+                    } else {
+                        visit(t.successor, transitions) + t.time
+                    };
+                    max_depth = std::cmp::max(max_depth, depth);
+                }
+            }
+            max_depth
+        }
+        visit(0, transitions)
     }
 }
 

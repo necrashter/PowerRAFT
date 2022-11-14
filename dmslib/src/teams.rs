@@ -117,7 +117,7 @@ where
     let horizon = if let Some(v) = horizon {
         v
     } else {
-        todo!();
+        TT::determine_horizon(&transitions)
     };
     let (values, policy) = PS::synthesize_policy(&transitions, horizon);
     let total_time: f64 = start_time.elapsed().as_secs_f64();
