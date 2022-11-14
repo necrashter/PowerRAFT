@@ -10,22 +10,21 @@ pub trait Explorer<'a, TT: Transition> {
 }
 
 /// Naive action explorer.
-pub struct NaiveExplorer<'a, TT: Transition, AI: ActionSet<'a>> {
+pub struct NaiveExplorer<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> {
     /// Action iterator.
     iterator: AI,
     /// Reference to a graph.
     graph: &'a Graph,
-    /// States
-    states: StateIndexer,
+    /// State indexer.
+    states: SI,
     /// 3D vector of transitions:
     /// - `transitions[i]`: Actions of state i
     /// - `transitions[i][j]`: Transitions of action j in state i
     transitions: Vec<Vec<Vec<TT>>>,
 }
 
-impl<'a, TT: Transition, AI: ActionSet<'a>> NaiveExplorer<'a, TT, AI> {
-    /// Explore the actions and transitions of a state at the given index in the
-    /// StateIndexer.
+impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, TT, AI, SI> {
+    /// Explore the actions and transitions of a state at the given index in the state indexer.
     #[inline]
     fn explore_state<AA: ActionApplier<TT>>(&mut self, index: usize) {
         let state = self.states.get_state(index);
@@ -105,7 +104,9 @@ impl<'a, TT: Transition, AI: ActionSet<'a>> NaiveExplorer<'a, TT, AI> {
     }
 }
 
-impl<'a, TT: Transition, AI: ActionSet<'a>> Explorer<'a, TT> for NaiveExplorer<'a, TT, AI> {
+impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
+    for NaiveExplorer<'a, TT, AI, SI>
+{
     fn explore<AA: ActionApplier<TT>>(
         graph: &'a Graph,
         teams: Vec<TeamState>,
@@ -113,7 +114,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>> Explorer<'a, TT> for NaiveExplorer<'
         let mut explorer = NaiveExplorer {
             iterator: AI::setup(graph),
             graph,
-            states: StateIndexer::new(graph.branches.len(), teams.len()),
+            states: SI::new(graph.branches.len(), teams.len()),
             transitions: Vec::new(),
         };
         let mut index = explorer
@@ -121,7 +122,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>> Explorer<'a, TT> for NaiveExplorer<'
             .index_state(&State::start_state(graph, teams));
         explorer.explore_initial::<AA>(index);
         index += 1;
-        while index < explorer.states.state_count {
+        while index < explorer.states.get_state_count() {
             explorer.explore_state::<AA>(index);
             index += 1;
         }

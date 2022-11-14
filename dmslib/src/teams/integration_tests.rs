@@ -20,7 +20,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions>,
+        NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -29,7 +29,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, PermutationalActions>,
+        NaiveExplorer<RegularTransition, PermutationalActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -38,7 +38,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>>,
+        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -47,7 +47,11 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            RegularTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -56,7 +60,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
+        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -65,7 +69,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -76,7 +80,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions>,
+        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -85,7 +89,11 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -94,7 +102,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -105,7 +113,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions>,
+        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -114,7 +122,11 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -123,7 +135,11 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<TimeUntilEnergization>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -132,7 +148,7 @@ fn pe0_1_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         TimedActionApplier<TimeUntilEnergization>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -160,7 +176,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions>,
+        NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -169,7 +185,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, PermutationalActions>,
+        NaiveExplorer<RegularTransition, PermutationalActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -178,7 +194,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>>,
+        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -187,7 +203,11 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            RegularTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -196,7 +216,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>>,
+        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -205,7 +225,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -216,7 +236,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions>,
+        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -225,7 +245,11 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -234,7 +258,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         TimedActionApplier<ConstantTime>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -245,7 +269,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions>,
+        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -254,7 +278,11 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -263,7 +291,11 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            NaiveStateIndexer,
+        >,
         TimedActionApplier<TimeUntilEnergization>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -272,7 +304,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         TimedActionApplier<TimeUntilArrival>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());
@@ -281,7 +313,7 @@ fn pe0_2_team() {
 
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>>,
+        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
         TimedActionApplier<TimeUntilEnergization>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone());

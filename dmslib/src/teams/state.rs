@@ -219,10 +219,24 @@ impl Serialize for BusState {
     }
 }
 
-/// A struct for indexing the explored states of a team-based restoration problem.
-pub struct StateIndexer {
+/// A trait for indexing the explored states of a team-based restoration problem.
+pub trait StateIndexer {
+    /// New state indexer structure from graph.
+    fn new(bus_count: usize, team_count: usize) -> Self;
+    /// Get the number of states.
+    fn get_state_count(&self) -> usize;
+    /// Get the index of given state, adding it to the hasmap when necessary.
+    fn index_state(&mut self, s: &State) -> usize;
+    /// Get the state at given index.
+    fn get_state(&self, index: usize) -> State;
+    /// Deconstruct the state indexer to state space.
+    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>);
+}
+
+/// A naive state indexer with hashmap.
+pub struct NaiveStateIndexer {
     /// Number of states.
-    pub state_count: usize,
+    state_count: usize,
     /// Matrix of bus states, each state in a row.
     bus_states: Array2<BusState>,
     /// Matrix of team states, each state in a row.
@@ -231,10 +245,9 @@ pub struct StateIndexer {
     state_to_index: HashMap<State, usize>,
 }
 
-impl StateIndexer {
-    /// New solution structure from graph.
-    pub fn new(bus_count: usize, team_count: usize) -> StateIndexer {
-        StateIndexer {
+impl StateIndexer for NaiveStateIndexer {
+    fn new(bus_count: usize, team_count: usize) -> Self {
+        NaiveStateIndexer {
             state_count: 0,
             bus_states: Array2::default((0, bus_count)),
             team_states: Array2::default((0, team_count)),
@@ -242,8 +255,12 @@ impl StateIndexer {
         }
     }
 
-    /// Get the index of given state, adding it to the hasmap when necessary.
-    pub fn index_state(&mut self, s: &State) -> usize {
+    #[inline]
+    fn get_state_count(&self) -> usize {
+        self.state_count
+    }
+
+    fn index_state(&mut self, s: &State) -> usize {
         match self.state_to_index.get(s) {
             Some(i) => *i,
             None => {
@@ -261,15 +278,14 @@ impl StateIndexer {
         }
     }
 
-    /// Get the state at given index.
-    pub fn get_state(&self, index: usize) -> State {
+    fn get_state(&self, index: usize) -> State {
         State {
             buses: self.bus_states.row(index).to_vec(),
             teams: self.team_states.row(index).to_vec(),
         }
     }
 
-    pub fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
+    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         (self.bus_states, self.team_states)
     }
 }

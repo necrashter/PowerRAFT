@@ -6,7 +6,7 @@ use super::*;
 pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<RegularTransition> {
     solve_generic::<
         RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions>,
+        NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
     >(graph, initial_teams)
@@ -15,10 +15,10 @@ pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<Reg
 /// Macro for generating solve code that reads class names from variables and constructs a code
 /// that calls the appropriate solve function variation.
 macro_rules! generate_solve_code {
-    ($tt:ty; $ps:ty; $aa:ty; $act:ty; $g:expr, $it:expr) => {
+    ($tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr) => {
         Ok(solve_generic::<
             $tt,
-            NaiveExplorer<$tt, $act>,
+            NaiveExplorer<$tt, $act, $si>,
             $aa,
             $ps,
         >($g, $it))
@@ -27,12 +27,13 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
+        indexer = $si:ty,
         action_applier = $aa:ty,
         action_set($actstr:ident) = [$act1:ty],
         solve($g:expr, $it:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $aa; $act1; $g, $it)
+            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it)
         } else {
             Err(format!("Undefined action set: {}", $actstr))
         }
@@ -40,16 +41,18 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
+        indexer = $si:ty,
         action_applier = $aa:ty,
         action_set($actstr:ident) = [$act1:ty, $($rem:ty),+ $(,)?],
         solve($g:expr, $it:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $aa; $act1; $g, $it)
+            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it)
         } else {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
+                indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($rem),+],
                 solve($g, $it)
@@ -60,6 +63,7 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
+        indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr)
@@ -68,6 +72,7 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
+                indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it)
@@ -79,6 +84,7 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
+        indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty, $($aarem:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr)
@@ -87,6 +93,7 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
+                indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it)
@@ -95,6 +102,7 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
+                indexer = $si,
                 action_applier($appstr) = [$($aarem),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it)
@@ -113,6 +121,7 @@ pub fn solve_custom_regular(
     generate_solve_code! {
         transition = RegularTransition,
         policy = NaivePolicySynthesizer,
+        indexer = NaiveStateIndexer,
         action_applier = NaiveActionApplier,
         action_set(action_set) = [
             NaiveActions,
@@ -138,6 +147,7 @@ pub fn solve_custom_timed(
     generate_solve_code! {
         transition = TimedTransition,
         policy = NaiveTimedPolicySynthesizer,
+        indexer = NaiveStateIndexer,
         action_applier(action_applier) = [
             TimedActionApplier<ConstantTime>,
             TimedActionApplier<TimeUntilArrival>,
