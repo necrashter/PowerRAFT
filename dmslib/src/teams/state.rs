@@ -290,6 +290,37 @@ impl StateIndexer for NaiveStateIndexer {
     }
 }
 
+/// State indexer that sorts the team states to eliminate permutations of the same team states.
+pub struct SortedStateIndexer(NaiveStateIndexer);
+
+impl StateIndexer for SortedStateIndexer {
+    #[inline]
+    fn new(bus_count: usize, team_count: usize) -> Self {
+        Self(NaiveStateIndexer::new(bus_count, team_count))
+    }
+
+    #[inline]
+    fn get_state_count(&self) -> usize {
+        self.0.get_state_count()
+    }
+
+    #[inline]
+    fn index_state(&mut self, mut s: State) -> usize {
+        s.teams.sort_unstable();
+        self.0.index_state(s)
+    }
+
+    #[inline]
+    fn get_state(&self, index: usize) -> State {
+        self.0.get_state(index)
+    }
+
+    #[inline]
+    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
+        self.0.deconstruct()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
