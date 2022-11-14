@@ -226,7 +226,7 @@ pub trait StateIndexer {
     /// Get the number of states.
     fn get_state_count(&self) -> usize;
     /// Get the index of given state, adding it to the hasmap when necessary.
-    fn index_state(&mut self, s: &State) -> usize;
+    fn index_state(&mut self, s: State) -> usize;
     /// Get the state at given index.
     fn get_state(&self, index: usize) -> State;
     /// Deconstruct the state indexer to state space.
@@ -260,8 +260,8 @@ impl StateIndexer for NaiveStateIndexer {
         self.state_count
     }
 
-    fn index_state(&mut self, s: &State) -> usize {
-        match self.state_to_index.get(s) {
+    fn index_state(&mut self, s: State) -> usize {
+        match self.state_to_index.get(&s) {
             Some(i) => *i,
             None => {
                 let i = self.state_count;
@@ -272,7 +272,7 @@ impl StateIndexer for NaiveStateIndexer {
                 self.team_states
                     .push_row(ndarray::ArrayView::from(&s.teams))
                     .unwrap();
-                self.state_to_index.insert(s.clone(), i);
+                self.state_to_index.insert(s, i);
                 i
             }
         }

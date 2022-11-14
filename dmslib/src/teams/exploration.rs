@@ -45,7 +45,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
-                            let successor_index = self.states.index_state(&successor_state);
+                            let successor_index = self.states.index_state(successor_state);
                             transition.set_successor(successor_index);
                             transition
                         })
@@ -77,7 +77,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         teams: state.teams.clone(),
                         buses: bus_state,
                     };
-                    let successor_index = self.states.index_state(&successor_state);
+                    let successor_index = self.states.index_state(successor_state);
                     TT::costless_transition(successor_index, p)
                 })
                 .collect()]
@@ -90,7 +90,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         .into_iter()
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
-                            let successor_index = self.states.index_state(&successor_state);
+                            let successor_index = self.states.index_state(successor_state);
                             transition.set_successor(successor_index);
                             transition
                         })
@@ -119,7 +119,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         };
         let mut index = explorer
             .states
-            .index_state(&State::start_state(graph, teams));
+            .index_state(State::start_state(graph, teams));
         explorer.explore_initial::<AA>(index);
         index += 1;
         while index < explorer.states.get_state_count() {
