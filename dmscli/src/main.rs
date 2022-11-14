@@ -131,6 +131,7 @@ fn benchmark(
     let result = dmslib::teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
+        problem.horizon,
         action,
         transition,
     );

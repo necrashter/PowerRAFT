@@ -76,15 +76,23 @@ impl Graph {
 pub struct Problem {
     pub graph: Graph,
     pub initial_teams: Vec<TeamState>,
+    /// Optimization horizon for policy synthesis.
+    /// Use `None` to automatically determine it based on transitions.
+    pub horizon: Option<usize>,
 }
 
 impl io::Graph {
     /// Convert this graph for solving a restoration problem with teams.
-    pub fn to_teams_problem(self, teams: Vec<io::Team>) -> Result<Problem, String> {
+    pub fn to_teams_problem(
+        self,
+        teams: Vec<io::Team>,
+        horizon: Option<usize>,
+    ) -> Result<Problem, String> {
         let team_problem = crate::io::TeamProblem {
             name: None,
             graph: self,
             teams,
+            horizon,
             time_func: io::TimeFunc::default(),
         };
 
@@ -92,7 +100,11 @@ impl io::Graph {
     }
 }
 
-fn solve_generic<'a, TT, E, AA, PS>(graph: &'a Graph, initial_teams: Vec<TeamState>) -> Solution<TT>
+fn solve_generic<'a, TT, E, AA, PS>(
+    graph: &'a Graph,
+    initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
+) -> Solution<TT>
 where
     TT: Transition,
     E: Explorer<'a, TT>,
@@ -102,7 +114,12 @@ where
     let start_time = Instant::now();
     let (states, teams, transitions) = E::explore::<AA>(graph, initial_teams);
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
-    let (values, policy) = PS::synthesize_policy(&transitions, 30);
+    let horizon = if let Some(v) = horizon {
+        v
+    } else {
+        todo!();
+    };
+    let (values, policy) = PS::synthesize_policy(&transitions, horizon);
     let total_time: f64 = start_time.elapsed().as_secs_f64();
 
     Solution {

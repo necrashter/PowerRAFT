@@ -164,7 +164,7 @@ pub trait PolicySynthesizer<TransitionType: Transition> {
     /// Returns a pair containing values of actions and index of the optimal action in each state.
     fn synthesize_policy(
         transitions: &[Vec<Vec<TransitionType>>],
-        optimization_horizon: usize,
+        horizon: usize,
     ) -> (Vec<Vec<f64>>, Vec<usize>);
 }
 
@@ -177,14 +177,14 @@ pub struct NaivePolicySynthesizer;
 impl PolicySynthesizer<RegularTransition> for NaivePolicySynthesizer {
     fn synthesize_policy(
         transitions: &[Vec<Vec<RegularTransition>>],
-        optimization_horizon: usize,
+        horizon: usize,
     ) -> (Vec<Vec<f64>>, Vec<usize>) {
         assert!(
             !transitions.is_empty(),
             "States must be non-empty during policy synthesis"
         );
         let mut values: Array1<f64> = Array1::zeros(transitions.len());
-        for _ in 1..optimization_horizon {
+        for _ in 1..horizon {
             let prev_val = values;
             values = Array1::zeros(transitions.len());
             for (i, action) in transitions.iter().enumerate() {
@@ -251,7 +251,7 @@ pub struct NaiveTimedPolicySynthesizer;
 impl PolicySynthesizer<TimedTransition> for NaiveTimedPolicySynthesizer {
     fn synthesize_policy(
         transitions: &[Vec<Vec<TimedTransition>>],
-        optimization_horizon: usize,
+        horizon: usize,
     ) -> (Vec<Vec<f64>>, Vec<usize>) {
         assert!(
             !transitions.is_empty(),
@@ -286,7 +286,7 @@ impl PolicySynthesizer<TimedTransition> for NaiveTimedPolicySynthesizer {
         // Array of values from previous iterations.
         // `values[0]`: current iteration, `values[1]`: previous iteration, etc.
         let mut values: Vec<Array1<f64>> = vec![values; max_time + 1];
-        for iteration in 2..optimization_horizon {
+        for iteration in 2..horizon {
             values[max_time] = Array1::zeros(transitions.len());
             values.rotate_right(1);
             for (i, action) in transitions.iter().enumerate().rev() {
@@ -323,7 +323,7 @@ impl PolicySynthesizer<TimedTransition> for NaiveTimedPolicySynthesizer {
                     transitions
                         .iter()
                         .map(|t| {
-                            let cost = t.cost * std::cmp::min(t.time, optimization_horizon) as f64;
+                            let cost = t.cost * std::cmp::min(t.time, horizon) as f64;
                             t.p * (cost + values[t.time][t.successor])
                         })
                         .sum()

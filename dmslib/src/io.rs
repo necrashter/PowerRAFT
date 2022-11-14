@@ -161,6 +161,9 @@ pub struct TeamProblem {
     pub name: Option<String>,
     pub graph: Graph,
     pub teams: Vec<Team>,
+    /// Optimization horizon for policy synthesis.
+    /// Use `None` to automatically determine it based on transitions.
+    pub horizon: Option<usize>,
     /// Travel time function.
     #[serde(default, rename = "timeFunction")]
     pub time_func: TimeFunc,
@@ -208,6 +211,7 @@ impl TeamProblem {
             name: _,
             graph,
             teams,
+            horizon,
             time_func,
         } = self;
 
@@ -278,6 +282,7 @@ impl TeamProblem {
         Ok(crate::teams::Problem {
             graph,
             initial_teams,
+            horizon,
         })
     }
 
@@ -285,7 +290,8 @@ impl TeamProblem {
     /// [`TeamSolution`] on success.
     pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, String> {
         let problem = self.prepare()?;
-        let solution = crate::teams::solve_naive(&problem.graph, problem.initial_teams);
+        let solution =
+            crate::teams::solve_naive(&problem.graph, problem.initial_teams, problem.horizon);
         Ok(solution.to_webclient(problem.graph))
     }
 
@@ -298,8 +304,12 @@ impl TeamProblem {
         action_set: &str,
     ) -> Result<TeamSolution<RegularTransition>, String> {
         let problem = self.prepare()?;
-        let solution =
-            crate::teams::solve_custom_regular(&problem.graph, problem.initial_teams, action_set)?;
+        let solution = crate::teams::solve_custom_regular(
+            &problem.graph,
+            problem.initial_teams,
+            problem.horizon,
+            action_set,
+        )?;
         Ok(solution.to_webclient(problem.graph))
     }
 
@@ -317,6 +327,7 @@ impl TeamProblem {
         let solution = crate::teams::solve_custom_timed(
             &problem.graph,
             problem.initial_teams,
+            problem.horizon,
             action_set,
             action_applier,
         )?;
@@ -337,6 +348,7 @@ impl TeamProblem {
         let solution = crate::teams::benchmark_custom(
             &problem.graph,
             problem.initial_teams,
+            problem.horizon,
             action_set,
             action_applier,
         )?;
@@ -349,6 +361,7 @@ impl TeamProblem {
         Ok(crate::teams::benchmark_all(
             &problem.graph,
             problem.initial_teams,
+            problem.horizon,
         ))
     }
 }

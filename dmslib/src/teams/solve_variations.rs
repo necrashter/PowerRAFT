@@ -3,25 +3,29 @@ use super::*;
 
 /// Solve a field-team restoration problem on this graph with the given teams without any
 /// action elimination or optimizations.
-pub fn solve_naive(graph: &Graph, initial_teams: Vec<TeamState>) -> Solution<RegularTransition> {
+pub fn solve_naive(
+    graph: &Graph,
+    initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
+) -> Solution<RegularTransition> {
     solve_generic::<
         RegularTransition,
         NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
-    >(graph, initial_teams)
+    >(graph, initial_teams, horizon)
 }
 
 /// Macro for generating solve code that reads class names from variables and constructs a code
 /// that calls the appropriate solve function variation.
 macro_rules! generate_solve_code {
-    ($tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr) => {
+    ($tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr, $oh:expr) => {
         Ok(solve_generic::<
             $tt,
             NaiveExplorer<$tt, $act, $si>,
             $aa,
             $ps,
-        >($g, $it))
+        >($g, $it, $oh))
     };
     // Iterate through action set
     (
@@ -30,10 +34,10 @@ macro_rules! generate_solve_code {
         indexer = $si:ty,
         action_applier = $aa:ty,
         action_set($actstr:ident) = [$act1:ty],
-        solve($g:expr, $it:expr)
+        solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it)
+            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it, $oh)
         } else {
             Err(format!("Undefined action set: {}", $actstr))
         }
@@ -44,10 +48,10 @@ macro_rules! generate_solve_code {
         indexer = $si:ty,
         action_applier = $aa:ty,
         action_set($actstr:ident) = [$act1:ty, $($rem:ty),+ $(,)?],
-        solve($g:expr, $it:expr)
+        solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it)
+            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it, $oh)
         } else {
             generate_solve_code!(
                 transition = $tt,
@@ -55,7 +59,7 @@ macro_rules! generate_solve_code {
                 indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($rem),+],
-                solve($g, $it)
+                solve($g, $it, $oh)
             )
         }
     };
@@ -66,7 +70,7 @@ macro_rules! generate_solve_code {
         indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
-        solve($g:expr, $it:expr)
+        solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $appstr == stringify!($aa) {
             generate_solve_code!(
@@ -75,7 +79,7 @@ macro_rules! generate_solve_code {
                 indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($acts),+],
-                solve($g, $it)
+                solve($g, $it, $oh)
             )
         } else {
             Err(format!("Undefined action applier: {}", $actstr))
@@ -87,7 +91,7 @@ macro_rules! generate_solve_code {
         indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty, $($aarem:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
-        solve($g:expr, $it:expr)
+        solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $appstr == stringify!($aa) {
             generate_solve_code!(
@@ -96,7 +100,7 @@ macro_rules! generate_solve_code {
                 indexer = $si,
                 action_applier = $aa,
                 action_set($actstr) = [$($acts),+],
-                solve($g, $it)
+                solve($g, $it, $oh)
             )
         } else {
             generate_solve_code!(
@@ -105,7 +109,7 @@ macro_rules! generate_solve_code {
                 indexer = $si,
                 action_applier($appstr) = [$($aarem),+],
                 action_set($actstr) = [$($acts),+],
-                solve($g, $it)
+                solve($g, $it, $oh)
             )
         }
     };
@@ -116,6 +120,7 @@ macro_rules! generate_solve_code {
 pub fn solve_custom_regular(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
     action_set: &str,
 ) -> Result<Solution<RegularTransition>, String> {
     generate_solve_code! {
@@ -131,7 +136,7 @@ pub fn solve_custom_regular(
             FilterEnergizedOnWay<NaiveActions>,
             FilterEnergizedOnWay<PermutationalActions>,
         ],
-        solve(graph, initial_teams)
+        solve(graph, initial_teams, horizon)
     }
 }
 
@@ -141,6 +146,7 @@ pub fn solve_custom_regular(
 pub fn solve_custom_timed(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
     action_set: &str,
     action_applier: &str,
 ) -> Result<Solution<TimedTransition>, String> {
@@ -161,7 +167,7 @@ pub fn solve_custom_timed(
             FilterEnergizedOnWay<NaiveActions>,
             FilterEnergizedOnWay<PermutationalActions>,
         ],
-        solve(graph, initial_teams)
+        solve(graph, initial_teams, horizon)
     }
 }
 
@@ -173,14 +179,15 @@ pub fn solve_custom_timed(
 pub fn benchmark_custom(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
     action_set: &str,
     action_applier: &str,
 ) -> Result<io::BenchmarkResult, String> {
     if action_applier == stringify!(NaiveActionApplier) {
-        Ok(solve_custom_regular(graph, initial_teams, action_set)?.to_benchmark_result())
+        Ok(solve_custom_regular(graph, initial_teams, horizon, action_set)?.to_benchmark_result())
     } else {
         Ok(
-            solve_custom_timed(graph, initial_teams, action_set, action_applier)?
+            solve_custom_timed(graph, initial_teams, horizon, action_set, action_applier)?
                 .to_benchmark_result(),
         )
     }
@@ -214,11 +221,18 @@ pub fn iter_optimizations() -> itertools::Product<
 pub fn benchmark_all(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
+    horizon: Option<usize>,
 ) -> Vec<io::OptimizationBenchmarkResult> {
     iter_optimizations()
         .map(|(action_applier, action_set)| {
-            let result = benchmark_custom(graph, initial_teams.clone(), action_set, action_applier)
-                .expect("Invalid optimization constant class name");
+            let result = benchmark_custom(
+                graph,
+                initial_teams.clone(),
+                horizon,
+                action_set,
+                action_applier,
+            )
+            .expect("Invalid optimization constant class name");
             let optimizations = io::OptimizationInfo {
                 actions: action_set.to_string(),
                 transitions: action_applier.to_string(),
