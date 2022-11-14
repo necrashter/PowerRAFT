@@ -3,7 +3,7 @@ use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 
 /// State of a single team. Use a `Vec` to represent multiple teams.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum TeamState {
     OnBus(Index),
     EnRoute(Index, Index, Time),
@@ -287,5 +287,42 @@ impl StateIndexer for NaiveStateIndexer {
 
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         (self.bus_states, self.team_states)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn team_state_ord_test() {
+        let ordered_teams = vec![
+            TeamState::OnBus(1),
+            TeamState::OnBus(2),
+            TeamState::OnBus(3),
+            TeamState::EnRoute(1, 10, 1),
+            TeamState::EnRoute(1, 10, 2),
+            TeamState::EnRoute(2, 10, 1),
+            TeamState::EnRoute(2, 11, 1),
+            TeamState::EnRoute(3, 10, 1),
+            TeamState::EnRoute(3, 11, 1),
+            TeamState::EnRoute(3, 11, 2),
+        ];
+
+        let mut teams = vec![
+            TeamState::EnRoute(1, 10, 2),
+            TeamState::OnBus(3),
+            TeamState::EnRoute(3, 11, 2),
+            TeamState::EnRoute(1, 10, 1),
+            TeamState::EnRoute(3, 11, 1),
+            TeamState::OnBus(1),
+            TeamState::EnRoute(2, 11, 1),
+            TeamState::EnRoute(2, 10, 1),
+            TeamState::OnBus(2),
+            TeamState::EnRoute(3, 10, 1),
+        ];
+        teams.sort_unstable();
+
+        assert_eq!(ordered_teams, teams);
     }
 }
