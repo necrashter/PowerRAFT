@@ -123,6 +123,27 @@ pub fn save_problem(content: &serde_json::Value) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Given a `serde_json::Value`, read it from the path it specifies if it's a string,
+/// relative to the given `path`.
+pub fn read_json_value_from_file<P: AsRef<Path>>(
+    value: &mut serde_json::Value,
+    path: P,
+) -> std::io::Result<bool> {
+    if let serde_json::Value::String(s) = value {
+        let mut graph_path = PathBuf::new();
+        graph_path.push(path);
+        graph_path.pop();
+        graph_path.push(s);
+        *value = {
+            let content = std::fs::read_to_string(&graph_path)?;
+            serde_json::from_str(&content)?
+        };
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 /// Given a `serde_json::Value`, read its given `field` from the path it specifies if it's a
 /// string, relative to the given `path`.
 pub fn read_field_from_file<P: AsRef<Path>>(
@@ -131,16 +152,8 @@ pub fn read_field_from_file<P: AsRef<Path>>(
     path: P,
 ) -> std::io::Result<bool> {
     let field = value.get_mut(field);
-    if let Some(serde_json::Value::String(s)) = field {
-        let mut graph_path = PathBuf::new();
-        graph_path.push(path);
-        graph_path.pop();
-        graph_path.push(s);
-        *field.unwrap() = {
-            let content = std::fs::read_to_string(&graph_path)?;
-            serde_json::from_str(&content)?
-        };
-        Ok(true)
+    if let Some(v) = field {
+        read_json_value_from_file(v, path)
     } else {
         Ok(false)
     }

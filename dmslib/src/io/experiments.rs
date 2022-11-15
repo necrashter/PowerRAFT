@@ -17,39 +17,18 @@ pub struct OptimizationBenchmarkResult {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "type")]
-pub enum ExperimentTask {
-    Benchmark {
-        problem: TeamProblem,
-        optimizations: OptimizationInfo,
-    },
-    BenchmarkAll {
-        problem: TeamProblem,
-        optimizations: Vec<OptimizationInfo>,
-    },
+pub struct ExperimentTask {
+    problems: Vec<TeamProblem>,
+    optimizations: Vec<OptimizationInfo>,
 }
 
-fn read_experiments<P: AsRef<Path>>(
-    v: Vec<serde_json::Value>,
-    path: P,
-) -> std::io::Result<Vec<ExperimentTask>> {
-    v.into_iter()
-        .map(|mut v| -> std::io::Result<ExperimentTask> {
-            if let Some(problem) = v.get_mut("problem") {
-                fs::read_field_from_file(problem, "graph", &path)?;
-            } else {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Problem is missing graph field",
-                ));
-            }
-            let e: ExperimentTask = serde_json::from_value(v)?;
-            Ok(e)
-        })
-        .collect::<std::io::Result<Vec<ExperimentTask>>>()
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Experiment {
+    pub name: Option<String>,
+    pub tasks: Vec<ExperimentTask>,
 }
 
-pub fn read_experiments_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<ExperimentTask>> {
+pub fn read_experiments_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Experiment> {
     let content = std::fs::read_to_string(&path)?;
     let path = {
         let mut p = PathBuf::new();
@@ -57,13 +36,39 @@ pub fn read_experiments_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Ve
         p
     };
     let value: serde_json::Value = serde_json::from_str(&content)?;
-    if let serde_json::Value::Array(a) = value {
-        read_experiments(a, path)
-    } else if let serde_json::Value::Object(mut map) = value {
+    if let serde_json::Value::Object(mut map) = value {
+        let name = if let Some(serde_json::Value::String(s)) = map.get("name").take() {
+            Some(s.clone())
+        } else {
+            None
+        };
         let tasks = map.get_mut("tasks");
         if let Some(tasks) = tasks {
             if let serde_json::Value::Array(a) = tasks.take() {
-                read_experiments(a, path)
+                let tasks = a
+                    .into_iter()
+                    .map(|mut v| -> std::io::Result<ExperimentTask> {
+                        fs::read_field_from_file(&mut v, "optimizations", &path)?;
+                        let taskmap = if let serde_json::Value::Object(mut v) = v {
+                            if let Some(serde_json::Value::Array(problems)) = v.get_mut("problems")
+                            {
+                                for problem in problems.iter_mut() {
+                                    fs::read_field_from_file(problem, "graph", &path)?;
+                                }
+                            }
+                            v
+                        } else {
+                            return Err(std::io::Error::new(
+                                std::io::ErrorKind::Other,
+                                "Each task must be an object",
+                            ));
+                        };
+                        let v = serde_json::Value::Object(taskmap);
+                        let e: ExperimentTask = serde_json::from_value(v)?;
+                        Ok(e)
+                    })
+                    .collect::<std::io::Result<Vec<ExperimentTask>>>()?;
+                Ok(Experiment { name, tasks })
             } else {
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
@@ -79,7 +84,7 @@ pub fn read_experiments_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Ve
     } else {
         Err(std::io::Error::new(
             std::io::ErrorKind::Other,
-            "Cannot recognize data structure",
+            "Experiment must be a JSON object",
         ))
     }
 }
