@@ -6,7 +6,7 @@ use dmslib::io::{
     read_experiment_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
     OptimizationInfo, TeamProblem,
 };
-use dmslib::teams::iter_optimizations;
+use dmslib::teams::all_optimizations;
 
 use clap::{Parser, Subcommand};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -33,6 +33,9 @@ enum Command {
     Solve {
         /// Path to the JSON file containing the problem.
         path: PathBuf,
+        /// State indexer class.
+        #[arg(short, long, default_value = "NaiveStateIndexer")]
+        indexer: String,
         /// Action set class.
         #[arg(short, long, default_value = "NaiveActions")]
         action: String,
@@ -94,20 +97,23 @@ fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, dmslib::team
 
 fn print_optimizations(
     out: &mut StandardStream,
-    action: &str,
-    transition: &str,
+    optimization: &OptimizationInfo,
 ) -> std::io::Result<()> {
     let mut bold = ColorSpec::new();
     bold.set_bold(true);
 
     out.set_color(&bold)?;
+    write!(out, "Indexer:          ")?;
+    out.reset()?;
+    writeln!(out, "{}", optimization.indexer)?;
+    out.set_color(&bold)?;
     write!(out, "Action:           ")?;
     out.reset()?;
-    writeln!(out, "{}", action)?;
+    writeln!(out, "{}", optimization.actions)?;
     out.set_color(&bold)?;
     write!(out, "Transition:       ")?;
     out.reset()?;
-    writeln!(out, "{}", transition)?;
+    writeln!(out, "{}", optimization.transitions)?;
     Ok(())
 }
 
@@ -243,15 +249,15 @@ fn print_travel_times(out: &mut StandardStream, mut problem: TeamProblem) {
 
 fn benchmark(
     problem: &dmslib::teams::Problem,
-    action: &str,
-    transition: &str,
+    optimization: &OptimizationInfo,
 ) -> OptimizationBenchmarkResult {
     let result = dmslib::teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-        action,
-        transition,
+        &optimization.indexer,
+        &optimization.actions,
+        &optimization.transitions,
     );
     let result = match result {
         Ok(s) => s,
@@ -260,10 +266,7 @@ fn benchmark(
 
     OptimizationBenchmarkResult {
         result,
-        optimizations: OptimizationInfo {
-            actions: action.to_string(),
-            transitions: transition.to_string(),
-        },
+        optimizations: optimization.clone(),
     }
 }
 
@@ -320,11 +323,8 @@ fn main() {
                     };
 
                     for optimization in &optimizations {
-                        let action_set = &optimization.actions;
-                        let action_applier = &optimization.transitions;
-
                         writeln!(&mut stderr).unwrap();
-                        print_optimizations(&mut stderr, action_set, action_applier).unwrap();
+                        print_optimizations(&mut stderr, optimization).unwrap();
 
                         stderr
                             .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -334,7 +334,7 @@ fn main() {
                         stderr.reset().unwrap();
                         stderr.flush().unwrap();
 
-                        let result = benchmark(&problem, action_set, action_applier);
+                        let result = benchmark(&problem, optimization);
 
                         print_benchmark_result(&mut stderr, &result.result).unwrap();
 
@@ -362,6 +362,7 @@ fn main() {
 
         Command::Solve {
             path,
+            indexer,
             action,
             transition,
             json,
@@ -373,7 +374,13 @@ fn main() {
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
-            print_optimizations(&mut stderr, &action, &transition).unwrap();
+            let optimizations = OptimizationInfo {
+                indexer,
+                actions: action,
+                transitions: transition,
+            };
+
+            print_optimizations(&mut stderr, &optimizations).unwrap();
 
             stderr
                 .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -382,7 +389,7 @@ fn main() {
             stderr.reset().unwrap();
             stderr.flush().unwrap();
 
-            let result = benchmark(&problem, &action, &transition);
+            let result = benchmark(&problem, &optimizations);
 
             print_benchmark_result(&mut stderr, &result.result).unwrap();
 
@@ -403,13 +410,15 @@ fn main() {
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
-            let total_optimizations = iter_optimizations().count();
+            let opt_list = all_optimizations();
+            let total_optimizations = opt_list.len();
 
-            let results: Vec<OptimizationBenchmarkResult> = iter_optimizations()
+            let results: Vec<OptimizationBenchmarkResult> = opt_list
+                .into_iter()
                 .enumerate()
-                .map(|(i, (action_set, action_applier))| {
+                .map(|(i, optimizations)| {
                     writeln!(&mut stderr).unwrap();
-                    print_optimizations(&mut stderr, action_set, action_applier).unwrap();
+                    print_optimizations(&mut stderr, &optimizations).unwrap();
 
                     stderr
                         .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -424,7 +433,7 @@ fn main() {
                     stderr.reset().unwrap();
                     stderr.flush().unwrap();
 
-                    let result = benchmark(&problem, action_set, action_applier);
+                    let result = benchmark(&problem, &optimizations);
 
                     print_benchmark_result(&mut stderr, &result.result).unwrap();
 

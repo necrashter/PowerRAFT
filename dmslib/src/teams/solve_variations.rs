@@ -33,8 +33,8 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
-        indexer = $si:ty,
         action_applier = $aa:ty,
+        indexer = $si:ty,
         action_set($actstr:ident) = [$act1:ty],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
@@ -47,8 +47,8 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
-        indexer = $si:ty,
         action_applier = $aa:ty,
+        indexer = $si:ty,
         action_set($actstr:ident) = [$act1:ty, $($rem:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
@@ -58,9 +58,59 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
-                indexer = $si,
                 action_applier = $aa,
+                indexer = $si,
                 action_set($actstr) = [$($rem),+],
+                solve($g, $it, $oh)
+            )
+        }
+    };
+    // Iterate through State Indexer
+    (
+        transition = $tt:ty,
+        policy = $ps:ty,
+        action_applier = $aa:ty,
+        indexer($sistr:ident) = [$si:ty],
+        action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
+        solve($g:expr, $it:expr, $oh:expr)
+    ) => {
+        if $sistr == stringify!($si) {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                indexer = $si,
+                action_set($actstr) = [$($acts),+],
+                solve($g, $it, $oh)
+            )
+        } else {
+            Err(format!("Undefined state indexer: {}", $sistr))
+        }
+    };
+    (
+        transition = $tt:ty,
+        policy = $ps:ty,
+        action_applier = $aa:ty,
+        indexer($sistr:ident) = [$si:ty, $($sis:ty),+ $(,)?],
+        action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
+        solve($g:expr, $it:expr, $oh:expr)
+    ) => {
+        if $sistr == stringify!($si) {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                indexer = $si,
+                action_set($actstr) = [$($acts),+],
+                solve($g, $it, $oh)
+            )
+        } else {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                indexer($sistr) = [$($sis),+],
+                action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
             )
         }
@@ -69,8 +119,8 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
-        indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty],
+        indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
@@ -78,8 +128,8 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
-                indexer = $si,
                 action_applier = $aa,
+                indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
             )
@@ -90,8 +140,8 @@ macro_rules! generate_solve_code {
     (
         transition = $tt:ty,
         policy = $ps:ty,
-        indexer = $si:ty,
         action_applier($appstr:ident) = [$aa:ty, $($aarem:ty),+ $(,)?],
+        indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
@@ -99,8 +149,8 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
-                indexer = $si,
                 action_applier = $aa,
+                indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
             )
@@ -108,8 +158,8 @@ macro_rules! generate_solve_code {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
-                indexer = $si,
                 action_applier($appstr) = [$($aarem),+],
+                indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
             )
@@ -123,13 +173,17 @@ pub fn solve_custom_regular(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
+    indexer: &str,
     action_set: &str,
 ) -> Result<Solution<RegularTransition>, String> {
     generate_solve_code! {
         transition = RegularTransition,
         policy = NaivePolicySynthesizer,
-        indexer = NaiveStateIndexer,
         action_applier = NaiveActionApplier,
+        indexer(indexer) = [
+            NaiveStateIndexer,
+            SortedStateIndexer,
+        ],
         action_set(action_set) = [
             NaiveActions,
             PermutationalActions,
@@ -149,17 +203,21 @@ pub fn solve_custom_timed(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
+    indexer: &str,
     action_set: &str,
     action_applier: &str,
 ) -> Result<Solution<TimedTransition>, String> {
     generate_solve_code! {
         transition = TimedTransition,
         policy = NaiveTimedPolicySynthesizer,
-        indexer = NaiveStateIndexer,
         action_applier(action_applier) = [
             TimedActionApplier<ConstantTime>,
             TimedActionApplier<TimeUntilArrival>,
             TimedActionApplier<TimeUntilEnergization>,
+        ],
+        indexer(indexer) = [
+            NaiveStateIndexer,
+            SortedStateIndexer,
         ],
         action_set(action_set) = [
             NaiveActions,
@@ -182,18 +240,32 @@ pub fn benchmark_custom(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
+    indexer: &str,
     action_set: &str,
     action_applier: &str,
 ) -> Result<io::BenchmarkResult, String> {
     if action_applier == stringify!(NaiveActionApplier) {
-        Ok(solve_custom_regular(graph, initial_teams, horizon, action_set)?.to_benchmark_result())
-    } else {
         Ok(
-            solve_custom_timed(graph, initial_teams, horizon, action_set, action_applier)?
+            solve_custom_regular(graph, initial_teams, horizon, indexer, action_set)?
                 .to_benchmark_result(),
         )
+    } else {
+        Ok(solve_custom_timed(
+            graph,
+            initial_teams,
+            horizon,
+            indexer,
+            action_set,
+            action_applier,
+        )?
+        .to_benchmark_result())
     }
 }
+
+const BENCHMARK_STATE_INDEXERS: &[&str] = &[
+    stringify!(NaiveStateIndexer),
+    stringify!(SortedStateIndexer),
+];
 
 const BENCHMARK_ACTION_APPLIERS: &[&str] = &[
     "NaiveActionApplier",
@@ -210,22 +282,18 @@ const BENCHMARK_ACTION_SETS: &[&str] = &[
     "FilterOnWay<PermutationalActions>",
 ];
 
-/// Return an iterator to all possible optimization combinations in `(action_set, action_applier)`
-/// form.
-pub fn iter_optimizations() -> itertools::Product<
-    std::slice::Iter<'static, &'static str>,
-    std::slice::Iter<'static, &'static str>,
-> {
-    itertools::iproduct!(BENCHMARK_ACTION_SETS, BENCHMARK_ACTION_APPLIERS)
-}
-
 pub fn all_optimizations() -> Vec<OptimizationInfo> {
-    iter_optimizations()
-        .map(|(actions, transitions)| OptimizationInfo {
-            actions: actions.to_string(),
-            transitions: transitions.to_string(),
-        })
-        .collect()
+    itertools::iproduct!(
+        BENCHMARK_STATE_INDEXERS,
+        BENCHMARK_ACTION_SETS,
+        BENCHMARK_ACTION_APPLIERS
+    )
+    .map(|(indexer, actions, transitions)| OptimizationInfo {
+        indexer: indexer.to_string(),
+        actions: actions.to_string(),
+        transitions: transitions.to_string(),
+    })
+    .collect()
 }
 
 /// Run all optimization combination possibilities on this field-teams restoration problem.
@@ -234,24 +302,30 @@ pub fn benchmark_all(
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
 ) -> Vec<io::OptimizationBenchmarkResult> {
-    iter_optimizations()
-        .map(|(action_applier, action_set)| {
-            let result = benchmark_custom(
-                graph,
-                initial_teams.clone(),
-                horizon,
-                action_set,
-                action_applier,
-            )
-            .expect("Invalid optimization constant class name");
-            let optimizations = io::OptimizationInfo {
-                actions: action_set.to_string(),
-                transitions: action_applier.to_string(),
-            };
-            io::OptimizationBenchmarkResult {
-                optimizations,
-                result,
-            }
-        })
-        .collect()
+    itertools::iproduct!(
+        BENCHMARK_STATE_INDEXERS,
+        BENCHMARK_ACTION_SETS,
+        BENCHMARK_ACTION_APPLIERS
+    )
+    .map(|(indexer, action_applier, action_set)| {
+        let result = benchmark_custom(
+            graph,
+            initial_teams.clone(),
+            horizon,
+            indexer,
+            action_set,
+            action_applier,
+        )
+        .expect("Invalid optimization constant class name");
+        let optimizations = io::OptimizationInfo {
+            indexer: indexer.to_string(),
+            actions: action_set.to_string(),
+            transitions: action_applier.to_string(),
+        };
+        io::OptimizationBenchmarkResult {
+            optimizations,
+            result,
+        }
+    })
+    .collect()
 }

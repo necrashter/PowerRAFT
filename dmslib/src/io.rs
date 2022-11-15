@@ -323,6 +323,7 @@ impl TeamProblem {
     /// Returns a [`TeamSolution`] on success.
     pub fn solve_custom_regular(
         self,
+        indexer: &str,
         action_set: &str,
     ) -> Result<TeamSolution<RegularTransition>, String> {
         let problem = self.prepare()?;
@@ -330,6 +331,7 @@ impl TeamProblem {
             &problem.graph,
             problem.initial_teams,
             problem.horizon,
+            indexer,
             action_set,
         )?;
         Ok(solution.to_webclient(problem.graph))
@@ -342,6 +344,7 @@ impl TeamProblem {
     /// Returns a [`TeamSolution`] on success.
     pub fn solve_custom_timed(
         self,
+        indexer: &str,
         action_set: &str,
         action_applier: &str,
     ) -> Result<TeamSolution<TimedTransition>, String> {
@@ -350,6 +353,7 @@ impl TeamProblem {
             &problem.graph,
             problem.initial_teams,
             problem.horizon,
+            indexer,
             action_set,
             action_applier,
         )?;
@@ -363,6 +367,7 @@ impl TeamProblem {
     /// Returns a [`BenchmarkResult`] on success.
     pub fn benchmark_custom(
         self,
+        indexer: &str,
         action_set: &str,
         action_applier: &str,
     ) -> Result<BenchmarkResult, String> {
@@ -371,6 +376,7 @@ impl TeamProblem {
             &problem.graph,
             problem.initial_teams,
             problem.horizon,
+            indexer,
             action_set,
             action_applier,
         )?;

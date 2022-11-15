@@ -2,8 +2,10 @@ use std::path::{Path, PathBuf};
 
 use super::*;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OptimizationInfo {
+    /// State indexer class
+    pub indexer: String,
     /// Action set definition
     pub actions: String,
     /// Action applier
