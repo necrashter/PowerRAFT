@@ -18,8 +18,8 @@ pub struct OptimizationBenchmarkResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExperimentTask {
-    problems: Vec<TeamProblem>,
-    optimizations: Vec<OptimizationInfo>,
+    pub problems: Vec<TeamProblem>,
+    pub optimizations: Vec<OptimizationInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

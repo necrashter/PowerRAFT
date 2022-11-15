@@ -2,8 +2,8 @@ use std::path::Path;
 use std::{io::Write, path::PathBuf};
 
 use dmslib::io::{
-    read_experiments_from_file, BenchmarkResult, OptimizationBenchmarkResult, OptimizationInfo,
-    TeamProblem,
+    read_experiments_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
+    OptimizationInfo, TeamProblem,
 };
 use dmslib::teams::iter_optimizations;
 
@@ -172,12 +172,91 @@ fn main() {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
-        Command::Run { path, json: _ } => {
-            let experiments = match read_experiments_from_file(path) {
+        Command::Run { path, json } => {
+            let experiment = match read_experiments_from_file(path) {
                 Ok(s) => s,
                 Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
             };
-            dbg!(experiments);
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Experiment Name:  ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(
+                &mut stderr,
+                "{}\n",
+                experiment.name.as_ref().map(String::as_ref).unwrap_or("-")
+            )
+            .unwrap();
+
+            let mut current: usize = 1;
+            let total_benchmarks: usize = experiment
+                .tasks
+                .iter()
+                .map(|task| task.problems.len() * task.optimizations.len())
+                .sum();
+
+            let mut results: Vec<OptimizationBenchmarkResult> = Vec::new();
+
+            for task in experiment.tasks.into_iter() {
+                let ExperimentTask {
+                    problems,
+                    optimizations,
+                } = task;
+                for problem in problems {
+                    stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+                    write!(&mut stderr, "Problem Name:     ").unwrap();
+                    stderr.reset().unwrap();
+                    writeln!(
+                        &mut stderr,
+                        "{}",
+                        problem.name.as_ref().map(String::as_ref).unwrap_or("-")
+                    )
+                    .unwrap();
+
+                    let problem = match problem.prepare() {
+                        Ok(x) => x,
+                        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+                    };
+
+                    for optimization in &optimizations {
+                        let action_set = &optimization.actions;
+                        let action_applier = &optimization.transitions;
+
+                        writeln!(&mut stderr).unwrap();
+                        print_optimizations(&mut stderr, action_set, action_applier).unwrap();
+
+                        stderr
+                            .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                            .unwrap();
+                        write!(&mut stderr, "Solving {}/{}...\r", current, total_benchmarks)
+                            .unwrap();
+                        stderr.reset().unwrap();
+                        stderr.flush().unwrap();
+
+                        let result = benchmark(&problem, action_set, action_applier);
+
+                        print_benchmark_result(&mut stderr, &result.result).unwrap();
+
+                        results.push(result);
+
+                        current += 1;
+                    }
+                }
+            }
+
+            if json {
+                let serialized = match serde_json::to_string_pretty(&results) {
+                    Ok(s) => s,
+                    Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+                };
+                println!("{}", serialized);
+            }
+
+            stderr
+                .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                .unwrap();
+            writeln!(&mut stderr, "\nDone!").unwrap();
+            stderr.reset().unwrap();
         }
 
         Command::Solve {
@@ -266,6 +345,7 @@ fn main() {
             writeln!(&mut stderr, "\nDone!").unwrap();
             stderr.reset().unwrap();
         }
+
         Command::Tt { path } => {
             let (name, problem) = read_and_parse_team_problem(path);
             let travel_times = problem.graph.travel_times;
@@ -288,6 +368,7 @@ fn main() {
 
             println!("{}", &travel_times);
         }
+
         Command::D { path, precision } => {
             let mut problem = match TeamProblem::read_from_file(path) {
                 Ok(x) => x,
