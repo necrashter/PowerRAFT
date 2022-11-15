@@ -105,9 +105,12 @@ pub struct Team {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum TimeFunc {
-    /// Calculate "as the crow flies" distance between two points, multiply it with the given
-    /// factor, and round it up (to avoid 0) to find travel times.
-    DirectDistance { multiplier: f64 },
+    /// Calculate "as the crow flies" distance between two points, multiply and/or divide it with
+    /// the given factor(s), and round it up (to avoid 0) to find travel times.
+    DirectDistance {
+        multiplier: Option<f64>,
+        divider: Option<f64>,
+    },
     /// Use a constant value to build travel time matrix (except for diagonal entries).
     Constant { constant: Time },
 }
@@ -116,8 +119,15 @@ impl TimeFunc {
     /// Get distance between two points according to this function.
     pub fn get_distance(&self, a: &LatLng, b: &LatLng) -> Time {
         match self {
-            TimeFunc::DirectDistance { multiplier } => {
-                (a.distance_to(b) * multiplier).ceil() as Time
+            TimeFunc::DirectDistance {
+                multiplier,
+                divider,
+            } => {
+                let mut mul = multiplier.unwrap_or(1.0);
+                if let Some(divider) = divider {
+                    mul /= divider;
+                }
+                (a.distance_to(b) * mul).ceil() as Time
             }
             TimeFunc::Constant { constant } => *constant,
         }
@@ -129,10 +139,17 @@ impl TimeFunc {
         let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
 
         match self {
-            TimeFunc::DirectDistance { multiplier } => {
+            TimeFunc::DirectDistance {
+                multiplier,
+                divider,
+            } => {
+                let mut mul = multiplier.unwrap_or(1.0);
+                if let Some(divider) = divider {
+                    mul /= divider;
+                }
                 for (i1, l1) in locations.iter().enumerate() {
                     for (i2, l2) in locations.iter().enumerate().skip(i1 + 1) {
-                        let time = (l1.distance_to(l2) * multiplier).ceil() as Time;
+                        let time = (l1.distance_to(l2) * mul).ceil() as Time;
                         travel_times[(i1, i2)] = time;
                         travel_times[(i2, i1)] = time;
                     }
@@ -153,7 +170,10 @@ impl TimeFunc {
 
 impl Default for TimeFunc {
     fn default() -> Self {
-        Self::DirectDistance { multiplier: 1.0 }
+        Self::DirectDistance {
+            multiplier: None,
+            divider: None,
+        }
     }
 }
 
