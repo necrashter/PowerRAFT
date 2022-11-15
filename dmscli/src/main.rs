@@ -63,6 +63,8 @@ enum Command {
         #[arg(short, long, default_value_t = 3)]
         precision: usize,
     },
+    /// Print the list of all possible optimizations.
+    ListAllOpt,
 }
 
 macro_rules! fatal_error {
@@ -325,6 +327,15 @@ fn main() {
             .unwrap();
 
             println!("{:.1$}", &distances, precision);
+        }
+
+        Command::ListAllOpt => {
+            let result = dmslib::teams::all_optimizations();
+            let serialized = match serde_json::to_string_pretty(&result) {
+                Ok(s) => s,
+                Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+            };
+            println!("{}", serialized);
         }
     }
 }

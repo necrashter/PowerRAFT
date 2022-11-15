@@ -1,4 +1,6 @@
 //! Variations of solve function
+use crate::io::OptimizationInfo;
+
 use super::*;
 
 /// Solve a field-team restoration problem on this graph with the given teams without any
@@ -215,6 +217,15 @@ pub fn iter_optimizations() -> itertools::Product<
     std::slice::Iter<'static, &'static str>,
 > {
     itertools::iproduct!(BENCHMARK_ACTION_SETS, BENCHMARK_ACTION_APPLIERS)
+}
+
+pub fn all_optimizations() -> Vec<OptimizationInfo> {
+    iter_optimizations()
+        .map(|(actions, transitions)| OptimizationInfo {
+            actions: actions.to_string(),
+            transitions: transitions.to_string(),
+        })
+        .collect()
 }
 
 /// Run all optimization combination possibilities on this field-teams restoration problem.
