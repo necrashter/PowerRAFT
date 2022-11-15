@@ -203,6 +203,20 @@ where
     sum.as_() / n_nondiag_elements as f64
 }
 
+/// Get the distances between neighbors in graph.
+pub fn neighbor_distances<T>(matrix: &Array2<T>, adj: &[Vec<usize>]) -> Vec<T>
+where
+    T: Copy,
+{
+    let mut out = Vec::new();
+    for (i, adj) in adj.iter().enumerate() {
+        for &j in adj.iter() {
+            out.push(matrix[(i, j)])
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 #[allow(clippy::bool_assert_comparison)]
 mod tests {

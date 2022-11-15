@@ -175,6 +175,42 @@ fn print_distances(out: &mut StandardStream, mut problem: TeamProblem, precision
     )
     .unwrap();
 
+    let problem = match problem.prepare() {
+        Ok(x) => x,
+        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+    };
+    let neighbor_dists = dmslib::utils::neighbor_distances(&distances, &problem.graph.branches);
+
+    if !neighbor_dists.is_empty() {
+        out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+        writeln!(out, "Neighbor Distances:").unwrap();
+        out.reset().unwrap();
+
+        let min = neighbor_dists
+            .iter()
+            .min_by(|x, y| x.partial_cmp(y).expect("Distances cannot be compared"))
+            .unwrap();
+        out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+        write!(out, "         Minimum: ").unwrap();
+        out.reset().unwrap();
+        writeln!(out, "{}", min).unwrap();
+
+        let avg: f64 = neighbor_dists.iter().sum::<f64>() / (neighbor_dists.len() as f64);
+        out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+        write!(out, "         Average: ").unwrap();
+        out.reset().unwrap();
+        writeln!(out, "{}", avg).unwrap();
+
+        let max = neighbor_dists
+            .iter()
+            .max_by(|x, y| x.partial_cmp(y).expect("Distances cannot be compared"))
+            .unwrap();
+        out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+        write!(out, "         Maximum: ").unwrap();
+        out.reset().unwrap();
+        writeln!(out, "{}", max).unwrap();
+    }
+
     println!("{:.1$}", &distances, precision);
 }
 
