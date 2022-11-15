@@ -420,6 +420,8 @@ pub struct TeamSolution<T: Transition> {
     pub values: Vec<Vec<f64>>,
     /// Index of optimal actions in each state.
     pub policy: Vec<usize>,
+    /// Given or computed Optimization horizon.
+    pub horizon: usize,
 }
 
 impl<T: Transition> Serialize for TeamSolution<T> {
@@ -489,6 +491,8 @@ pub struct BenchmarkResult {
     pub states: usize,
     /// Minimum value in the initial state.
     pub value: f64,
+    /// Given or computed Optimization horizon.
+    pub horizon: usize,
 }
 
 #[cfg(test)]

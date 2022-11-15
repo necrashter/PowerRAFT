@@ -130,6 +130,7 @@ where
         transitions,
         values,
         policy,
+        horizon,
     }
 }
 
@@ -153,6 +154,8 @@ pub struct Solution<T: Transition> {
     pub values: Vec<Vec<f64>>,
     /// Index of optimal actions in each state.
     pub policy: Vec<usize>,
+    /// Given or computed Optimization horizon.
+    pub horizon: usize,
 }
 
 impl<T: Transition> Solution<T> {
@@ -174,6 +177,7 @@ impl<T: Transition> Solution<T> {
             transitions,
             values,
             policy,
+            horizon,
         } = self;
         io::TeamSolution {
             total_time,
@@ -185,6 +189,7 @@ impl<T: Transition> Solution<T> {
             transitions,
             values,
             policy,
+            horizon,
         }
     }
 
@@ -195,6 +200,7 @@ impl<T: Transition> Solution<T> {
             generation_time: self.generation_time,
             states: self.transitions.len(),
             value: self.get_min_value(),
+            horizon: self.horizon,
         }
     }
 }

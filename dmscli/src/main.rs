@@ -131,6 +131,10 @@ fn print_benchmark_result(
     write!(out, "Min Value:        ")?;
     out.reset()?;
     writeln!(out, "{}", result.value)?;
+    out.set_color(&bold)?;
+    write!(out, "Horizon:          ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.horizon)?;
     Ok(())
 }
 
