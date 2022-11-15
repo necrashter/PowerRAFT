@@ -28,14 +28,21 @@ pub struct Experiment {
     pub tasks: Vec<ExperimentTask>,
 }
 
-pub fn read_experiments_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Experiment> {
+pub fn read_experiment_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Experiment> {
     let content = std::fs::read_to_string(&path)?;
+    let value: serde_json::Value = serde_json::from_str(&content)?;
+    read_experiment_from_value(value, path)
+}
+
+pub fn read_experiment_from_value<P: AsRef<Path>>(
+    value: serde_json::Value,
+    path: P,
+) -> std::io::Result<Experiment> {
     let path = {
         let mut p = PathBuf::new();
         p.push(path);
         p
     };
-    let value: serde_json::Value = serde_json::from_str(&content)?;
     if let serde_json::Value::Object(mut map) = value {
         let name = if let Some(serde_json::Value::String(s)) = map.get("name").take() {
             Some(s.clone())

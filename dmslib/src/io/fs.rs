@@ -1,5 +1,5 @@
 //! A module responsible for the DMS file system operations.
-use super::{GraphEntry, TeamProblem, View};
+use super::*;
 use crate::EXPERIMENTS_PATH;
 
 use itertools::Itertools;
@@ -160,12 +160,38 @@ pub fn read_field_from_file<P: AsRef<Path>>(
 }
 
 impl TeamProblem {
-    pub fn read_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<TeamProblem> {
-        let content = std::fs::read_to_string(&path)?;
-        let mut value: serde_json::Value = serde_json::from_str(&content)?;
+    pub fn read_from_value<P: AsRef<Path>>(
+        mut value: serde_json::Value,
+        path: P,
+    ) -> std::io::Result<TeamProblem> {
         read_field_from_file(&mut value, "graph", path)?;
         let team_problem: TeamProblem = serde_json::from_value(value)?;
         Ok(team_problem)
+    }
+
+    pub fn read_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<TeamProblem> {
+        let content = std::fs::read_to_string(&path)?;
+        let value: serde_json::Value = serde_json::from_str(&content)?;
+        TeamProblem::read_from_value(value, path)
+    }
+}
+
+/// Read problems from a JSON file, whether it's a single problem file or experiment.
+pub fn read_problems_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<TeamProblem>> {
+    let content = std::fs::read_to_string(&path)?;
+    let value: serde_json::Value = serde_json::from_str(&content)?;
+    if value.get("tasks").is_some() {
+        let experiment = read_experiment_from_value(value, path)?;
+        let mut result: Vec<TeamProblem> = Vec::new();
+        for task in experiment.tasks {
+            for problem in task.problems {
+                result.push(problem);
+            }
+        }
+        Ok(result)
+    } else {
+        let problem = TeamProblem::read_from_value(value, path)?;
+        Ok(vec![problem])
     }
 }
 

@@ -1,8 +1,9 @@
 use std::path::Path;
 use std::{io::Write, path::PathBuf};
 
+use dmslib::io::fs::read_problems_from_file;
 use dmslib::io::{
-    read_experiments_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
+    read_experiment_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
     OptimizationInfo, TeamProblem,
 };
 use dmslib::teams::iter_optimizations;
@@ -140,6 +141,70 @@ fn print_benchmark_result(
     Ok(())
 }
 
+fn print_distances(out: &mut StandardStream, mut problem: TeamProblem, precision: usize) {
+    let name = problem.name.take().unwrap_or_else(|| "-".to_string());
+    let distances = match problem.get_distances() {
+        Ok(x) => x,
+        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+    };
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Problem Name:     ").unwrap();
+    out.reset().unwrap();
+    writeln!(out, "{}", name).unwrap();
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Average Distance: ").unwrap();
+    out.reset().unwrap();
+    let avg: f64 = dmslib::utils::distance_matrix_average(&distances);
+    writeln!(out, "{}", avg).unwrap();
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Maximum Distance: ").unwrap();
+    out.reset().unwrap();
+    writeln!(
+        out,
+        "{}",
+        distances
+            .iter()
+            .max_by(|a, b| {
+                a.partial_cmp(b)
+                    .expect("Distance values must be comparable (not NaN)")
+            })
+            .unwrap()
+    )
+    .unwrap();
+
+    println!("{:.1$}", &distances, precision);
+}
+
+fn print_travel_times(out: &mut StandardStream, mut problem: TeamProblem) {
+    let name = problem.name.take().unwrap_or_else(|| "-".to_string());
+    let problem = match problem.prepare() {
+        Ok(x) => x,
+        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+    };
+    let travel_times = problem.graph.travel_times;
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Problem Name: ").unwrap();
+    out.reset().unwrap();
+    writeln!(out, "{}", name).unwrap();
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Average Time: ").unwrap();
+    out.reset().unwrap();
+    let avg: f64 = dmslib::utils::distance_matrix_average(&travel_times);
+    writeln!(out, "{}", avg).unwrap();
+
+    out.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(out, "Maximum Time: ").unwrap();
+    out.reset().unwrap();
+    writeln!(out, "{}", travel_times.iter().max().unwrap()).unwrap();
+
+    println!("{}", &travel_times);
+}
+
 fn benchmark(
     problem: &dmslib::teams::Problem,
     action: &str,
@@ -173,7 +238,7 @@ fn main() {
 
     match args.command {
         Command::Run { path, json } => {
-            let experiment = match read_experiments_from_file(path) {
+            let experiment = match read_experiment_from_file(path) {
                 Ok(s) => s,
                 Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
             };
@@ -347,67 +412,23 @@ fn main() {
         }
 
         Command::Tt { path } => {
-            let (name, problem) = read_and_parse_team_problem(path);
-            let travel_times = problem.graph.travel_times;
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Problem Name: ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(&mut stderr, "{}", name).unwrap();
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Average Time: ").unwrap();
-            stderr.reset().unwrap();
-            let avg: f64 = dmslib::utils::distance_matrix_average(&travel_times);
-            writeln!(&mut stderr, "{}", avg).unwrap();
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Maximum Time: ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(&mut stderr, "{}", travel_times.iter().max().unwrap()).unwrap();
-
-            println!("{}", &travel_times);
+            let problems = match read_problems_from_file(path) {
+                Ok(x) => x,
+                Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),
+            };
+            for problem in problems {
+                print_travel_times(&mut stderr, problem);
+            }
         }
 
         Command::D { path, precision } => {
-            let mut problem = match TeamProblem::read_from_file(path) {
+            let problems = match read_problems_from_file(path) {
                 Ok(x) => x,
-                Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
+                Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),
             };
-            let name = problem.name.take().unwrap_or_else(|| "-".to_string());
-            let distances = match problem.get_distances() {
-                Ok(x) => x,
-                Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
-            };
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Problem Name:     ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(&mut stderr, "{}", name).unwrap();
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Average Distance: ").unwrap();
-            stderr.reset().unwrap();
-            let avg: f64 = dmslib::utils::distance_matrix_average(&distances);
-            writeln!(&mut stderr, "{}", avg).unwrap();
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Maximum Distance: ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(
-                &mut stderr,
-                "{}",
-                distances
-                    .iter()
-                    .max_by(|a, b| {
-                        a.partial_cmp(b)
-                            .expect("Distance values must be comparable (not NaN)")
-                    })
-                    .unwrap()
-            )
-            .unwrap();
-
-            println!("{:.1$}", &distances, precision);
+            for problem in problems {
+                print_distances(&mut stderr, problem, precision);
+            }
         }
 
         Command::ListAllOpt => {
