@@ -32,6 +32,13 @@ pub struct RegularTransition {
     pub cost: f64,
 }
 
+#[derive(PartialEq, Clone)]
+enum DfsState<T> {
+    New,
+    Visiting,
+    Done(T),
+}
+
 impl Transition for RegularTransition {
     #[inline]
     fn terminal_transition(index: usize, cost: f64) -> Self {
@@ -60,21 +67,35 @@ impl Transition for RegularTransition {
     where
         Self: Sized,
     {
-        fn visit(index: usize, transitions: &[Vec<Vec<RegularTransition>>]) -> usize {
+        let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
+
+        fn visit(
+            index: usize,
+            transitions: &[Vec<Vec<RegularTransition>>],
+            memoization: &mut [DfsState<usize>],
+        ) -> usize {
+            let m = &mut memoization[index];
+            if let DfsState::Done(v) = m {
+                return *v;
+            } else if *m == DfsState::Visiting {
+                panic!("MDP state graph is cyclic");
+            }
+            *m = DfsState::Visiting;
             let mut max_depth = 0;
             for action in transitions[index].iter() {
                 for t in action.iter() {
                     let depth: usize = if t.successor == index {
                         1
                     } else {
-                        visit(t.successor, transitions) + 1
+                        visit(t.successor, transitions, memoization) + 1
                     };
                     max_depth = std::cmp::max(max_depth, depth);
                 }
             }
+            memoization[index] = DfsState::Done(max_depth);
             max_depth
         }
-        visit(0, transitions)
+        visit(0, transitions, &mut memoization)
     }
 }
 
@@ -172,21 +193,35 @@ impl Transition for TimedTransition {
     where
         Self: Sized,
     {
-        fn visit(index: usize, transitions: &[Vec<Vec<TimedTransition>>]) -> usize {
+        let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
+
+        fn visit(
+            index: usize,
+            transitions: &[Vec<Vec<TimedTransition>>],
+            memoization: &mut [DfsState<usize>],
+        ) -> usize {
+            let m = &mut memoization[index];
+            if let DfsState::Done(v) = m {
+                return *v;
+            } else if *m == DfsState::Visiting {
+                panic!("MDP state graph is cyclic");
+            }
+            *m = DfsState::Visiting;
             let mut max_depth = 0;
             for action in transitions[index].iter() {
                 for t in action.iter() {
                     let depth: usize = if t.successor == index {
                         t.time
                     } else {
-                        visit(t.successor, transitions) + t.time
+                        visit(t.successor, transitions, memoization) + t.time
                     };
                     max_depth = std::cmp::max(max_depth, depth);
                 }
             }
+            memoization[index] = DfsState::Done(max_depth);
             max_depth
         }
-        visit(0, transitions)
+        visit(0, transitions, &mut memoization)
     }
 }
 
