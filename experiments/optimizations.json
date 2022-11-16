@@ -1,0 +1,122 @@
+[
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterOnWay<NaiveActions>",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterOnWay<NaiveActions>",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterEnergizedOnWay<NaiveActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterOnWay<PermutationalActions>",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "NaiveStateIndexer",
+    "actions": "FilterEnergizedOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "PermutationalActions",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterOnWay<NaiveActions>",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterOnWay<NaiveActions>",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterEnergizedOnWay<NaiveActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterOnWay<PermutationalActions>",
+    "transitions": "NaiveActionApplier"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  },
+  {
+    "indexer": "SortedStateIndexer",
+    "actions": "FilterEnergizedOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  }
+]

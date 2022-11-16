@@ -22,6 +22,27 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug 'dmscli'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=dmscli",
+                    "--package=dmscli"
+                ],
+                "filter": {
+                    "name": "dmscli",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "run",
+                "../experiments/wscc-opt-exp.json"
+            ],
+            "cwd": "${workspaceFolder}/dmscli"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug unit tests in executable 'server'",
             "cargo": {
                 "args": [
