@@ -7,7 +7,7 @@ from matplotlib.ticker import MaxNLocator
 
 def plot(benchmark_data, options):
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    fig.subplots_adjust(left=0.2)
+    fig.subplots_adjust(left=0.125)
     # fig.subplots_adjust(left=0.115, right=0.88)
     # fig.canvas.set_window_title('Eldorado K-8 Fitness Chart')
 
@@ -98,20 +98,28 @@ def plot(benchmark_data, options):
     plt.show()
 
 def get_optimization_name(d):
+    indexer = {
+            "NaiveStateIndexer": [],
+            "SortedStateIndexer": ["S"],
+    }
     actions = {
-            "NaiveActions": "naive",
-            "PermutationalActions": "perm",
-            "FilterOnWay<NaiveActions>": "naive:ow",
-            "FilterOnWay<PermutationalActions>": "perm:ow",
-            "FilterEnergizedOnWay<NaiveActions>": "naive:eow",
-            "FilterEnergizedOnWay<PermutationalActions>": "perm:eow",
+            "NaiveActions": [],
+            "PermutationalActions": ["P"],
+            "FilterOnWay<NaiveActions>": ["O"],
+            "FilterOnWay<PermutationalActions>": ["P", "O"],
+            "FilterEnergizedOnWay<NaiveActions>": ["O"],
+            "FilterEnergizedOnWay<PermutationalActions>": ["P", "O"],
     }
     transitions = {
-            "NaiveActionApplier": "naive",
-            "TimedActionApplier<TimeUntilArrival>": "arriv",
-            "TimedActionApplier<TimeUntilEnergization>": "energ",
+            "NaiveActionApplier": [],
+            "TimedActionApplier<TimeUntilArrival>": ["V"],
+            "TimedActionApplier<TimeUntilEnergization>": ["W"],
     }
-    return actions[d["actions"]] + " + " + transitions[d["transitions"]]
+    opts = indexer[d["indexer"]] + actions[d["actions"]] + transitions[d["transitions"]]
+    if opts:
+        return " + ".join(opts)
+    else:
+        return "-"
 
 if __name__ == "__main__":
     with open(sys.argv[1]) as f:
