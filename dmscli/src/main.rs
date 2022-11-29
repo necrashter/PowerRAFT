@@ -300,20 +300,24 @@ fn main() {
                 .sum();
 
             let mut results: Vec<OptimizationBenchmarkResult> = Vec::new();
+            // Name of the task for each result
+            let mut names: Vec<Option<String>> = Vec::new();
 
             for task in experiment.tasks.into_iter() {
                 let ExperimentTask {
                     problems,
                     optimizations,
                 } = task;
-                for problem in problems {
+                for mut problem in problems {
+                    let name = problem.name.take();
+
                     stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
                     write!(&mut stderr, "Problem Name:     ").unwrap();
                     stderr.reset().unwrap();
                     writeln!(
                         &mut stderr,
                         "{}",
-                        problem.name.as_ref().map(String::as_ref).unwrap_or("-")
+                        name.as_ref().map(String::as_ref).unwrap_or("-")
                     )
                     .unwrap();
 
@@ -339,6 +343,7 @@ fn main() {
                         print_benchmark_result(&mut stderr, &result.result).unwrap();
 
                         results.push(result);
+                        names.push(name.clone());
 
                         current += 1;
                     }
@@ -346,6 +351,23 @@ fn main() {
             }
 
             if json {
+                let results: Vec<serde_json::Value> = results
+                    .into_iter()
+                    .zip(names.into_iter())
+                    .map(|(result, name)| {
+                        let mut result = match serde_json::to_value(result) {
+                            Ok(s) => s,
+                            Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+                        };
+                        if let Some(name) = name {
+                            result
+                                .as_object_mut()
+                                .unwrap()
+                                .insert("name".to_string(), serde_json::Value::String(name));
+                        }
+                        result
+                    })
+                    .collect();
                 let serialized = match serde_json::to_string_pretty(&results) {
                     Ok(s) => s,
                     Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
