@@ -6,6 +6,8 @@ parser = argparse.ArgumentParser(description="Plot dmscli experiment results fro
 parser.add_argument("filename")
 parser.add_argument('-n', '--naming', dest="naming",
                     help="Names of benchmarks: default or opt")
+parser.add_argument('-p', '--plot', dest="plot",
+                    help="Plot: memory or time")
 
 args = parser.parse_args()
 
@@ -132,6 +134,74 @@ def get_optimization_name(d):
         return "-"
 
 
+def plot_memory(benchmark_data, options):
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+    fig.subplots_adjust(left=0.125)
+    # fig.subplots_adjust(left=0.115, right=0.88)
+    # fig.canvas.set_window_title('Eldorado K-8 Fitness Chart')
+
+    benchmark_names = [b["name"] for b in benchmark_data]
+    mems = [b["max_memory"] / 1024 / 1024 for b in benchmark_data]
+    minmaxavg = (min(mems) + max(mems))/2
+
+    pos = np.arange(len(benchmark_names))
+
+    rect_height = 0.75
+    total_rects = ax1.barh(pos, mems,
+                     align='center',
+                     height=rect_height,
+                     tick_label=benchmark_names)
+
+    ax1.set_title("Benchmark Results", fontweight="bold")
+
+    ax1.xaxis.set_major_locator(MaxNLocator(11))
+    ax1.xaxis.grid(True, linestyle='--', which='major',
+                   color='grey', alpha=.25)
+
+    ax1.set_xlabel("Maximum Memory Usage (MB)")
+
+    if not "no-states" in options:
+        # Set the right-hand Y-axis ticks and labels
+        ax2 = ax1.twinx()
+        right_labels = [b["states"] if "states" in b else "TIME OUT"
+                        for b in benchmark_data]
+        # set the tick locations
+        ax2.set_yticks(pos)
+        # make sure that the limits are set equally on both yaxis so the
+        # ticks line up
+        ax2.set_ylim(ax1.get_ylim())
+        # set the tick labels
+        ax2.set_yticklabels(right_labels)
+        ax2.set_ylabel('Number of States')
+
+    for mem, rect in zip(mems, total_rects):
+        # Rectangle widths are already integer-valued but are floating
+        # type, so it helps to remove the trailing decimal point and 0 by
+        # converting width to int type
+        width = rect.get_width()
+
+        if mem < minmaxavg:
+            # Shift the text to the right side of the right edge
+            xloc = 5
+            clr = 'black'
+            align = 'left'
+        else:
+            # Shift the text to the left side of the right edge
+            xloc = -5
+            clr = 'white'
+            align = 'right'
+
+        # Center the text vertically in the bar
+        yloc = rect.get_y() + rect.get_height() / 2
+        label = ax1.annotate("%.2f" % (mem,), xy=(width, yloc), xytext=(xloc, 0),
+                            textcoords="offset points",
+                            ha=align, va='center',
+                            color=clr, weight='bold', clip_on=True)
+
+    # plt.legend((total_rects[0], ), ('Total Time', ), loc="upper left")
+    plt.show()
+
+
 with open(args.filename) as f:
     data = json.load(f)
 
@@ -146,4 +216,12 @@ if args.naming == "opt":
 else:
     data = [ { "name": d["name"], **d["result"] } for d in data ]
 
-plot(data[::-1], {})
+if args.plot:
+    if args.plot.startswith("t"):
+        plot(data[::-1], {})
+    elif args.plot.startswith("m"):
+        plot_memory(data[::-1], {})
+    else:
+        print("Unknown plot type:", args.plot)
+else:
+    plot(data[::-1], {})
