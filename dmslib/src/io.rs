@@ -427,6 +427,8 @@ pub struct TeamSolution<T: Transition> {
     pub total_time: f64,
     /// Total time to generate the MDP without policy synthesis in seconds.
     pub generation_time: f64,
+    /// Maximum memory usage in bytes.
+    pub max_memory: usize,
 
     /// Latitude and longtitude values of vertices in team graph.
     pub team_nodes: Array2<f64>,
@@ -513,6 +515,8 @@ pub struct BenchmarkResult {
     pub total_time: f64,
     /// Total time to generate the MDP without policy synthesis in seconds.
     pub generation_time: f64,
+    /// Maximum memory usage in bytes.
+    pub max_memory: usize,
     /// Number of states.
     pub states: usize,
     /// Minimum value in the initial state.

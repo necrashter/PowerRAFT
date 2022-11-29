@@ -144,12 +144,12 @@ where
     let total_time: f64 = start_time.elapsed().as_secs_f64();
 
     drop(cancel_arc);
-    let max_allocated = memory_watcher.join().unwrap();
-    println!("Max mem: {max_allocated}");
+    let max_memory = memory_watcher.join().unwrap();
 
     Solution {
         total_time,
         generation_time,
+        max_memory,
         states,
         teams,
         transitions,
@@ -165,6 +165,8 @@ pub struct Solution<T: Transition> {
     pub total_time: f64,
     /// Total time to generate the MDP without policy synthesis in seconds.
     pub generation_time: f64,
+    /// Maximum memory usage in bytes.
+    pub max_memory: usize,
 
     /// Array of bus states.
     pub states: Array2<BusState>,
@@ -197,6 +199,7 @@ impl<T: Transition> Solution<T> {
         let Solution {
             total_time,
             generation_time,
+            max_memory,
             states,
             teams,
             transitions,
@@ -207,6 +210,7 @@ impl<T: Transition> Solution<T> {
         io::TeamSolution {
             total_time,
             generation_time,
+            max_memory,
             team_nodes: graph.team_nodes,
             travel_times: graph.travel_times,
             states,
@@ -223,6 +227,7 @@ impl<T: Transition> Solution<T> {
         io::BenchmarkResult {
             total_time: self.total_time,
             generation_time: self.generation_time,
+            max_memory: self.max_memory,
             states: self.transitions.len(),
             value: self.get_min_value(),
             horizon: self.horizon,

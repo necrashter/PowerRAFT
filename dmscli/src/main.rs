@@ -129,6 +129,11 @@ fn print_benchmark_result(
     out.reset()?;
     writeln!(out, "{}", result.states)?;
     out.set_color(&bold)?;
+    write!(out, "Max memory usage: ")?;
+    out.reset()?;
+    writeln!(out, "{}", result.max_memory)?;
+
+    out.set_color(&bold)?;
     write!(out, "Generation time:  ")?;
     out.reset()?;
     writeln!(out, "{}", result.generation_time)?;
