@@ -21,7 +21,7 @@ use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use std::sync::Arc;
+use std::sync::{Arc, Condvar, Mutex};
 
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.
@@ -114,19 +114,31 @@ where
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
 {
-    let cancel_arc = Arc::new(());
+    let cancel_arc = Arc::new((Mutex::new(false), Condvar::new()));
     let cancel_arc_child = cancel_arc.clone();
     let memory_watcher = std::thread::spawn(move || {
+        let (lock, cvar) = &*cancel_arc_child;
+        let sleep_times = [25, 25, 50, 100, 200, 200, 400, 500, 500];
+        let mut sleep_iter = sleep_times.into_iter().chain(std::iter::repeat(1000));
         let mut max_allocated: usize = 0;
+        let mut locked = lock.lock().unwrap();
         loop {
             if Arc::strong_count(&cancel_arc_child) <= 1 {
                 break;
             }
             let allocated = super::ALLOCATOR.allocated();
             max_allocated = std::cmp::max(max_allocated, allocated);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            let result = cvar
+                .wait_timeout(
+                    locked,
+                    std::time::Duration::from_millis(sleep_iter.next().unwrap()),
+                )
+                .unwrap();
+            locked = result.0;
+            if !result.1.timed_out() {
+                break;
+            }
         }
-        drop(cancel_arc_child);
         max_allocated
     });
 
@@ -144,6 +156,9 @@ where
 
     let total_time: f64 = start_time.elapsed().as_secs_f64();
 
+    let lock = cancel_arc.0.lock().unwrap();
+    cancel_arc.1.notify_all();
+    drop(lock);
     drop(cancel_arc);
     let max_memory = memory_watcher.join().unwrap();
 
