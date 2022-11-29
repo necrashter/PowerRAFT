@@ -1,9 +1,19 @@
-# Plot JSON benchmark output
-import sys
+#!/usr/bin/env python3
+
+import argparse
+
+parser = argparse.ArgumentParser(description="Plot dmscli experiment results from JSON files.")
+parser.add_argument("filename")
+parser.add_argument('-n', '--naming', dest="naming",
+                    help="Names of benchmarks: default or opt")
+
+args = parser.parse_args()
+
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+
 
 def plot(benchmark_data, options):
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -121,9 +131,11 @@ def get_optimization_name(d):
     else:
         return "-"
 
-if __name__ == "__main__":
-    with open(sys.argv[1]) as f:
-        data = json.load(f)
+
+with open(args.filename) as f:
+    data = json.load(f)
+
+if args.naming == "opt":
     data = [
         {
             "name": get_optimization_name(d["optimizations"]),
@@ -131,4 +143,7 @@ if __name__ == "__main__":
         }
         for d in data
     ]
-    plot(data[::-1], {})
+else:
+    data = [ { "name": d["name"], **d["result"] } for d in data ]
+
+plot(data[::-1], {})
