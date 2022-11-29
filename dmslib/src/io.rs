@@ -3,7 +3,7 @@
 //! Contains structs to serialize and deserialize various representation of graphs.
 use crate::policy::*;
 use crate::teams::state::{BusState, TeamState};
-use crate::Time;
+use crate::{SolveFailure, Time};
 
 use ndarray::{Array1, Array2, ArrayView1};
 use serde::ser::{SerializeMap, SerializeSeq};
@@ -228,7 +228,7 @@ impl TeamProblem {
     /// - Add nodes for initial team positions.
     /// - Compute travel times matrix.
     /// - ...and so on.
-    pub fn prepare(self) -> Result<crate::teams::Problem, String> {
+    pub fn prepare(self) -> Result<crate::teams::Problem, SolveFailure> {
         let TeamProblem {
             name: _,
             graph,
@@ -243,15 +243,17 @@ impl TeamProblem {
 
         for (i, team) in teams.iter().enumerate() {
             if team.index.is_none() && team.latlng.is_none() {
-                return Err(format!("Team {i} has neither index nor latlng!"));
+                return Err(SolveFailure::BadInput(format!(
+                    "Team {i} has neither index nor latlng!"
+                )));
             }
         }
 
         for res in graph.resources.iter() {
             if res.kind.is_some() {
-                return Err(String::from(
+                return Err(SolveFailure::BadInput(String::from(
                     "Only transmission grid is supported for teams!",
-                ));
+                )));
             }
         }
 
@@ -310,10 +312,10 @@ impl TeamProblem {
 
     /// Solve this field teams restoration problem without any optimizations and return a
     /// [`TeamSolution`] on success.
-    pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, String> {
+    pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
         let problem = self.prepare()?;
         let solution =
-            crate::teams::solve_naive(&problem.graph, problem.initial_teams, problem.horizon);
+            crate::teams::solve_naive(&problem.graph, problem.initial_teams, problem.horizon)?;
         Ok(solution.to_webclient(problem.graph))
     }
 
@@ -325,7 +327,7 @@ impl TeamProblem {
         self,
         indexer: &str,
         action_set: &str,
-    ) -> Result<TeamSolution<RegularTransition>, String> {
+    ) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
         let problem = self.prepare()?;
         let solution = crate::teams::solve_custom_regular(
             &problem.graph,
@@ -347,7 +349,7 @@ impl TeamProblem {
         indexer: &str,
         action_set: &str,
         action_applier: &str,
-    ) -> Result<TeamSolution<TimedTransition>, String> {
+    ) -> Result<TeamSolution<TimedTransition>, SolveFailure> {
         let problem = self.prepare()?;
         let solution = crate::teams::solve_custom_timed(
             &problem.graph,
@@ -370,7 +372,7 @@ impl TeamProblem {
         indexer: &str,
         action_set: &str,
         action_applier: &str,
-    ) -> Result<BenchmarkResult, String> {
+    ) -> Result<BenchmarkResult, SolveFailure> {
         let problem = self.prepare()?;
         let solution = crate::teams::benchmark_custom(
             &problem.graph,
@@ -384,7 +386,7 @@ impl TeamProblem {
     }
 
     /// Run all optimization combination possibilities on this field-teams restoration problem.
-    pub fn benchmark_all(self) -> Result<Vec<OptimizationBenchmarkResult>, String> {
+    pub fn benchmark_all(self) -> Result<Vec<OptimizationBenchmarkResult>, SolveFailure> {
         let problem = self.prepare()?;
         Ok(crate::teams::benchmark_all(
             &problem.graph,

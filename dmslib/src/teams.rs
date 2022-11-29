@@ -13,6 +13,7 @@ use transitions::*;
 
 use crate::io;
 use crate::policy::*;
+use crate::SolveFailure;
 use crate::{Index, Time};
 
 use itertools::Itertools;
@@ -89,7 +90,7 @@ impl io::Graph {
         self,
         teams: Vec<io::Team>,
         horizon: Option<usize>,
-    ) -> Result<Problem, String> {
+    ) -> Result<Problem, SolveFailure> {
         let team_problem = crate::io::TeamProblem {
             name: None,
             graph: self,
@@ -106,7 +107,7 @@ fn solve_generic<'a, TT, E, AA, PS>(
     graph: &'a Graph,
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
-) -> Solution<TT>
+) -> Result<Solution<TT>, SolveFailure>
 where
     TT: Transition,
     E: Explorer<'a, TT>,
@@ -146,7 +147,7 @@ where
     drop(cancel_arc);
     let max_memory = memory_watcher.join().unwrap();
 
-    Solution {
+    Ok(Solution {
         total_time,
         generation_time,
         max_memory,
@@ -156,7 +157,7 @@ where
         values,
         policy,
         horizon,
-    }
+    })
 }
 
 /// Stores the solution for a field teams restoration [`Problem`].

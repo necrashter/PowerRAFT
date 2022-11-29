@@ -30,7 +30,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
@@ -43,7 +44,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
@@ -56,7 +58,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
@@ -69,7 +72,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -86,7 +90,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -99,7 +104,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -112,7 +118,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -127,7 +134,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 645);
 
@@ -144,7 +152,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -157,7 +166,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 544);
 
@@ -172,7 +182,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 433);
 
@@ -189,7 +200,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
@@ -206,7 +218,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
@@ -219,7 +232,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
@@ -232,7 +246,8 @@ fn pe0_1_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 }
@@ -267,7 +282,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 11545);
 
@@ -280,7 +296,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 6161);
 
@@ -293,7 +310,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 9039);
     let solution = solve_generic::<
@@ -305,7 +323,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5190);
 
@@ -318,7 +337,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 8234);
 
@@ -335,7 +355,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 6551);
 
@@ -348,7 +369,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 7161);
 
@@ -361,7 +383,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 3912);
 
@@ -374,7 +397,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5847);
 
@@ -389,7 +413,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 11545);
 
@@ -406,7 +431,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 6551);
 
@@ -419,7 +445,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5847);
 
@@ -432,7 +459,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 3489);
 
@@ -447,7 +475,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 9089);
 
@@ -464,7 +493,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5762);
 
@@ -481,7 +511,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4751);
 
@@ -494,7 +525,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5216);
 
@@ -507,7 +539,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4217);
 
@@ -520,7 +553,8 @@ fn pe0_2_team() {
         &problem.graph,
         problem.initial_teams.clone(),
         problem.horizon,
-    );
+    )
+    .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 2478);
 }

@@ -346,6 +346,7 @@ fn main() {
                         let result = benchmark(&problem, optimization);
 
                         print_benchmark_result(&mut stderr, &result.result).unwrap();
+                        writeln!(&mut stderr).unwrap();
 
                         results.push(result);
                         names.push(name.clone());
@@ -383,7 +384,7 @@ fn main() {
             stderr
                 .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
                 .unwrap();
-            writeln!(&mut stderr, "\nDone!").unwrap();
+            writeln!(&mut stderr, "Done!").unwrap();
             stderr.reset().unwrap();
         }
 

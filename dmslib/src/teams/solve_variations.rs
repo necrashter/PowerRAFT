@@ -9,7 +9,7 @@ pub fn solve_naive(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
     horizon: Option<usize>,
-) -> Solution<RegularTransition> {
+) -> Result<Solution<RegularTransition>, SolveFailure> {
     solve_generic::<
         RegularTransition,
         NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
@@ -22,12 +22,12 @@ pub fn solve_naive(
 /// that calls the appropriate solve function variation.
 macro_rules! generate_solve_code {
     ($tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr, $oh:expr) => {
-        Ok(solve_generic::<
+        solve_generic::<
             $tt,
             NaiveExplorer<$tt, $act, $si>,
             $aa,
             $ps,
-        >($g, $it, $oh))
+        >($g, $it, $oh)
     };
     // Iterate through action set
     (
@@ -41,7 +41,7 @@ macro_rules! generate_solve_code {
         if $actstr == stringify!($act1) {
             generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it, $oh)
         } else {
-            Err(format!("Undefined action set: {}", $actstr))
+            Err(SolveFailure::BadInput(format!("Undefined action set: {}", $actstr)))
         }
     };
     (
@@ -84,7 +84,7 @@ macro_rules! generate_solve_code {
                 solve($g, $it, $oh)
             )
         } else {
-            Err(format!("Undefined state indexer: {}", $sistr))
+            Err(SolveFailure::BadInput(format!("Undefined state indexer: {}", $sistr)))
         }
     };
     (
@@ -134,7 +134,7 @@ macro_rules! generate_solve_code {
                 solve($g, $it, $oh)
             )
         } else {
-            Err(format!("Undefined action applier: {}", $actstr))
+            Err(SolveFailure::BadInput(format!("Undefined action applier: {}", $actstr)))
         }
     };
     (
@@ -175,7 +175,7 @@ pub fn solve_custom_regular(
     horizon: Option<usize>,
     indexer: &str,
     action_set: &str,
-) -> Result<Solution<RegularTransition>, String> {
+) -> Result<Solution<RegularTransition>, SolveFailure> {
     generate_solve_code! {
         transition = RegularTransition,
         policy = NaivePolicySynthesizer,
@@ -206,7 +206,7 @@ pub fn solve_custom_timed(
     indexer: &str,
     action_set: &str,
     action_applier: &str,
-) -> Result<Solution<TimedTransition>, String> {
+) -> Result<Solution<TimedTransition>, SolveFailure> {
     generate_solve_code! {
         transition = TimedTransition,
         policy = NaiveTimedPolicySynthesizer,
@@ -243,7 +243,7 @@ pub fn benchmark_custom(
     indexer: &str,
     action_set: &str,
     action_applier: &str,
-) -> Result<io::BenchmarkResult, String> {
+) -> Result<io::BenchmarkResult, SolveFailure> {
     if action_applier == stringify!(NaiveActionApplier) {
         Ok(
             solve_custom_regular(graph, initial_teams, horizon, indexer, action_set)?
