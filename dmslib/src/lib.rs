@@ -2,6 +2,9 @@
 //!
 //! Common functionality for DMS server and command line interface.
 
+#[global_allocator]
+static ALLOCATOR: cap::Cap<std::alloc::System> = cap::Cap::new(std::alloc::System, usize::MAX);
+
 /// Data type for bus indices.
 pub type Index = usize;
 /// Data type for measuring time.

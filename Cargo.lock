@@ -81,6 +81,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
 
 [[package]]
+name = "cap"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42cf69039bc11cbca6ec9076caa0147dc68b267a6eb6b2b3f7ccf97e986d3f01"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -175,6 +181,7 @@ dependencies = [
 name = "dmslib"
 version = "0.1.0"
 dependencies = [
+ "cap",
  "itertools",
  "log",
  "ndarray",

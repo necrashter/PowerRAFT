@@ -20,6 +20,8 @@ use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
+use std::sync::Arc;
+
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.
 /// For en-route teams (continue action), this must be the index of the destination bus.
@@ -111,16 +113,39 @@ where
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
 {
+    let cancel_arc = Arc::new(());
+    let cancel_arc_child = cancel_arc.clone();
+    let memory_watcher = std::thread::spawn(move || {
+        let mut max_allocated: usize = 0;
+        loop {
+            if Arc::strong_count(&cancel_arc_child) <= 1 {
+                break;
+            }
+            let allocated = super::ALLOCATOR.allocated();
+            max_allocated = std::cmp::max(max_allocated, allocated);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        drop(cancel_arc_child);
+        max_allocated
+    });
+
     let start_time = Instant::now();
     let (states, teams, transitions) = E::explore::<AA>(graph, initial_teams);
+
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
+
     let horizon = if let Some(v) = horizon {
         v
     } else {
         TT::determine_horizon(&transitions)
     };
     let (values, policy) = PS::synthesize_policy(&transitions, horizon);
+
     let total_time: f64 = start_time.elapsed().as_secs_f64();
+
+    drop(cancel_arc);
+    let max_allocated = memory_watcher.join().unwrap();
+    println!("Max mem: {max_allocated}");
 
     Solution {
         total_time,
