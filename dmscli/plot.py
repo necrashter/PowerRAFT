@@ -28,6 +28,7 @@ def plot(benchmark_data, options):
                    for b in benchmark_data]
     generation_times = [b["generation_time"]  if "generation_time" in b else 0
                         for b in benchmark_data]
+    errors = [b["error"] if "error" in b else None for b in benchmark_data]
     minmaxavg = (min(total_times) + max(total_times))/2
 
     pos = np.arange(len(benchmark_names))
@@ -53,8 +54,7 @@ def plot(benchmark_data, options):
     if not "no-states" in options:
         # Set the right-hand Y-axis ticks and labels
         ax2 = ax1.twinx()
-        right_labels = [b["states"] if "states" in b else "TIME OUT"
-                        for b in benchmark_data]
+        right_labels = [b["states"] if "states" in b else "-" for b in benchmark_data]
         # set the tick locations
         ax2.set_yticks(pos)
         # make sure that the limits are set equally on both yaxis so the
@@ -64,13 +64,13 @@ def plot(benchmark_data, options):
         ax2.set_yticklabels(right_labels)
         ax2.set_ylabel('Number of States')
 
-    for time, rect in zip(total_times, total_rects):
+    for time, rect, error in zip(total_times, total_rects, errors):
         # Rectangle widths are already integer-valued but are floating
         # type, so it helps to remove the trailing decimal point and 0 by
         # converting width to int type
         width = rect.get_width()
 
-        if time < minmaxavg:
+        if time < minmaxavg or error:
             # Shift the text to the right side of the right edge
             xloc = 5
             clr = 'black'
@@ -81,9 +81,11 @@ def plot(benchmark_data, options):
             clr = 'white'
             align = 'right'
 
+        label = error if error else "%.2f" % (time,)
+
         # Center the text vertically in the bar
         yloc = rect.get_y() + rect.get_height() / 2
-        label = ax1.annotate("%.2f" % (time,), xy=(width, yloc), xytext=(xloc, 0),
+        ax1.annotate(label, xy=(width, yloc), xytext=(xloc, 0),
                             textcoords="offset points",
                             ha=align, va='center',
                             color=clr, weight='bold', clip_on=True)
@@ -109,30 +111,6 @@ def plot(benchmark_data, options):
     plt.legend((total_rects[0], generation_rects[0]), ('Total Time', 'Generation Time'), loc="upper left")
     plt.show()
 
-def get_optimization_name(d):
-    indexer = {
-            "NaiveStateIndexer": [],
-            "SortedStateIndexer": ["S"],
-    }
-    actions = {
-            "NaiveActions": [],
-            "PermutationalActions": ["P"],
-            "FilterOnWay<NaiveActions>": ["O"],
-            "FilterOnWay<PermutationalActions>": ["P", "O"],
-            "FilterEnergizedOnWay<NaiveActions>": ["O"],
-            "FilterEnergizedOnWay<PermutationalActions>": ["P", "O"],
-    }
-    transitions = {
-            "NaiveActionApplier": [],
-            "TimedActionApplier<TimeUntilArrival>": ["V"],
-            "TimedActionApplier<TimeUntilEnergization>": ["W"],
-    }
-    opts = indexer[d["indexer"]] + actions[d["actions"]] + transitions[d["transitions"]]
-    if opts:
-        return " + ".join(opts)
-    else:
-        return "-"
-
 
 def plot_memory(benchmark_data, options):
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -142,6 +120,7 @@ def plot_memory(benchmark_data, options):
 
     benchmark_names = [b["name"] for b in benchmark_data]
     mems = [b["max_memory"] / 1024 / 1024 for b in benchmark_data]
+    errors = [b["error"] if "error" in b else None for b in benchmark_data]
     minmaxavg = (min(mems) + max(mems))/2
 
     pos = np.arange(len(benchmark_names))
@@ -174,13 +153,13 @@ def plot_memory(benchmark_data, options):
         ax2.set_yticklabels(right_labels)
         ax2.set_ylabel('Number of States')
 
-    for mem, rect in zip(mems, total_rects):
+    for mem, rect, error in zip(mems, total_rects, errors):
         # Rectangle widths are already integer-valued but are floating
         # type, so it helps to remove the trailing decimal point and 0 by
         # converting width to int type
         width = rect.get_width()
 
-        if mem < minmaxavg:
+        if mem < minmaxavg or error:
             # Shift the text to the right side of the right edge
             xloc = 5
             clr = 'black'
@@ -191,9 +170,11 @@ def plot_memory(benchmark_data, options):
             clr = 'white'
             align = 'right'
 
+        label = error if error else ("%.2f" % (mem,))
+
         # Center the text vertically in the bar
         yloc = rect.get_y() + rect.get_height() / 2
-        label = ax1.annotate("%.2f" % (mem,), xy=(width, yloc), xytext=(xloc, 0),
+        ax1.annotate(label, xy=(width, yloc), xytext=(xloc, 0),
                             textcoords="offset points",
                             ha=align, va='center',
                             color=clr, weight='bold', clip_on=True)
@@ -202,19 +183,46 @@ def plot_memory(benchmark_data, options):
     plt.show()
 
 
+def get_optimization_name(d):
+    indexer = {
+            "NaiveStateIndexer": [],
+            "SortedStateIndexer": ["S"],
+    }
+    actions = {
+            "NaiveActions": [],
+            "PermutationalActions": ["P"],
+            "FilterOnWay<NaiveActions>": ["O"],
+            "FilterOnWay<PermutationalActions>": ["P", "O"],
+            "FilterEnergizedOnWay<NaiveActions>": ["O"],
+            "FilterEnergizedOnWay<PermutationalActions>": ["P", "O"],
+    }
+    transitions = {
+            "NaiveActionApplier": [],
+            "TimedActionApplier<TimeUntilArrival>": ["V"],
+            "TimedActionApplier<TimeUntilEnergization>": ["W"],
+    }
+    opts = indexer[d["indexer"]] + actions[d["actions"]] + transitions[d["transitions"]]
+    if opts:
+        return " + ".join(opts)
+    else:
+        return "-"
+
+def process_datum(d, name):
+    o = { "name": name }
+    if "error" in d["result"] and "description" in d["result"]:
+        o["error"] = d["result"]["description"]
+    if "success" in d["result"]:
+        o.update(d["result"]["success"])
+    return o
+
+
 with open(args.filename) as f:
     data = json.load(f)
 
 if args.naming == "opt":
-    data = [
-        {
-            "name": get_optimization_name(d["optimizations"]),
-            **d["result"]
-        }
-        for d in data
-    ]
+    data = [ process_datum(d, get_optimization_name(d["optimizations"])) for d in data ]
 else:
-    data = [ { "name": d["name"], **d["result"] } for d in data ]
+    data = [ process_datum(d, d["name"]) for d in data ]
 
 if args.plot:
     if args.plot.startswith("t"):
