@@ -114,7 +114,8 @@ impl Config {
     /// Build a new config struct with default settings.
     pub const fn new() -> Config {
         Config {
-            max_memory: 15 * 1024 * 1024 * 1024,
+            // TODO: Make this adjustable without recompiling
+            max_memory: 14_800_000_000,
             horizon: None,
         }
     }
