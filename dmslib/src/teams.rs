@@ -79,9 +79,6 @@ impl Graph {
 pub struct Problem {
     pub graph: Graph,
     pub initial_teams: Vec<TeamState>,
-    /// Optimization horizon for policy synthesis.
-    /// Use `None` to automatically determine it based on transitions.
-    pub horizon: Option<usize>,
 }
 
 impl io::Graph {
@@ -90,7 +87,7 @@ impl io::Graph {
         self,
         teams: Vec<io::Team>,
         horizon: Option<usize>,
-    ) -> Result<Problem, SolveFailure> {
+    ) -> Result<(Problem, Config), SolveFailure> {
         let team_problem = crate::io::TeamProblem {
             name: None,
             graph: self,
@@ -103,10 +100,38 @@ impl io::Graph {
     }
 }
 
+/// Configuration struct for teams problem.
+pub struct Config {
+    /// State exploration will be cancelled if its memory usage exceeds this limit.
+    /// [`SolveFailure::OutOfMemory`] will be returned.
+    pub max_memory: usize,
+    /// Optimization horizon for policy synthesis.
+    /// Use `None` to automatically determine it based on transitions.
+    /// `Some(value)` allows setting the optimization horizon manually instead of determining it
+    /// automatically from state space.
+    pub horizon: Option<usize>,
+}
+
+impl Config {
+    /// Build a new config struct with default settings.
+    pub const fn new() -> Config {
+        Config {
+            max_memory: 15 * 1024 * 1024 * 1024,
+            horizon: None,
+        }
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config::new()
+    }
+}
+
 fn solve_generic<'a, TT, E, AA, PS>(
     graph: &'a Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
 ) -> Result<Solution<TT>, SolveFailure>
 where
     TT: Transition,
@@ -114,9 +139,9 @@ where
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
 {
-    const MEMORY_LIMIT: usize = 30 * 1024 * 1024;
     let cancel_arc = Arc::new((Mutex::new(()), Condvar::new()));
     let cancel_arc_child = cancel_arc.clone();
+    let max_memory: usize = config.max_memory;
     let memory_watcher = std::thread::spawn(move || {
         let (lock, cvar) = &*cancel_arc_child;
         let sleep_times = [25, 25, 50, 100, 200, 200, 400, 500, 500];
@@ -129,7 +154,7 @@ where
             }
             let allocated = super::ALLOCATOR.allocated();
             max_allocated = std::cmp::max(max_allocated, allocated);
-            if allocated > MEMORY_LIMIT {
+            if allocated > max_memory {
                 // Drop the Arc so that exploration exits.
                 break;
             }
@@ -156,13 +181,13 @@ where
         let max_memory = memory_watcher.join().unwrap();
         return Err(SolveFailure::OutOfMemory {
             used: max_memory,
-            limit: MEMORY_LIMIT,
+            limit: config.max_memory,
         });
     };
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
-    let horizon = if let Some(v) = horizon {
+    let horizon = if let Some(v) = config.horizon {
         v
     } else {
         TT::determine_horizon(&transitions)

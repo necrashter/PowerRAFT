@@ -2,8 +2,9 @@
 //!
 //! Contains structs to serialize and deserialize various representation of graphs.
 use crate::policy::*;
-use crate::teams::state::{BusState, TeamState};
+use crate::teams;
 use crate::{SolveFailure, Time};
+use teams::state::{BusState, TeamState};
 
 use ndarray::{Array1, Array2, ArrayView1};
 use serde::ser::{SerializeMap, SerializeSeq};
@@ -228,7 +229,7 @@ impl TeamProblem {
     /// - Add nodes for initial team positions.
     /// - Compute travel times matrix.
     /// - ...and so on.
-    pub fn prepare(self) -> Result<crate::teams::Problem, SolveFailure> {
+    pub fn prepare(self) -> Result<(teams::Problem, teams::Config), SolveFailure> {
         let TeamProblem {
             name: _,
             graph,
@@ -295,7 +296,7 @@ impl TeamProblem {
             team_nodes[(i, 1)] = location.1;
         }
 
-        let graph = crate::teams::Graph {
+        let graph = teams::Graph {
             travel_times,
             branches,
             connected,
@@ -303,19 +304,23 @@ impl TeamProblem {
             team_nodes,
         };
 
-        Ok(crate::teams::Problem {
-            graph,
-            initial_teams,
-            horizon,
-        })
+        Ok((
+            teams::Problem {
+                graph,
+                initial_teams,
+            },
+            teams::Config {
+                horizon,
+                ..Default::default()
+            },
+        ))
     }
 
     /// Solve this field teams restoration problem without any optimizations and return a
     /// [`TeamSolution`] on success.
     pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
-        let problem = self.prepare()?;
-        let solution =
-            crate::teams::solve_naive(&problem.graph, problem.initial_teams, problem.horizon)?;
+        let (problem, config) = self.prepare()?;
+        let solution = teams::solve_naive(&problem.graph, problem.initial_teams, &config)?;
         Ok(solution.to_webclient(problem.graph))
     }
 
@@ -328,11 +333,11 @@ impl TeamProblem {
         indexer: &str,
         action_set: &str,
     ) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
-        let problem = self.prepare()?;
-        let solution = crate::teams::solve_custom_regular(
+        let (problem, config) = self.prepare()?;
+        let solution = teams::solve_custom_regular(
             &problem.graph,
             problem.initial_teams,
-            problem.horizon,
+            &config,
             indexer,
             action_set,
         )?;
@@ -350,11 +355,11 @@ impl TeamProblem {
         action_set: &str,
         action_applier: &str,
     ) -> Result<TeamSolution<TimedTransition>, SolveFailure> {
-        let problem = self.prepare()?;
-        let solution = crate::teams::solve_custom_timed(
+        let (problem, config) = self.prepare()?;
+        let solution = teams::solve_custom_timed(
             &problem.graph,
             problem.initial_teams,
-            problem.horizon,
+            &config,
             indexer,
             action_set,
             action_applier,
@@ -373,11 +378,11 @@ impl TeamProblem {
         action_set: &str,
         action_applier: &str,
     ) -> Result<BenchmarkResult, SolveFailure> {
-        let problem = self.prepare()?;
-        let solution = crate::teams::benchmark_custom(
+        let (problem, config) = self.prepare()?;
+        let solution = teams::benchmark_custom(
             &problem.graph,
             problem.initial_teams,
-            problem.horizon,
+            &config,
             indexer,
             action_set,
             action_applier,
@@ -387,11 +392,11 @@ impl TeamProblem {
 
     /// Run all optimization combination possibilities on this field-teams restoration problem.
     pub fn benchmark_all(self) -> Result<Vec<OptimizationBenchmarkResult>, SolveFailure> {
-        let problem = self.prepare()?;
-        Ok(crate::teams::benchmark_all(
+        let (problem, config) = self.prepare()?;
+        Ok(teams::benchmark_all(
             &problem.graph,
             problem.initial_teams,
-            problem.horizon,
+            &config,
         ))
     }
 }

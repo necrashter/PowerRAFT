@@ -6,7 +6,7 @@ use dmslib::io::{
     read_experiment_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
     OptimizationInfo, TeamProblem,
 };
-use dmslib::teams::all_optimizations;
+use dmslib::teams;
 use dmslib::SolveFailure;
 
 use clap::{Parser, Subcommand};
@@ -83,17 +83,17 @@ macro_rules! fatal_error {
     }};
 }
 
-fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, dmslib::teams::Problem) {
+fn read_and_parse_team_problem<P: AsRef<Path>>(path: P) -> (String, teams::Problem, teams::Config) {
     let mut problem = match TeamProblem::read_from_file(path) {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Cannot read team problem: {}", err),
     };
     let name = problem.name.take().unwrap_or_else(|| "-".to_string());
-    let problem = match problem.prepare() {
+    let (problem, config) = match problem.prepare() {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
     };
-    (name, problem)
+    (name, problem, config)
 }
 
 fn print_optimizations(
@@ -198,7 +198,7 @@ fn print_distances(out: &mut StandardStream, mut problem: TeamProblem, precision
     )
     .unwrap();
 
-    let problem = match problem.prepare() {
+    let (problem, _config) = match problem.prepare() {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
     };
@@ -239,7 +239,7 @@ fn print_distances(out: &mut StandardStream, mut problem: TeamProblem, precision
 
 fn print_travel_times(out: &mut StandardStream, mut problem: TeamProblem) {
     let name = problem.name.take().unwrap_or_else(|| "-".to_string());
-    let problem = match problem.prepare() {
+    let (problem, _config) = match problem.prepare() {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
     };
@@ -265,13 +265,14 @@ fn print_travel_times(out: &mut StandardStream, mut problem: TeamProblem) {
 }
 
 fn benchmark(
-    problem: &dmslib::teams::Problem,
+    problem: &teams::Problem,
+    config: &teams::Config,
     optimization: &OptimizationInfo,
 ) -> OptimizationBenchmarkResult {
-    let result = dmslib::teams::benchmark_custom(
+    let result = teams::benchmark_custom(
         &problem.graph,
         problem.initial_teams.clone(),
-        problem.horizon,
+        config,
         &optimization.indexer,
         &optimization.actions,
         &optimization.transitions,
@@ -334,7 +335,7 @@ fn main() {
                     )
                     .unwrap();
 
-                    let problem = match problem.prepare() {
+                    let (problem, config) = match problem.prepare() {
                         Ok(x) => x,
                         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
                     };
@@ -351,7 +352,7 @@ fn main() {
                         stderr.reset().unwrap();
                         stderr.flush().unwrap();
 
-                        let result = benchmark(&problem, optimization);
+                        let result = benchmark(&problem, &config, optimization);
 
                         print_benchmark_result(&mut stderr, &result.result).unwrap();
                         writeln!(&mut stderr).unwrap();
@@ -403,7 +404,7 @@ fn main() {
             transition,
             json,
         } => {
-            let (name, problem) = read_and_parse_team_problem(path);
+            let (name, problem, config) = read_and_parse_team_problem(path);
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
             write!(&mut stderr, "Problem Name:     ").unwrap();
@@ -425,7 +426,7 @@ fn main() {
             stderr.reset().unwrap();
             stderr.flush().unwrap();
 
-            let result = benchmark(&problem, &optimizations);
+            let result = benchmark(&problem, &config, &optimizations);
 
             print_benchmark_result(&mut stderr, &result.result).unwrap();
 
@@ -439,14 +440,14 @@ fn main() {
         }
 
         Command::Benchmark { path, json } => {
-            let (name, problem) = read_and_parse_team_problem(path);
+            let (name, problem, config) = read_and_parse_team_problem(path);
 
             stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
             write!(&mut stderr, "Problem Name:     ").unwrap();
             stderr.reset().unwrap();
             writeln!(&mut stderr, "{}", name).unwrap();
 
-            let opt_list = all_optimizations();
+            let opt_list = teams::all_optimizations();
             let total_optimizations = opt_list.len();
 
             let results: Vec<OptimizationBenchmarkResult> = opt_list
@@ -469,7 +470,7 @@ fn main() {
                     stderr.reset().unwrap();
                     stderr.flush().unwrap();
 
-                    let result = benchmark(&problem, &optimizations);
+                    let result = benchmark(&problem, &config, &optimizations);
 
                     print_benchmark_result(&mut stderr, &result.result).unwrap();
 
@@ -513,7 +514,7 @@ fn main() {
         }
 
         Command::ListAllOpt => {
-            let result = dmslib::teams::all_optimizations();
+            let result = teams::all_optimizations();
             let serialized = match serde_json::to_string_pretty(&result) {
                 Ok(s) => s,
                 Err(e) => fatal_error!(1, "Error while serializing results: {}", e),

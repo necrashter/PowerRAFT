@@ -8,14 +8,14 @@ use super::*;
 pub fn solve_naive(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
 ) -> Result<Solution<RegularTransition>, SolveFailure> {
     solve_generic::<
         RegularTransition,
         NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
         NaiveActionApplier,
         NaivePolicySynthesizer,
-    >(graph, initial_teams, horizon)
+    >(graph, initial_teams, config)
 }
 
 /// Macro for generating solve code that reads class names from variables and constructs a code
@@ -172,7 +172,7 @@ macro_rules! generate_solve_code {
 pub fn solve_custom_regular(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
     indexer: &str,
     action_set: &str,
 ) -> Result<Solution<RegularTransition>, SolveFailure> {
@@ -192,7 +192,7 @@ pub fn solve_custom_regular(
             FilterEnergizedOnWay<NaiveActions>,
             FilterEnergizedOnWay<PermutationalActions>,
         ],
-        solve(graph, initial_teams, horizon)
+        solve(graph, initial_teams, config)
     }
 }
 
@@ -202,7 +202,7 @@ pub fn solve_custom_regular(
 pub fn solve_custom_timed(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
     indexer: &str,
     action_set: &str,
     action_applier: &str,
@@ -227,7 +227,7 @@ pub fn solve_custom_timed(
             FilterEnergizedOnWay<NaiveActions>,
             FilterEnergizedOnWay<PermutationalActions>,
         ],
-        solve(graph, initial_teams, horizon)
+        solve(graph, initial_teams, config)
     }
 }
 
@@ -239,21 +239,21 @@ pub fn solve_custom_timed(
 pub fn benchmark_custom(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
     indexer: &str,
     action_set: &str,
     action_applier: &str,
 ) -> Result<io::BenchmarkResult, SolveFailure> {
     if action_applier == stringify!(NaiveActionApplier) {
         Ok(
-            solve_custom_regular(graph, initial_teams, horizon, indexer, action_set)?
+            solve_custom_regular(graph, initial_teams, config, indexer, action_set)?
                 .to_benchmark_result(),
         )
     } else {
         Ok(solve_custom_timed(
             graph,
             initial_teams,
-            horizon,
+            config,
             indexer,
             action_set,
             action_applier,
@@ -300,7 +300,7 @@ pub fn all_optimizations() -> Vec<OptimizationInfo> {
 pub fn benchmark_all(
     graph: &Graph,
     initial_teams: Vec<TeamState>,
-    horizon: Option<usize>,
+    config: &Config,
 ) -> Vec<io::OptimizationBenchmarkResult> {
     itertools::iproduct!(
         BENCHMARK_STATE_INDEXERS,
@@ -311,7 +311,7 @@ pub fn benchmark_all(
         let result = benchmark_custom(
             graph,
             initial_teams.clone(),
-            horizon,
+            config,
             indexer,
             action_set,
             action_applier,
