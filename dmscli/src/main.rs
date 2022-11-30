@@ -7,6 +7,7 @@ use dmslib::io::{
     OptimizationInfo, TeamProblem,
 };
 use dmslib::teams::all_optimizations;
+use dmslib::SolveFailure;
 
 use clap::{Parser, Subcommand};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -119,36 +120,47 @@ fn print_optimizations(
 
 fn print_benchmark_result(
     out: &mut StandardStream,
-    result: &BenchmarkResult,
+    result: &Result<BenchmarkResult, SolveFailure>,
 ) -> std::io::Result<()> {
     let mut bold = ColorSpec::new();
     bold.set_bold(true);
 
-    out.set_color(&bold)?;
-    write!(out, "Number of states: ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.states)?;
-    out.set_color(&bold)?;
-    write!(out, "Max memory usage: ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.max_memory)?;
+    match result {
+        Ok(result) => {
+            out.set_color(&bold)?;
+            write!(out, "Number of states: ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.states)?;
+            out.set_color(&bold)?;
+            write!(out, "Max memory usage: ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.max_memory)?;
 
-    out.set_color(&bold)?;
-    write!(out, "Generation time:  ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.generation_time)?;
-    out.set_color(&bold)?;
-    write!(out, "Total time:       ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.total_time)?;
-    out.set_color(&bold)?;
-    write!(out, "Min Value:        ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.value)?;
-    out.set_color(&bold)?;
-    write!(out, "Horizon:          ")?;
-    out.reset()?;
-    writeln!(out, "{}", result.horizon)?;
+            out.set_color(&bold)?;
+            write!(out, "Generation time:  ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.generation_time)?;
+            out.set_color(&bold)?;
+            write!(out, "Total time:       ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.total_time)?;
+            out.set_color(&bold)?;
+            write!(out, "Min Value:        ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.value)?;
+            out.set_color(&bold)?;
+            write!(out, "Horizon:          ")?;
+            out.reset()?;
+            writeln!(out, "{}", result.horizon)?;
+        }
+        Err(failure) => {
+            out.set_color(ColorSpec::new().set_bold(true).set_fg(Some(Color::Red)))?;
+            writeln!(out, "Benchmark failed!")?;
+            out.reset()?;
+            writeln!(out, "{}", failure)?;
+        }
+    }
+
     Ok(())
 }
 
@@ -264,10 +276,6 @@ fn benchmark(
         &optimization.actions,
         &optimization.transitions,
     );
-    let result = match result {
-        Ok(s) => s,
-        Err(err) => fatal_error!(1, "Cannot solve team problem: {}", err),
-    };
 
     OptimizationBenchmarkResult {
         result,

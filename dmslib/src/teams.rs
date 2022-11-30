@@ -154,7 +154,10 @@ where
         x
     } else {
         let max_memory = memory_watcher.join().unwrap();
-        return Err(SolveFailure::OutOfMemory { used: max_memory, limit: MEMORY_LIMIT });
+        return Err(SolveFailure::OutOfMemory {
+            used: max_memory,
+            limit: MEMORY_LIMIT,
+        });
     };
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();

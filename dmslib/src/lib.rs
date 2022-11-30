@@ -2,6 +2,8 @@
 //!
 //! Common functionality for DMS server and command line interface.
 
+use serde::{Deserialize, Serialize};
+
 pub mod io;
 pub mod policy;
 pub mod teams;
@@ -23,7 +25,8 @@ pub const GRAPHS_PATH: &str = "../graphs/";
 pub const EXPERIMENTS_PATH: &str = "../experiments/";
 
 /// Represents the reasons why a solution attempt might fail.
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
 pub enum SolveFailure {
     BadInput(String),
     OutOfMemory { used: usize, limit: usize },

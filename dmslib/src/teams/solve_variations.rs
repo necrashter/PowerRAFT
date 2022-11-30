@@ -315,8 +315,7 @@ pub fn benchmark_all(
             indexer,
             action_set,
             action_applier,
-        )
-        .expect("Invalid optimization constant class name");
+        );
         let optimizations = io::OptimizationInfo {
             indexer: indexer.to_string(),
             actions: action_set.to_string(),

@@ -12,10 +12,33 @@ pub struct OptimizationInfo {
     pub transitions: String,
 }
 
+pub fn serialize_benchmark_result<S>(
+    result: &Result<BenchmarkResult, SolveFailure>,
+    s: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match result {
+        Ok(result) => {
+            let mut ser = s.serialize_map(Some(1))?;
+            ser.serialize_entry("success", result)?;
+            ser.end()
+        }
+        Err(failure) => {
+            let mut ser = s.serialize_map(Some(2))?;
+            ser.serialize_entry("error", failure)?;
+            ser.serialize_entry("description", format!("{}", failure).as_str())?;
+            ser.end()
+        }
+    }
+}
+
 #[derive(Serialize, Debug)]
 pub struct OptimizationBenchmarkResult {
     pub optimizations: OptimizationInfo,
-    pub result: BenchmarkResult,
+    #[serde(serialize_with = "serialize_benchmark_result")]
+    pub result: Result<BenchmarkResult, SolveFailure>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
