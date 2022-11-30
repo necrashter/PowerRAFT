@@ -7,6 +7,16 @@ pub trait Explorer<'a, TT: Transition> {
         graph: &'a Graph,
         teams: Vec<TeamState>,
     ) -> (Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>);
+
+    /// Explore the possible states starting from the given team state.
+    ///
+    /// When the strong reference count of `arc` is 1 (i.e., only this function is holding it),
+    /// The exploration will be cancelled and `None` is returned.
+    fn cancelable_explore<AA: ActionApplier<TT>, A>(
+        graph: &'a Graph,
+        teams: Vec<TeamState>,
+        arc: &Arc<A>,
+    ) -> Option<(Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>)>;
 }
 
 /// Naive action explorer.
@@ -129,5 +139,33 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         let (bus_states, team_states) = explorer.states.deconstruct();
         let transitions = explorer.transitions;
         (bus_states, team_states, transitions)
+    }
+
+    fn cancelable_explore<AA: ActionApplier<TT>, A>(
+        graph: &'a Graph,
+        teams: Vec<TeamState>,
+        arc: &Arc<A>,
+    ) -> Option<(Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>)> {
+        let mut explorer = NaiveExplorer {
+            iterator: AI::setup(graph),
+            graph,
+            states: SI::new(graph.branches.len(), teams.len()),
+            transitions: Vec::new(),
+        };
+        let mut index = explorer
+            .states
+            .index_state(State::start_state(graph, teams));
+        explorer.explore_initial::<AA>(index);
+        index += 1;
+        while index < explorer.states.get_state_count() {
+            explorer.explore_state::<AA>(index);
+            index += 1;
+            if Arc::strong_count(arc) <= 1 {
+                return None;
+            }
+        }
+        let (bus_states, team_states) = explorer.states.deconstruct();
+        let transitions = explorer.transitions;
+        Some((bus_states, team_states, transitions))
     }
 }

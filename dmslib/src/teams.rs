@@ -114,7 +114,8 @@ where
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
 {
-    let cancel_arc = Arc::new((Mutex::new(false), Condvar::new()));
+    const MEMORY_LIMIT: usize = 30 * 1024 * 1024;
+    let cancel_arc = Arc::new((Mutex::new(()), Condvar::new()));
     let cancel_arc_child = cancel_arc.clone();
     let memory_watcher = std::thread::spawn(move || {
         let (lock, cvar) = &*cancel_arc_child;
@@ -128,6 +129,10 @@ where
             }
             let allocated = super::ALLOCATOR.allocated();
             max_allocated = std::cmp::max(max_allocated, allocated);
+            if allocated > MEMORY_LIMIT {
+                // Drop the Arc so that exploration exits.
+                break;
+            }
             let result = cvar
                 .wait_timeout(
                     locked,
@@ -143,7 +148,14 @@ where
     });
 
     let start_time = Instant::now();
-    let (states, teams, transitions) = E::explore::<AA>(graph, initial_teams);
+    let result =
+        E::cancelable_explore::<AA, (Mutex<()>, Condvar)>(graph, initial_teams, &cancel_arc);
+    let (states, teams, transitions) = if let Some(x) = result {
+        x
+    } else {
+        let max_memory = memory_watcher.join().unwrap();
+        return Err(SolveFailure::OutOfMemory { used: max_memory, limit: MEMORY_LIMIT });
+    };
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
