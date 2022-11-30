@@ -1,4 +1,13 @@
+use crate::ALLOCATOR;
+
 use super::*;
+
+pub struct ExploreResult<TT: Transition> {
+    pub bus_states: Array2<BusState>,
+    pub team_states: Array2<TeamState>,
+    pub transitions: Vec<Vec<Vec<TT>>>,
+    pub max_memory: usize,
+}
 
 /// Generic trait for the functions that explore the actions of a given state.
 pub trait Explorer<'a, TT: Transition> {
@@ -6,17 +15,19 @@ pub trait Explorer<'a, TT: Transition> {
     fn explore<AA: ActionApplier<TT>>(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-    ) -> (Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>);
+    ) -> ExploreResult<TT> {
+        Self::memory_limited_explore::<AA>(graph, teams, usize::MAX).unwrap()
+    }
 
     /// Explore the possible states starting from the given team state.
     ///
-    /// When the strong reference count of `arc` is 1 (i.e., only this function is holding it),
-    /// The exploration will be cancelled and `None` is returned.
-    fn cancelable_explore<AA: ActionApplier<TT>, A>(
+    /// When the memory usage reported by global allocator exceeds the limit,
+    /// [`SolveFailure::OutOfMemory`] will be returned;
+    fn memory_limited_explore<AA: ActionApplier<TT>>(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-        arc: &Arc<A>,
-    ) -> Option<(Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>)>;
+        memory_limit: usize,
+    ) -> Result<ExploreResult<TT>, SolveFailure>;
 }
 
 /// Naive action explorer.
@@ -117,35 +128,15 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
 impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
     for NaiveExplorer<'a, TT, AI, SI>
 {
-    fn explore<AA: ActionApplier<TT>>(
+    fn memory_limited_explore<AA: ActionApplier<TT>>(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-    ) -> (Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>) {
-        let mut explorer = NaiveExplorer {
-            iterator: AI::setup(graph),
-            graph,
-            states: SI::new(graph.branches.len(), teams.len()),
-            transitions: Vec::new(),
-        };
-        let mut index = explorer
-            .states
-            .index_state(State::start_state(graph, teams));
-        explorer.explore_initial::<AA>(index);
-        index += 1;
-        while index < explorer.states.get_state_count() {
-            explorer.explore_state::<AA>(index);
-            index += 1;
-        }
-        let (bus_states, team_states) = explorer.states.deconstruct();
-        let transitions = explorer.transitions;
-        (bus_states, team_states, transitions)
-    }
+        memory_limit: usize,
+    ) -> Result<ExploreResult<TT>, SolveFailure> {
+        const MEMORY_SAMPLE_PERIOD: usize = 2_usize.pow(18);
+        let initial_memory = ALLOCATOR.allocated();
+        let mut max_memory: usize = 0;
 
-    fn cancelable_explore<AA: ActionApplier<TT>, A>(
-        graph: &'a Graph,
-        teams: Vec<TeamState>,
-        arc: &Arc<A>,
-    ) -> Option<(Array2<BusState>, Array2<TeamState>, Vec<Vec<Vec<TT>>>)> {
         let mut explorer = NaiveExplorer {
             iterator: AI::setup(graph),
             graph,
@@ -155,17 +146,35 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         let mut index = explorer
             .states
             .index_state(State::start_state(graph, teams));
+
         explorer.explore_initial::<AA>(index);
         index += 1;
         while index < explorer.states.get_state_count() {
             explorer.explore_state::<AA>(index);
             index += 1;
-            if Arc::strong_count(arc) <= 1 {
-                return None;
+
+            if index % MEMORY_SAMPLE_PERIOD == 0 {
+                let allocated = ALLOCATOR.allocated() - initial_memory;
+                max_memory = std::cmp::max(max_memory, allocated);
+                if allocated > memory_limit {
+                    return Err(SolveFailure::OutOfMemory {
+                        used: max_memory,
+                        limit: memory_limit,
+                    });
+                }
             }
         }
+
+        let allocated = ALLOCATOR.allocated() - initial_memory;
+        max_memory = std::cmp::max(max_memory, allocated);
+
         let (bus_states, team_states) = explorer.states.deconstruct();
         let transitions = explorer.transitions;
-        Some((bus_states, team_states, transitions))
+        Ok(ExploreResult {
+            bus_states,
+            team_states,
+            transitions,
+            max_memory,
+        })
     }
 }

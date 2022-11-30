@@ -21,8 +21,6 @@ use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use std::sync::{Arc, Condvar, Mutex};
-
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.
 /// For en-route teams (continue action), this must be the index of the destination bus.
@@ -139,51 +137,14 @@ where
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
 {
-    let cancel_arc = Arc::new((Mutex::new(()), Condvar::new()));
-    let cancel_arc_child = cancel_arc.clone();
-    let max_memory: usize = config.max_memory;
-    let memory_watcher = std::thread::spawn(move || {
-        let (lock, cvar) = &*cancel_arc_child;
-        let sleep_times = [25, 25, 50, 100, 200, 200, 400, 500, 500];
-        let mut sleep_iter = sleep_times.into_iter().chain(std::iter::repeat(1000));
-        let mut max_allocated: usize = 0;
-        let mut locked = lock.lock().unwrap();
-        loop {
-            if Arc::strong_count(&cancel_arc_child) <= 1 {
-                break;
-            }
-            let allocated = super::ALLOCATOR.allocated();
-            max_allocated = std::cmp::max(max_allocated, allocated);
-            if allocated > max_memory {
-                // Drop the Arc so that exploration exits.
-                break;
-            }
-            let result = cvar
-                .wait_timeout(
-                    locked,
-                    std::time::Duration::from_millis(sleep_iter.next().unwrap()),
-                )
-                .unwrap();
-            locked = result.0;
-            if !result.1.timed_out() {
-                break;
-            }
-        }
-        max_allocated
-    });
-
     let start_time = Instant::now();
-    let result =
-        E::cancelable_explore::<AA, (Mutex<()>, Condvar)>(graph, initial_teams, &cancel_arc);
-    let (states, teams, transitions) = if let Some(x) = result {
-        x
-    } else {
-        let max_memory = memory_watcher.join().unwrap();
-        return Err(SolveFailure::OutOfMemory {
-            used: max_memory,
-            limit: config.max_memory,
-        });
-    };
+
+    let ExploreResult {
+        bus_states,
+        team_states,
+        transitions,
+        max_memory,
+    } = E::memory_limited_explore::<AA>(graph, initial_teams, config.max_memory)?;
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
@@ -196,18 +157,12 @@ where
 
     let total_time: f64 = start_time.elapsed().as_secs_f64();
 
-    let lock = cancel_arc.0.lock().unwrap();
-    cancel_arc.1.notify_all();
-    drop(lock);
-    drop(cancel_arc);
-    let max_memory = memory_watcher.join().unwrap();
-
     Ok(Solution {
         total_time,
         generation_time,
         max_memory,
-        states,
-        teams,
+        states: bus_states,
+        teams: team_states,
         transitions,
         values,
         policy,
