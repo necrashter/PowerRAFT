@@ -16,10 +16,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
+plt.rc('font', size=14)
 
 def plot(benchmark_data, options):
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-    fig.subplots_adjust(left=0.125)
+    fig, ax1 = plt.subplots(figsize=(12, len(benchmark_data)*0.6))
+    fig.subplots_adjust(left=0.135)
     # fig.subplots_adjust(left=0.115, right=0.88)
     # fig.canvas.set_window_title('Eldorado K-8 Fitness Chart')
 
@@ -48,6 +49,17 @@ def plot(benchmark_data, options):
     ax1.xaxis.set_major_locator(MaxNLocator(11))
     ax1.xaxis.grid(True, linestyle='--', which='major',
                    color='grey', alpha=.25)
+
+    ax1.yaxis.set_ticks([i*0.999 for i in range(len(benchmark_names)) if i % 2 == 1], minor=True)
+    ax1.yaxis.grid(True,
+                   # linestyle='--',
+                   fillstyle='full',
+                   linewidth=32,
+                   which='minor',
+                   color='grey',
+                   alpha=.5,
+                   )
+    ax1.yaxis.set_zorder(-1)
 
     ax1.set_xlabel("Time (seconds)")
 
@@ -109,7 +121,8 @@ def plot(benchmark_data, options):
                             color=clr, weight='bold', clip_on=True)
 
     plt.legend((total_rects[0], generation_rects[0]), ('Total Time', 'Generation Time'), loc="upper left")
-    plt.show()
+    plt.savefig("plot.png")
+    # plt.show()
 
 
 def plot_memory(benchmark_data, options):
