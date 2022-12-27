@@ -84,6 +84,8 @@ def plot(benchmark_data, options):
         if options["side_label"]:
             ax2.set_ylabel(options["side_label"])
 
+    field_format = options["field_format"] if "field_format" in options else "%.2f"
+
     for datum, rect, error in zip(datas[0], data_rects[0], errors):
         # Rectangle widths are already integer-valued but are floating
         # type, so it helps to remove the trailing decimal point and 0 by
@@ -101,7 +103,7 @@ def plot(benchmark_data, options):
             clr = 'white'
             align = 'right'
 
-        label = error if error else "%.2f" % (datum,)
+        label = error if error else field_format % (datum,)
 
         # Center the text vertically in the bar
         yloc = rect.get_y() + rect.get_height() / 2
@@ -124,7 +126,7 @@ def plot(benchmark_data, options):
 
             # Center the text vertically in the bar
             yloc = rect.get_y() + rect.get_height() / 2
-            label = ax1.annotate("%.2f" % (datum,), xy=(width, yloc), xytext=(xloc, 0),
+            label = ax1.annotate(field_format % (datum,), xy=(width, yloc), xytext=(xloc, 0),
                                 textcoords="offset points",
                                 ha=align, va='center',
                                 color=clr, weight='bold', clip_on=True)
@@ -182,6 +184,17 @@ def plot_avg(benchmark_data, options={}):
         "side_label": "Number of States",
         })
 
+def plot_states(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Number of States",
+        "fields": [
+            [b["states"] if "states" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Number of States",
+        "field_format": "%d",
+        })
+
 
 def get_optimization_name(d):
     indexer = {
@@ -235,8 +248,10 @@ elif plot_type.startswith("a"):
     plot_avg(data[::-1], {
         "bus_count": args.bus_count,
         })
+elif plot_type.startswith("s"):
+    plot_states(data[::-1], {})
 else:
     print("Unknown plot type:", plot_type)
 
-plt.savefig("plot.png")
-# plt.show()
+# plt.savefig("plot.png")
+plt.show()
