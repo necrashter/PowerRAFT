@@ -149,10 +149,14 @@ where
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
+    let auto_horizon = TT::determine_horizon(&transitions);
     let horizon = if let Some(v) = config.horizon {
+        if auto_horizon > v {
+            log::warn!("Given horizon ({v}) is smaller than determined ({auto_horizon})");
+        }
         v
     } else {
-        TT::determine_horizon(&transitions)
+        auto_horizon
     };
     let (values, policy) = PS::synthesize_policy(&transitions, horizon);
 
