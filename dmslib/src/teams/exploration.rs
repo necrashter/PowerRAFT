@@ -133,7 +133,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         teams: Vec<TeamState>,
         memory_limit: usize,
     ) -> Result<ExploreResult<TT>, SolveFailure> {
-        const MEMORY_SAMPLE_PERIOD: usize = 2_usize.pow(18);
+        const MEMORY_SAMPLE_PERIOD: usize = 2_usize.pow(15);
         let initial_memory = ALLOCATOR.allocated();
         let mut max_memory: usize = 0;
 

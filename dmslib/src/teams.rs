@@ -115,7 +115,7 @@ impl Config {
     pub const fn new() -> Config {
         Config {
             // TODO: Make this adjustable without recompiling
-            max_memory: 14_800_000_000,
+            max_memory: 14_400_000_000,
             horizon: None,
         }
     }
