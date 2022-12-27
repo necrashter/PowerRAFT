@@ -8,6 +8,9 @@ parser.add_argument('-n', '--naming', dest="naming",
                     help="Names of benchmarks: default or opt")
 parser.add_argument('-p', '--plot', dest="plot",
                     help="Plot: memory or time")
+parser.add_argument('-b', '--bus', dest="bus_count",
+                    type=int,
+                    help="Number of buses")
 
 args = parser.parse_args()
 
@@ -18,33 +21,35 @@ from matplotlib.ticker import MaxNLocator
 
 plt.rc('font', size=14)
 
-def plot(benchmark_data, options):
-    fig, ax1 = plt.subplots(figsize=(12, len(benchmark_data)*0.6))
-    fig.subplots_adjust(left=0.135)
+def plot_setup(l):
+    fig, ax1 = plt.subplots(figsize=(12, l*0.6))
+    fig.subplots_adjust(left=0.135, bottom=0.2)
     # fig.subplots_adjust(left=0.115, right=0.88)
     # fig.canvas.set_window_title('Eldorado K-8 Fitness Chart')
+    return fig, ax1
+
+def plot(benchmark_data, options):
+    fig, ax1 = plot_setup(len(benchmark_data))
 
     benchmark_names = [b["name"] for b in benchmark_data]
-    total_times = [b["total_time"] if "total_time" in b else 0
-                   for b in benchmark_data]
-    generation_times = [b["generation_time"]  if "generation_time" in b else 0
-                        for b in benchmark_data]
+    datas = options["fields"]
     errors = [b["error"] if "error" in b else None for b in benchmark_data]
-    minmaxavg = (min(total_times) + max(total_times))/2
+    minmaxavg = (min(datas[0]) + max(datas[0]))/2
 
     pos = np.arange(len(benchmark_names))
 
     rect_height = 0.75
-    total_rects = ax1.barh(pos, total_times,
-                     align='center',
-                     height=rect_height,
-                     tick_label=benchmark_names)
-    generation_rects = ax1.barh(pos, generation_times,
-                     align='center',
-                     height=rect_height,
-                     tick_label=benchmark_names)
 
-    ax1.set_title("Benchmark Results", fontweight="bold")
+    data_rects = [
+            ax1.barh(pos, data,
+                     align='center',
+                     height=rect_height,
+                     tick_label=benchmark_names)
+            for data in datas
+            ]
+
+    if options["title"]:
+        ax1.set_title(options["title"], fontweight="bold")
 
     ax1.xaxis.set_major_locator(MaxNLocator(11))
     ax1.xaxis.grid(True, linestyle='--', which='major',
@@ -54,19 +59,21 @@ def plot(benchmark_data, options):
     ax1.yaxis.grid(True,
                    # linestyle='--',
                    fillstyle='full',
-                   linewidth=32,
+                   linewidth=29,
                    which='minor',
                    color='grey',
                    alpha=.5,
                    )
     ax1.yaxis.set_zorder(-1)
 
-    ax1.set_xlabel("Time (seconds)")
+    if options["xlabel"]:
+        ax1.set_xlabel(options["xlabel"])
 
-    if not "no-states" in options:
+    if "side_field" in options:
+        field = options["side_field"]
         # Set the right-hand Y-axis ticks and labels
         ax2 = ax1.twinx()
-        right_labels = [b["states"] if "states" in b else "-" for b in benchmark_data]
+        right_labels = [b[field] if field in b else "-" for b in benchmark_data]
         # set the tick locations
         ax2.set_yticks(pos)
         # make sure that the limits are set equally on both yaxis so the
@@ -74,15 +81,16 @@ def plot(benchmark_data, options):
         ax2.set_ylim(ax1.get_ylim())
         # set the tick labels
         ax2.set_yticklabels(right_labels)
-        ax2.set_ylabel('Number of States')
+        if options["side_label"]:
+            ax2.set_ylabel(options["side_label"])
 
-    for time, rect, error in zip(total_times, total_rects, errors):
+    for datum, rect, error in zip(datas[0], data_rects[0], errors):
         # Rectangle widths are already integer-valued but are floating
         # type, so it helps to remove the trailing decimal point and 0 by
         # converting width to int type
         width = rect.get_width()
 
-        if time < minmaxavg or error:
+        if datum < minmaxavg or error:
             # Shift the text to the right side of the right edge
             xloc = 5
             clr = 'black'
@@ -93,7 +101,7 @@ def plot(benchmark_data, options):
             clr = 'white'
             align = 'right'
 
-        label = error if error else "%.2f" % (time,)
+        label = error if error else "%.2f" % (datum,)
 
         # Center the text vertically in the bar
         yloc = rect.get_y() + rect.get_height() / 2
@@ -102,98 +110,77 @@ def plot(benchmark_data, options):
                             ha=align, va='center',
                             color=clr, weight='bold', clip_on=True)
 
-    for time, rect in zip(generation_times, generation_rects):
-        # Rectangle widths are already integer-valued but are floating
-        # type, so it helps to remove the trailing decimal point and 0 by
-        # converting width to int type
-        width = rect.get_width()
+    for data, rects in zip(datas[1:], data_rects[1:]):
+        for datum, rect, error in zip(data, rects, errors):
+            # Rectangle widths are already integer-valued but are floating
+            # type, so it helps to remove the trailing decimal point and 0 by
+            # converting width to int type
+            width = rect.get_width()
 
-        # Shift the text to the left side of the right edge
-        xloc = -5
-        clr = 'black'
-        align = 'right'
-
-        # Center the text vertically in the bar
-        yloc = rect.get_y() + rect.get_height() / 2
-        label = ax1.annotate("%.2f" % (time,), xy=(width, yloc), xytext=(xloc, 0),
-                            textcoords="offset points",
-                            ha=align, va='center',
-                            color=clr, weight='bold', clip_on=True)
-
-    plt.legend((total_rects[0], generation_rects[0]), ('Total Time', 'Generation Time'), loc="upper left")
-    plt.savefig("plot.png")
-    # plt.show()
-
-
-def plot_memory(benchmark_data, options):
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-    fig.subplots_adjust(left=0.125)
-    # fig.subplots_adjust(left=0.115, right=0.88)
-    # fig.canvas.set_window_title('Eldorado K-8 Fitness Chart')
-
-    benchmark_names = [b["name"] for b in benchmark_data]
-    mems = [b["max_memory"] / 1024 / 1024 for b in benchmark_data]
-    errors = [b["error"] if "error" in b else None for b in benchmark_data]
-    minmaxavg = (min(mems) + max(mems))/2
-
-    pos = np.arange(len(benchmark_names))
-
-    rect_height = 0.75
-    total_rects = ax1.barh(pos, mems,
-                     align='center',
-                     height=rect_height,
-                     tick_label=benchmark_names)
-
-    ax1.set_title("Benchmark Results", fontweight="bold")
-
-    ax1.xaxis.set_major_locator(MaxNLocator(11))
-    ax1.xaxis.grid(True, linestyle='--', which='major',
-                   color='grey', alpha=.25)
-
-    ax1.set_xlabel("Maximum Memory Usage (MB)")
-
-    if not "no-states" in options:
-        # Set the right-hand Y-axis ticks and labels
-        ax2 = ax1.twinx()
-        right_labels = [b["states"] if "states" in b else "TIME OUT"
-                        for b in benchmark_data]
-        # set the tick locations
-        ax2.set_yticks(pos)
-        # make sure that the limits are set equally on both yaxis so the
-        # ticks line up
-        ax2.set_ylim(ax1.get_ylim())
-        # set the tick labels
-        ax2.set_yticklabels(right_labels)
-        ax2.set_ylabel('Number of States')
-
-    for mem, rect, error in zip(mems, total_rects, errors):
-        # Rectangle widths are already integer-valued but are floating
-        # type, so it helps to remove the trailing decimal point and 0 by
-        # converting width to int type
-        width = rect.get_width()
-
-        if mem < minmaxavg or error:
-            # Shift the text to the right side of the right edge
-            xloc = 5
-            clr = 'black'
-            align = 'left'
-        else:
             # Shift the text to the left side of the right edge
             xloc = -5
-            clr = 'white'
+            clr = 'black'
             align = 'right'
 
-        label = error if error else ("%.2f" % (mem,))
+            # Center the text vertically in the bar
+            yloc = rect.get_y() + rect.get_height() / 2
+            label = ax1.annotate("%.2f" % (datum,), xy=(width, yloc), xytext=(xloc, 0),
+                                textcoords="offset points",
+                                ha=align, va='center',
+                                color=clr, weight='bold', clip_on=True)
 
-        # Center the text vertically in the bar
-        yloc = rect.get_y() + rect.get_height() / 2
-        ax1.annotate(label, xy=(width, yloc), xytext=(xloc, 0),
-                            textcoords="offset points",
-                            ha=align, va='center',
-                            color=clr, weight='bold', clip_on=True)
+    return data_rects
 
-    # plt.legend((total_rects[0], ), ('Total Time', ), loc="upper left")
-    plt.show()
+
+def plot_time(benchmark_data, options={}):
+    rects = plot(benchmark_data, {
+        **options,
+        "title": "Execution Time",
+        "fields": [
+            [b["total_time"] if "total_time" in b else 0 for b in benchmark_data],
+            [b["generation_time"] if "generation_time" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Time (seconds)",
+        "side_field": "states",
+        "side_label": "Number of States",
+        })
+    plt.legend((rects[0][0], rects[1][0]), ('Total Time', 'Generation Time'), loc="upper left")
+
+def plot_memory(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Max Memory Usage",
+        "fields": [
+            [b["max_memory"] / 1024 / 1024 if "max_memory" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Maximum Memory Usage (MB)",
+        "side_field": "states",
+        "side_label": "Number of States",
+        })
+
+def plot_value(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Value Function",
+        "fields": [
+            [b["value"] if "value" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Minimum Value",
+        "side_field": "states",
+        "side_label": "Number of States",
+        })
+
+def plot_avg(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Average Time Until Energization",
+        "fields": [
+            [b["value"] / options["bus_count"] if "value" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Average Time Until Energization",
+        "side_field": "states",
+        "side_label": "Number of States",
+        })
 
 
 def get_optimization_name(d):
@@ -237,12 +224,19 @@ if args.naming == "opt":
 else:
     data = [ process_datum(d, d["name"]) for d in data ]
 
-if args.plot:
-    if args.plot.startswith("t"):
-        plot(data[::-1], {})
-    elif args.plot.startswith("m"):
-        plot_memory(data[::-1], {})
-    else:
-        print("Unknown plot type:", args.plot)
+plot_type = args.plot if args.plot else "t"
+if plot_type.startswith("t"):
+    plot_time(data[::-1], {})
+elif plot_type.startswith("m"):
+    plot_memory(data[::-1], {})
+elif plot_type.startswith("v"):
+    plot_value(data[::-1], {})
+elif plot_type.startswith("a"):
+    plot_avg(data[::-1], {
+        "bus_count": args.bus_count,
+        })
 else:
-    plot(data[::-1], {})
+    print("Unknown plot type:", plot_type)
+
+plt.savefig("plot.png")
+# plt.show()
