@@ -90,6 +90,7 @@ impl io::Graph {
             name: None,
             graph: self,
             teams,
+            pfo: None,
             horizon,
             time_func: io::TimeFunc::default(),
         };
@@ -150,6 +151,7 @@ where
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
     let auto_horizon = TT::determine_horizon(&transitions);
+    log::info!("Automatically determined horizon: {auto_horizon}");
     let horizon = if let Some(v) = config.horizon {
         if auto_horizon > v {
             log::warn!("Given horizon ({v}) is smaller than determined ({auto_horizon})");

@@ -187,6 +187,9 @@ pub struct TeamProblem {
     /// Optimization horizon for policy synthesis.
     /// Use `None` to automatically determine it based on transitions.
     pub horizon: Option<usize>,
+    /// Probability of Failure override.
+    /// If set, P_f values of all buses will be set to this.
+    pub pfo: Option<f64>,
     /// Travel time function.
     #[serde(default, rename = "timeFunction")]
     pub time_func: TimeFunc,
@@ -235,12 +238,17 @@ impl TeamProblem {
             graph,
             teams,
             horizon,
+            pfo,
             time_func,
         } = self;
 
         let mut locations: Vec<LatLng> =
             graph.nodes.iter().map(|node| node.latlng.clone()).collect();
-        let pfs: Array1<f64> = graph.nodes.iter().map(|node| node.pf).collect();
+        let pfs: Array1<f64> = if let Some(pfo) = pfo {
+            Array1::from(vec![pfo; graph.nodes.len()])
+        } else {
+            graph.nodes.iter().map(|node| node.pf).collect()
+        };
 
         for (i, team) in teams.iter().enumerate() {
             if team.index.is_none() && team.latlng.is_none() {
