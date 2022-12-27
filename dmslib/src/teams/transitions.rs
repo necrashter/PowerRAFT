@@ -148,12 +148,14 @@ fn advance_time_for_teams(
 }
 
 /// Performs recursive energization with given team and bus state on the given graph.
+/// Returns a pair of bool and outcomes.
+/// The bool determines whether at least one energization happened.
 /// Outcomes are a list of probability and bus state pairs.
 fn recursive_energization(
     graph: &Graph,
     teams: &[TeamState],
     buses: Vec<BusState>,
-) -> Vec<(f64, Vec<BusState>)> {
+) -> (bool, Vec<(f64, Vec<BusState>)>) {
     // Buses on which a team is present
     let team_buses: Vec<usize> = teams
         .iter()
@@ -173,66 +175,94 @@ fn recursive_energization(
     // All energization outcomes with probability.
     let mut outcomes: Vec<(f64, Vec<BusState>)> = Vec::new();
     // Recursive energization process
-    let mut queue: Vec<(f64, Vec<BusState>)> = vec![(1.0, buses)];
+    let mut queue: Vec<(f64, Vec<BusState>)> = Vec::new();
+
+    /// Compute alpha as defined in paper
+    macro_rules! get_alpha {
+        ($state:expr) => {{
+            team_buses
+                .clone()
+                .into_iter()
+                .filter(|i| {
+                    let i = *i;
+                    $state[i] == BusState::Unknown && {
+                        graph.connected[i]
+                            || graph.branches[i]
+                                .iter()
+                                .any(|j| $state[*j] == BusState::Energized)
+                    }
+                })
+                .collect()
+        }};
+    }
+    /// Add permutations to the queue
+    macro_rules! add_permutations {
+        ($p:expr, $state:expr, $alpha:expr) => {{
+            for &i in &$alpha {
+                $state[i] = BusState::Damaged;
+            }
+            'permutations: loop {
+                let p = $alpha.iter().fold($p, |acc, &i| {
+                    let pf = graph.pfs[i];
+                    acc * if $state[i] == BusState::Damaged {
+                        pf
+                    } else {
+                        1.0 - pf
+                    }
+                });
+                queue.push((p, $state.clone()));
+                for &i in &$alpha {
+                    if $state[i] == BusState::Damaged {
+                        $state[i] = BusState::Energized;
+                        continue 'permutations;
+                    } else {
+                        $state[i] = BusState::Damaged;
+                    }
+                }
+                break 'permutations;
+            }
+        }};
+    }
+
+    // Handle initial state
+    {
+        let mut state = buses;
+        let alpha: Vec<usize> = get_alpha!(state);
+        if alpha.is_empty() {
+            outcomes.push((1.0, state));
+            return (false, outcomes);
+        }
+
+        add_permutations!(1.0, state, alpha);
+    }
+    // Handle states in queue
     while let Some(next) = queue.pop() {
         let (p, mut state) = next;
-        // Alpha as defined in paper
-        let alpha: Vec<usize> = team_buses
-            .clone()
-            .into_iter()
-            .filter(|i| {
-                let i = *i;
-                state[i] == BusState::Unknown && {
-                    graph.connected[i]
-                        || graph.branches[i]
-                            .iter()
-                            .any(|j| state[*j] == BusState::Energized)
-                }
-            })
-            .collect();
+        let alpha: Vec<usize> = get_alpha!(state);
         if alpha.is_empty() {
-            outcomes.push((p, state));
+            // Discard transitions with p = 0
+            if p != 0.0 {
+                outcomes.push((p, state));
+            }
             continue;
         }
 
-        for &i in &alpha {
-            state[i] = BusState::Damaged;
-        }
-        'permutations: loop {
-            let p = alpha.iter().fold(p, |acc, &i| {
-                let pf = graph.pfs[i];
-                acc * if state[i] == BusState::Damaged {
-                    pf
-                } else {
-                    1.0 - pf
-                }
-            });
-            queue.push((p, state.clone()));
-            for &i in &alpha {
-                if state[i] == BusState::Damaged {
-                    state[i] = BusState::Energized;
-                    continue 'permutations;
-                } else {
-                    state[i] = BusState::Damaged;
-                }
-            }
-            break 'permutations;
-        }
+        add_permutations!(p, state, alpha);
     }
-    outcomes
+    (true, outcomes)
 }
 
 impl State {
     /// Attempt to energize without moving the teams.
     pub fn energize(&self, graph: &Graph) -> Option<Vec<(f64, Vec<BusState>)>> {
-        let outcomes = recursive_energization(graph, &self.teams, self.buses.clone());
-        if outcomes.len() == 1 {
+        let (success, outcomes) = recursive_energization(graph, &self.teams, self.buses.clone());
+        if success {
+            Some(outcomes)
+        } else {
             // No energizations happened
             debug_assert_eq!(outcomes[0].0, 1.0);
             debug_assert_eq!(outcomes[0].1, self.buses);
             None
-        } else {
-            Some(outcomes)
         }
     }
 }
@@ -279,6 +309,7 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
         debug_assert_eq!(actions.len(), action_state.state.teams.len());
         let teams = advance_time_for_teams(graph, &action_state.state.teams, actions, 1);
         recursive_energization(graph, &teams, action_state.state.buses.clone())
+            .1
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = RegularTransition {
@@ -318,6 +349,7 @@ impl<F: DetermineActionTime> ActionApplier<TimedTransition> for TimedActionAppli
         let time: Time = F::get_time(graph, action_state, actions);
         let teams = advance_time_for_teams(graph, &action_state.state.teams, actions, time);
         recursive_energization(graph, &teams, action_state.state.buses.clone())
+            .1
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = TimedTransition {
