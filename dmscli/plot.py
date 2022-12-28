@@ -177,7 +177,8 @@ def plot_avg(benchmark_data, options={}):
         **options,
         "title": "Average Time Until Energization",
         "fields": [
-            [b["value"] / options["bus_count"] if "value" in b else 0 for b in benchmark_data],
+            [b["value"] / (b["buses"] if "buses" in b else options["bus_count"])
+             if "value" in b else 0 for b in benchmark_data],
         ],
         "xlabel": "Average Time Until Energization",
         "side_field": "states",
@@ -232,6 +233,8 @@ def process_datum(d, name):
 with open(args.filename) as f:
     data = json.load(f)
 
+filename = args.filename[:args.filename.rindex('.')]
+
 if args.naming == "opt":
     data = [ process_datum(d, get_optimization_name(d["optimizations"])) for d in data ]
 else:
@@ -240,18 +243,23 @@ else:
 plot_type = args.plot if args.plot else "t"
 if plot_type.startswith("t"):
     plot_time(data[::-1], {})
+    filename += ".exec"
 elif plot_type.startswith("m"):
     plot_memory(data[::-1], {})
+    filename += ".mem"
 elif plot_type.startswith("v"):
     plot_value(data[::-1], {})
+    filename += ".val"
 elif plot_type.startswith("a"):
     plot_avg(data[::-1], {
         "bus_count": args.bus_count,
         })
+    filename += ".avg"
 elif plot_type.startswith("s"):
     plot_states(data[::-1], {})
+    filename += ".states"
 else:
     print("Unknown plot type:", plot_type)
 
-# plt.savefig("plot.png")
-plt.show()
+plt.savefig(filename + ".png")
+# plt.show()
