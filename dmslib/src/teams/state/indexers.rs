@@ -359,6 +359,8 @@ mod tests {
         use BusState::*;
         use TeamState::*;
 
+        assert_eq!(indexer.get_state_count(), 0);
+
         let state0 = State {
             buses: vec![Unknown, Unknown, Unknown],
             teams: vec![OnBus(0)],
@@ -367,10 +369,13 @@ mod tests {
         assert_eq!(indexer.index_state(state0.clone()), 0);
         assert_eq!(indexer.index_state(state0.clone()), 0);
         assert_eq!(indexer.index_state(state0.clone()), 0);
+        assert_eq!(indexer.get_state_count(), 1);
 
         let (i, s) = indexer.next().unwrap();
         assert_eq!(i, 0);
         assert_eq!(s, state0);
+
+        assert_eq!(indexer.get_state_count(), 1);
 
         let state1 = State {
             buses: vec![Unknown, Unknown, Damaged],
@@ -382,14 +387,21 @@ mod tests {
         };
 
         assert_eq!(indexer.index_state(state1.clone()), 1);
-        assert_eq!(indexer.index_state(state2.clone()), 2);
+        assert_eq!(indexer.get_state_count(), 2);
         assert_eq!(indexer.index_state(state1.clone()), 1);
+        assert_eq!(indexer.get_state_count(), 2);
         assert_eq!(indexer.index_state(state2.clone()), 2);
+        assert_eq!(indexer.get_state_count(), 3);
+        assert_eq!(indexer.index_state(state1.clone()), 1);
+        assert_eq!(indexer.get_state_count(), 3);
+        assert_eq!(indexer.index_state(state2.clone()), 2);
+        assert_eq!(indexer.get_state_count(), 3);
 
         if stack_based {
             let (i, s) = indexer.next().unwrap();
             assert_eq!(i, 2);
             assert_eq!(s, state2);
+            assert_eq!(indexer.get_state_count(), 3);
 
             let (i, s) = indexer.next().unwrap();
             assert_eq!(i, 1);
@@ -398,15 +410,18 @@ mod tests {
             let (i, s) = indexer.next().unwrap();
             assert_eq!(i, 1);
             assert_eq!(s, state1);
+            assert_eq!(indexer.get_state_count(), 3);
 
             let (i, s) = indexer.next().unwrap();
             assert_eq!(i, 2);
             assert_eq!(s, state2);
         }
+        assert_eq!(indexer.get_state_count(), 3);
 
         assert_eq!(indexer.index_state(state0.clone()), 0);
 
         assert_eq!(indexer.next(), None);
+        assert_eq!(indexer.get_state_count(), 3);
 
         let (bus_states, team_states) = indexer.deconstruct();
         assert_eq!(
