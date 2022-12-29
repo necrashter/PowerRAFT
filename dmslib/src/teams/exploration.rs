@@ -74,9 +74,10 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                 })
                 .collect()
         };
-        // It is guaranteed that the pushed element has the given index.
-        // Because states are visited in sequential order.
-        self.transitions.push(action_transitions);
+        if self.transitions.len() <= index {
+            self.transitions.resize_with(index+1, Default::default);
+        }
+        self.transitions[index] = action_transitions;
     }
 
     /// Explore the actions and transitions of the initial state.
@@ -119,9 +120,10 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                 })
                 .collect()
         };
-        // It is guaranteed that the pushed element has the given index.
-        // Because states are visited in sequential order.
-        self.transitions.push(action_transitions);
+        if self.transitions.len() <= index {
+            self.transitions.resize_with(index+1, Default::default);
+        }
+        self.transitions[index] = action_transitions;
     }
 }
 
