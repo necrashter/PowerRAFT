@@ -120,7 +120,7 @@ impl StateIndexer for BTreeStateIndexer {
             btree,
             stack,
         } = self;
-        if stack.len() != 0 {
+        if !stack.is_empty() {
             panic!("State stack is not empty in deconstruct");
         }
         drop(stack);
