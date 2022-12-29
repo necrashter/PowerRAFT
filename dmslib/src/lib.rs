@@ -26,7 +26,7 @@ pub const EXPERIMENTS_PATH: &str = "../experiments/";
 
 /// Represents the reasons why a solution attempt might fail.
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "content")] // content will be used for BadInput(String)
 pub enum SolveFailure {
     BadInput(String),
     OutOfMemory { used: usize, limit: usize },
