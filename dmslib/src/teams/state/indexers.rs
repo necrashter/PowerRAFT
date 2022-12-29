@@ -148,12 +148,12 @@ impl StateIndexer for BTreeStateIndexer {
 }
 
 /// State indexer that sorts the team states to eliminate permutations of equivalent team states.
-pub struct SortedStateIndexer(NaiveStateIndexer);
+pub struct SortedStateIndexer<T: StateIndexer>(T);
 
-impl StateIndexer for SortedStateIndexer {
+impl<T: StateIndexer> StateIndexer for SortedStateIndexer<T> {
     #[inline]
     fn new(bus_count: usize, team_count: usize) -> Self {
-        Self(NaiveStateIndexer::new(bus_count, team_count))
+        Self(T::new(bus_count, team_count))
     }
 
     #[inline]
