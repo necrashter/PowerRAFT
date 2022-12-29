@@ -16,11 +16,29 @@ impl Default for TeamState {
 }
 
 /// State of a single bus.
-#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Copy)]
 pub enum BusState {
-    Damaged = -1,
     Unknown = 0,
-    Energized = 1,
+    Damaged = 1,
+    Energized = 2,
+}
+
+impl BusState {
+    /// Get the set of bus states this state can transition to as bitmask.
+    #[inline]
+    fn get_transition_mask(&self) -> u8 {
+        match self {
+            BusState::Unknown => 7,
+            BusState::Damaged => 2,
+            BusState::Energized => 4,
+        }
+    }
+
+    /// Check if bus state is in the given set.
+    #[inline]
+    fn check_mask(&self, mask: u8) -> bool {
+        (1 << *self as u8) & mask != 0
+    }
 }
 
 impl Default for BusState {
