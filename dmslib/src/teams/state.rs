@@ -16,7 +16,7 @@ impl Default for TeamState {
 }
 
 /// State of a single bus.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum BusState {
     Damaged = -1,
     Unknown = 0,
@@ -30,7 +30,7 @@ impl Default for BusState {
 }
 
 /// Struct representing a state in MDP.
-#[derive(Eq, Clone)]
+#[derive(Eq, Clone, Debug)]
 pub struct State {
     /// The state of each bus.
     pub buses: Vec<BusState>,
@@ -152,6 +152,40 @@ impl PartialEq for State {
     }
 }
 
+impl Ord for State {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let buses_len = self.buses.len();
+        let teams_len = self.teams.len();
+        assert_eq!(
+            buses_len,
+            other.buses.len(),
+            "Ordering is undefined for states of different systems."
+        );
+        assert_eq!(
+            teams_len,
+            other.teams.len(),
+            "Ordering is undefined for states of different systems."
+        );
+        for i in 0..buses_len {
+            if self.buses[i] != other.buses[i] {
+                return self.buses[i].cmp(&other.buses[i]);
+            }
+        }
+        for i in 0..teams_len {
+            if self.teams[i] != other.teams[i] {
+                return self.teams[i].cmp(&other.teams[i]);
+            }
+        }
+        std::cmp::Ordering::Equal
+    }
+}
+
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 /// Hash is implemented for index lookup for a given state.
 impl std::hash::Hash for State {
     fn hash<H: std::hash::Hasher>(&self, hash_state: &mut H) {
@@ -257,5 +291,144 @@ mod tests {
         teams.sort_unstable();
 
         assert_eq!(ordered_teams, teams);
+    }
+
+    #[test]
+    fn state_ord_test() {
+        use BusState::*;
+        use TeamState::*;
+
+        let ordered_states = vec![
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Unknown, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+            },
+            State {
+                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Energized, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+        ];
+
+        let mut shuffled = vec![
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+            },
+            State {
+                buses: vec![Energized, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Unknown, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+            },
+        ];
+        shuffled.sort_unstable();
+        assert_eq!(shuffled, ordered_states);
+
+        let mut shuffled = vec![
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Energized, Damaged, Energized],
+                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+            },
+            State {
+                buses: vec![Energized, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Unknown, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Energized],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+            },
+            State {
+                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+            },
+        ];
+        shuffled.sort();
+        assert_eq!(shuffled, ordered_states);
     }
 }
