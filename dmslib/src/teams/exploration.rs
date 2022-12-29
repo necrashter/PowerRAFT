@@ -75,7 +75,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                 .collect()
         };
         if self.transitions.len() <= index {
-            self.transitions.resize_with(index+1, Default::default);
+            self.transitions.resize_with(index + 1, Default::default);
         }
         self.transitions[index] = action_transitions;
     }
@@ -121,7 +121,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                 .collect()
         };
         if self.transitions.len() <= index {
-            self.transitions.resize_with(index+1, Default::default);
+            self.transitions.resize_with(index + 1, Default::default);
         }
         self.transitions[index] = action_transitions;
     }

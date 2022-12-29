@@ -183,8 +183,10 @@ pub fn solve_custom_regular(
         indexer(indexer) = [
             NaiveStateIndexer,
             StackStateIndexer,
+            ArrayStateIndexer,
             SortedStateIndexer<NaiveStateIndexer>,
             SortedStateIndexer<StackStateIndexer>,
+            SortedStateIndexer<ArrayStateIndexer>,
         ],
         action_set(action_set) = [
             NaiveActions,
@@ -220,8 +222,10 @@ pub fn solve_custom_timed(
         indexer(indexer) = [
             NaiveStateIndexer,
             StackStateIndexer,
+            ArrayStateIndexer,
             SortedStateIndexer<NaiveStateIndexer>,
             SortedStateIndexer<StackStateIndexer>,
+            SortedStateIndexer<ArrayStateIndexer>,
         ],
         action_set(action_set) = [
             NaiveActions,
@@ -269,8 +273,10 @@ pub fn benchmark_custom(
 const BENCHMARK_STATE_INDEXERS: &[&str] = &[
     stringify!(NaiveStateIndexer),
     stringify!(StackStateIndexer),
+    stringify!(ArrayStateIndexer),
     stringify!(SortedStateIndexer<NaiveStateIndexer>),
     stringify!(SortedStateIndexer<StackStateIndexer>),
+    stringify!(SortedStateIndexer<ArrayStateIndexer>),
 ];
 
 const BENCHMARK_ACTION_APPLIERS: &[&str] = &[
