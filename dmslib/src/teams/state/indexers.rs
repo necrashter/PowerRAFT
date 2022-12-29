@@ -198,3 +198,69 @@ impl<T: StateIndexer> StateIndexer for SortedStateIndexer<T> {
         self.0.deconstruct()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn btree_indexer_test() {
+        use BusState::*;
+        use TeamState::*;
+
+        let mut indexer = BTreeStateIndexer::new(3, 1);
+
+        let state0 = State {
+            buses: vec![Unknown, Unknown, Unknown],
+            teams: vec![OnBus(0)],
+        };
+
+        assert_eq!(indexer.index_state(state0.clone()), 0);
+        assert_eq!(indexer.index_state(state0.clone()), 0);
+        assert_eq!(indexer.index_state(state0.clone()), 0);
+
+        let (i, s) = indexer.next().unwrap();
+        assert_eq!(i, 0);
+        assert_eq!(s, state0);
+
+        let state1 = State {
+            buses: vec![Unknown, Unknown, Damaged],
+            teams: vec![OnBus(0)],
+        };
+        let state2 = State {
+            buses: vec![Unknown, Unknown, Unknown],
+            teams: vec![OnBus(1)],
+        };
+
+        assert_eq!(indexer.index_state(state1.clone()), 1);
+        assert_eq!(indexer.index_state(state2.clone()), 2);
+        assert_eq!(indexer.index_state(state1.clone()), 1);
+        assert_eq!(indexer.index_state(state2.clone()), 2);
+
+        let (i, s) = indexer.next().unwrap();
+        assert_eq!(i, 2);
+        assert_eq!(s, state2);
+
+        let (i, s) = indexer.next().unwrap();
+        assert_eq!(i, 1);
+        assert_eq!(s, state1);
+
+        assert_eq!(indexer.index_state(state0.clone()), 0);
+
+        assert_eq!(indexer.next(), None);
+
+        let (bus_states, team_states) = indexer.deconstruct();
+        assert_eq!(
+            bus_states,
+            ndarray::array![
+                [Unknown, Unknown, Unknown],
+                [Unknown, Unknown, Damaged],
+                [Unknown, Unknown, Unknown],
+            ]
+        );
+        assert_eq!(
+            team_states,
+            ndarray::array![[OnBus(0)], [OnBus(0)], [OnBus(1)],]
+        );
+    }
+}
