@@ -134,7 +134,8 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         memory_limit: usize,
     ) -> Result<ExploreResult<TT>, SolveFailure> {
         const MEMORY_SAMPLE_PERIOD: usize = 2_usize.pow(15);
-        let initial_memory = ALLOCATOR.allocated();
+        // NOTE: Previously, initail memory usage was subtracted from the currently allocated.
+        // However, in some cases it caused underflow due to memory usage approximation errors.
         let mut max_memory: usize = 0;
 
         let mut explorer = NaiveExplorer {
@@ -154,7 +155,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
             index += 1;
 
             if index % MEMORY_SAMPLE_PERIOD == 0 {
-                let allocated = ALLOCATOR.allocated() - initial_memory;
+                let allocated = ALLOCATOR.allocated();
                 max_memory = std::cmp::max(max_memory, allocated);
                 if allocated > memory_limit {
                     return Err(SolveFailure::OutOfMemory {
@@ -165,7 +166,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
             }
         }
 
-        let allocated = ALLOCATOR.allocated() - initial_memory;
+        let allocated = ALLOCATOR.allocated();
         max_memory = std::cmp::max(max_memory, allocated);
 
         let (bus_states, team_states) = explorer.states.deconstruct();
