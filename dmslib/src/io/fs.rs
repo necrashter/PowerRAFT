@@ -4,9 +4,14 @@ use crate::EXPERIMENTS_PATH;
 
 use itertools::Itertools;
 
-use std::collections::HashMap;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+
+#[cfg(not(feature = "hashbrown"))]
+use std::collections::HashMap;
+
+#[cfg(feature = "hashbrown")]
+use hashbrown::HashMap;
 
 /// Yields a list of the graph `.json` files for the root directory and each subdirectory,
 /// Root directory will have an empty string key in the HashMap, and others will have their

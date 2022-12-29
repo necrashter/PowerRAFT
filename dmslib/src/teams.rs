@@ -18,8 +18,14 @@ use crate::{Index, Time};
 
 use itertools::Itertools;
 use ndarray::{Array1, Array2};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::time::Instant;
+
+#[cfg(not(feature = "hashbrown"))]
+use std::collections::HashMap;
+
+#[cfg(feature = "hashbrown")]
+use hashbrown::HashMap;
 
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.

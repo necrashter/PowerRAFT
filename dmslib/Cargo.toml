@@ -14,3 +14,8 @@ itertools = "0.10"
 sanitize-filename = "0.4"
 num-traits = "0.2"
 cap = "0.1"
+hashbrown = { version = "0.13", optional = true, features = ["serde"] }
+
+[features]
+default = ["hashbrown"]
+hashbrown = ["dep:hashbrown"]
