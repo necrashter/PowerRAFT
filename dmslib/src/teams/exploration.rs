@@ -47,8 +47,8 @@ pub struct NaiveExplorer<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer
 impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, TT, AI, SI> {
     /// Explore the actions and transitions of a state at the given index in the state indexer.
     #[inline]
-    fn explore_state<AA: ActionApplier<TT>>(&mut self, index: usize) {
-        let state = self.states.get_state(index);
+    fn explore_state<AA: ActionApplier<TT>>(&mut self, input: (usize, State)) {
+        let (index, state) = input;
         let cost = state.get_cost();
         debug_assert_eq!(
             state.energize(self.graph),
@@ -85,8 +85,8 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
     /// state without team movement. Normally, this is not the case since all energizations are
     /// attempted after each transition.
     #[inline]
-    fn explore_initial<AA: ActionApplier<TT>>(&mut self, index: usize) {
-        let state = self.states.get_state(index);
+    fn explore_initial<AA: ActionApplier<TT>>(&mut self, input: (usize, State)) {
+        let (index, state) = input;
         let cost = state.get_cost();
         let action_transitions: Vec<Vec<TT>> = if state.is_terminal(self.graph) {
             vec![vec![TT::terminal_transition(index, cost)]]
@@ -144,16 +144,21 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
             states: SI::new(graph.branches.len(), teams.len()),
             transitions: Vec::new(),
         };
-        let mut index = explorer
+        explorer
             .states
             .index_state(State::start_state(graph, teams));
 
-        explorer.explore_initial::<AA>(index);
-        index += 1;
-        while index < explorer.states.get_state_count() {
-            explorer.explore_state::<AA>(index);
-            index += 1;
+        {
+            let initial = explorer.states.next();
+            explorer.explore_initial::<AA>(
+                initial.expect("No initial exploration state in StateIndexer"),
+            );
+        }
+        let mut index = 1; // First one indexed
+        while let Some(i) = explorer.states.next() {
+            explorer.explore_state::<AA>(i);
 
+            index += 1;
             if index % MEMORY_SAMPLE_PERIOD == 0 {
                 let allocated = ALLOCATOR.allocated();
                 max_memory = std::cmp::max(max_memory, allocated);

@@ -1,16 +1,17 @@
 use super::*;
 use std::collections::BTreeMap;
 
-/// A trait for indexing the explored states of a team-based restoration problem.
-pub trait StateIndexer {
+/// A trait for indexing the states of a team-based restoration problem.
+///
+/// Each StateIndexer also implements an Iterator, which yields the next state to be explored.
+/// If the exploration is done, then the iterator will end.
+pub trait StateIndexer: Iterator<Item = (usize, State)> {
     /// New state indexer structure from graph.
     fn new(bus_count: usize, team_count: usize) -> Self;
     /// Get the number of states.
     fn get_state_count(&self) -> usize;
     /// Get the index of given state, adding it to the hasmap when necessary.
     fn index_state(&mut self, s: State) -> usize;
-    /// Get the state at given index.
-    fn get_state(&mut self, index: usize) -> State;
     /// Deconstruct the state indexer to state space.
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>);
 }
@@ -19,6 +20,9 @@ pub trait StateIndexer {
 pub struct NaiveStateIndexer {
     /// Number of states.
     state_count: usize,
+    /// States before this one are explored.
+    /// In other words, index of the next state to be explored.
+    explored_count: usize,
     /// Matrix of bus states, each state in a row.
     bus_states: Array2<BusState>,
     /// Matrix of team states, each state in a row.
@@ -27,10 +31,29 @@ pub struct NaiveStateIndexer {
     state_to_index: HashMap<State, usize>,
 }
 
+impl Iterator for NaiveStateIndexer {
+    type Item = (usize, State);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.explored_count >= self.state_count {
+            None
+        } else {
+            let index = self.explored_count;
+            self.explored_count += 1;
+            let state = State {
+                buses: self.bus_states.row(index).to_vec(),
+                teams: self.team_states.row(index).to_vec(),
+            };
+            Some((index, state))
+        }
+    }
+}
+
 impl StateIndexer for NaiveStateIndexer {
     fn new(bus_count: usize, team_count: usize) -> Self {
         NaiveStateIndexer {
             state_count: 0,
+            explored_count: 0,
             bus_states: Array2::default((0, bus_count)),
             team_states: Array2::default((0, team_count)),
             state_to_index: HashMap::new(),
@@ -60,13 +83,6 @@ impl StateIndexer for NaiveStateIndexer {
         }
     }
 
-    fn get_state(&mut self, index: usize) -> State {
-        State {
-            buses: self.bus_states.row(index).to_vec(),
-            teams: self.team_states.row(index).to_vec(),
-        }
-    }
-
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         (self.bus_states, self.team_states)
     }
@@ -77,7 +93,15 @@ pub struct BTreeStateIndexer {
     bus_count: usize,
     team_count: usize,
     btree: BTreeMap<State, usize>,
-    stack: Vec<State>,
+    stack: Vec<(usize, State)>,
+}
+
+impl Iterator for BTreeStateIndexer {
+    type Item = (usize, State);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.stack.pop()
+    }
 }
 
 impl StateIndexer for BTreeStateIndexer {
@@ -99,18 +123,11 @@ impl StateIndexer for BTreeStateIndexer {
             Some(i) => *i,
             None => {
                 let i = self.btree.len();
-                self.stack.push(s.clone());
+                self.stack.push((i, s.clone()));
                 self.btree.insert(s, i);
                 i
             }
         }
-    }
-
-    /// NOTE: INDEX IS IGNORED!
-    /// A stack is maintained in which newly indexed states are added. This returns states from
-    /// that stack.
-    fn get_state(&mut self, _index: usize) -> State {
-        self.stack.pop().expect("State stack is empty in get_state")
     }
 
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
@@ -150,6 +167,15 @@ impl StateIndexer for BTreeStateIndexer {
 /// State indexer that sorts the team states to eliminate permutations of equivalent team states.
 pub struct SortedStateIndexer<T: StateIndexer>(T);
 
+impl<T: StateIndexer> Iterator for SortedStateIndexer<T> {
+    type Item = (usize, State);
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
 impl<T: StateIndexer> StateIndexer for SortedStateIndexer<T> {
     #[inline]
     fn new(bus_count: usize, team_count: usize) -> Self {
@@ -165,11 +191,6 @@ impl<T: StateIndexer> StateIndexer for SortedStateIndexer<T> {
     fn index_state(&mut self, mut s: State) -> usize {
         s.teams.sort_unstable();
         self.0.index_state(s)
-    }
-
-    #[inline]
-    fn get_state(&mut self, index: usize) -> State {
-        self.0.get_state(index)
     }
 
     #[inline]
