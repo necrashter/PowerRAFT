@@ -573,8 +573,14 @@ mod tests {
     }
 
     #[test]
-    fn tight_stack_indexer_test() {
+    fn bit_stack_indexer_test() {
         let indexer = BitStackStateIndexer::new(3, 1, 3);
+        generic_indexer_test(indexer, true);
+    }
+
+    #[test]
+    fn trie_indexer_test() {
+        let indexer = TrieStateIndexer::new(3, 1, 3);
         generic_indexer_test(indexer, true);
     }
 

@@ -2,6 +2,9 @@ use super::*;
 use bitvec::prelude::*;
 use num_traits::FromPrimitive;
 
+type TrieKey = u8;
+const TRIE_KEY_BITS: usize = 8;
+
 /// Number of bits required to represent the given number.
 fn get_bits_required_for(mut number: usize) -> usize {
     let mut i = 0;
@@ -98,6 +101,107 @@ impl StateCompressor {
             }
         }
         State { buses, teams }
+    }
+}
+
+enum TrieLink<T> {
+    Link(Box<Trie<T>>),
+    Leaf(T),
+}
+
+struct Trie<T> {
+    element: Option<T>,
+    links: Vec<(TrieKey, TrieLink<T>)>,
+}
+
+impl<T> Trie<T> {
+    fn new() -> Self {
+        Trie {
+            element: None,
+            links: Vec::new(),
+        }
+    }
+
+    fn local_index(&mut self, i: TrieKey) -> Result<&mut TrieLink<T>, usize> {
+        let mut first = 0;
+        let mut count = self.links.len();
+        while count > 0 {
+            let step: usize = count / 2;
+            let index = first + step;
+            match self.links[index].0.cmp(&i) {
+                Ordering::Less => {
+                    first += step + 1;
+                    count -= step + 1;
+                }
+                Ordering::Equal => {
+                    return Ok(&mut self.links[index].1);
+                }
+                Ordering::Greater => {
+                    count = step;
+                }
+            }
+        }
+        Err(first)
+    }
+
+    fn get(&mut self, bv: &BitVec, bit_start: usize) -> Option<&T> {
+        if bv.len() <= bit_start {
+            return self.element.as_ref();
+        }
+        let bit_end = std::cmp::min(bit_start + TRIE_KEY_BITS, bv.len());
+        let i = bv[bit_start..bit_end].load::<TrieKey>();
+        match self.local_index(i) {
+            Ok(link) => match link {
+                TrieLink::Link(e) => e.get(bv, bit_end),
+                TrieLink::Leaf(t) => Some(t),
+            },
+            Err(_) => None,
+        }
+    }
+
+    fn insert(&mut self, bv: &BitVec, bit_start: usize, value: T) {
+        if bv.len() <= bit_start {
+            self.element = Some(value);
+            return;
+        }
+        let bit_end = std::cmp::min(bit_start + TRIE_KEY_BITS, bv.len());
+        let i = bv[bit_start..bit_end].load::<TrieKey>();
+        match self.local_index(i) {
+            Ok(link) => match link {
+                TrieLink::Link(e) => {
+                    e.insert(bv, bit_end, value);
+                }
+                TrieLink::Leaf(_) => {
+                    if bv.len() <= bit_end {
+                        *link = TrieLink::Leaf(value);
+                    } else {
+                        let mut child: Trie<T> = Trie::new();
+                        child.insert(bv, bit_end, value);
+                        let old_link = std::mem::replace(link, TrieLink::Link(Box::new(child)));
+                        if let TrieLink::Leaf(old) = old_link {
+                            if let TrieLink::Link(child) = link {
+                                child.element = Some(old);
+                            } else {
+                                panic!();
+                            }
+                        } else {
+                            panic!();
+                        }
+                    }
+                }
+            },
+            Err(insertion_point) => {
+                if bv.len() <= bit_end {
+                    self.links
+                        .insert(insertion_point, (i, TrieLink::Leaf(value)));
+                } else {
+                    let mut child = Trie::new();
+                    child.insert(bv, bit_end, value);
+                    self.links
+                        .insert(insertion_point, (i, TrieLink::Link(Box::new(child))));
+                }
+            }
+        }
     }
 }
 
@@ -211,16 +315,98 @@ impl StateIndexer for BitStackStateIndexer {
     }
 }
 
+pub struct TrieStateIndexer {
+    state_count: usize,
+    bus_count: usize,
+    team_count: usize,
+    compressor: StateCompressor,
+    state_to_index: Trie<usize>,
+    stack: Vec<(usize, BitVec)>,
+}
+
+impl TrieStateIndexer {
+    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
+        TrieStateIndexer {
+            state_count: 0,
+            bus_count,
+            team_count,
+            compressor: StateCompressor::new(bus_count, team_count, max_time),
+            state_to_index: Trie::new(),
+            stack: Vec::new(),
+        }
+    }
+}
+
+impl Iterator for TrieStateIndexer {
+    type Item = (usize, State);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some((i, bits)) = self.stack.pop() {
+            Some((i, self.compressor.bits_to_state(bits)))
+        } else {
+            None
+        }
+    }
+}
+
+impl StateIndexer for TrieStateIndexer {
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
+        let max_time = graph
+            .travel_times
+            .iter()
+            .max()
+            .expect("Cannot get max travel time");
+        TrieStateIndexer::new(bus_count, team_count, *max_time)
+    }
+
+    fn get_state_count(&self) -> usize {
+        self.state_count
+    }
+
+    fn index_state(&mut self, s: State) -> usize {
+        let bits = self.compressor.state_to_bits(s);
+        match self.state_to_index.get(&bits, 0) {
+            Some(i) => *i,
+            None => {
+                let i = self.state_count;
+                self.state_count += 1;
+                self.state_to_index.insert(&bits, 0, i);
+                self.stack.push((i, bits));
+                i
+            }
+        }
+    }
+
+    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
+        let TrieStateIndexer {
+            state_count,
+            bus_count,
+            team_count,
+            state_to_index,
+            stack,
+            compressor,
+        } = self;
+        if !stack.is_empty() {
+            panic!("State stack is not empty in deconstruct");
+        }
+        drop(stack);
+        // TODO
+        let bus_states = Array2::default((1, bus_count));
+        let team_states = Array2::default((1, team_count));
+        (bus_states, team_states)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use BusState::*;
     use TeamState::*;
 
-    #[test]
-    fn state_compressor_test() {
-        let comp = StateCompressor::new(4, 3, 3);
-        let states = vec![
+    fn get_states() -> Vec<State> {
+        vec![
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
@@ -261,11 +447,28 @@ mod tests {
                 buses: vec![Energized, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
-        ];
+        ]
+    }
 
-        for state in states {
+    #[test]
+    fn state_compressor_test() {
+        let comp = StateCompressor::new(4, 3, 3);
+
+        for state in get_states() {
             let bits = comp.state_to_bits(state.clone());
             assert_eq!(state, comp.bits_to_state(bits));
+        }
+    }
+
+    #[test]
+    fn trie_test() {
+        let comp = StateCompressor::new(4, 3, 3);
+        let mut trie: Trie<usize> = Trie::new();
+
+        for (i, state) in get_states().into_iter().enumerate() {
+            let bits = comp.state_to_bits(state.clone());
+            trie.insert(&bits, 0, i);
+            assert_eq!(trie.get(&bits, 0), Some(&i));
         }
     }
 }
