@@ -317,86 +317,86 @@ mod tests {
 
         let ordered_states = vec![
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(1)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(1), OnBus(1), OnBus(1)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                buses: vec![Unknown, Unknown, Unknown, Damaged],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Energized],
+                buses: vec![Unknown, Unknown, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Unknown, Damaged, Energized],
+                buses: vec![Unknown, Damaged, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
             },
             State {
-                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                buses: vec![Damaged, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Energized, Damaged, Damaged, Damaged],
+                buses: vec![Energized, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
         ];
 
         let mut shuffled = vec![
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(1)],
             },
             State {
-                buses: vec![Energized, Damaged, Damaged, Damaged],
+                buses: vec![Energized, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                buses: vec![Damaged, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(1), OnBus(1), OnBus(1)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                buses: vec![Unknown, Unknown, Unknown, Damaged],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Energized],
+                buses: vec![Unknown, Unknown, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Unknown, Damaged, Energized],
+                buses: vec![Unknown, Damaged, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
             },
         ];
@@ -405,43 +405,43 @@ mod tests {
 
         let mut shuffled = vec![
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Energized, Damaged, Energized],
+                buses: vec![Unknown, Energized, Unknown, Energized],
                 teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
             },
             State {
-                buses: vec![Energized, Damaged, Damaged, Damaged],
+                buses: vec![Energized, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Unknown, Damaged, Energized],
+                buses: vec![Unknown, Damaged, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Unknown],
+                buses: vec![Unknown, Unknown, Unknown, Damaged],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(1)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Energized],
+                buses: vec![Unknown, Unknown, Unknown, Energized],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Unknown, Damaged, Damaged, Damaged],
+                buses: vec![Damaged, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(0), OnBus(0), OnBus(0)],
             },
             State {
-                buses: vec![Damaged, Damaged, Damaged, Damaged],
+                buses: vec![Unknown, Unknown, Unknown, Unknown],
                 teams: vec![OnBus(1), OnBus(1), OnBus(1)],
             },
         ];
