@@ -1,4 +1,5 @@
 use super::*;
+use num_derive::FromPrimitive;
 use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 
@@ -16,7 +17,7 @@ impl Default for TeamState {
 }
 
 /// State of a single bus.
-#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Copy)]
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Copy, FromPrimitive)]
 pub enum BusState {
     Unknown = 0,
     Damaged = 1,

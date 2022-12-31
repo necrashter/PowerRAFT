@@ -13,8 +13,10 @@ ndarray = "0.15"
 itertools = "0.10"
 sanitize-filename = "0.4"
 num-traits = "0.2"
+num-derive = "0.2"
 cap = "0.1"
 hashbrown = { version = "0.13", optional = true, features = ["serde"] }
+bitvec = "1"
 
 [features]
 default = ["hashbrown"]

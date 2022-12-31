@@ -1,5 +1,9 @@
 use super::*;
 
+/// Module containing compressed state indexers.
+mod compressed;
+pub use compressed::*;
+
 /// A trait for indexing the states of a team-based restoration problem.
 ///
 /// Each StateIndexer also implements an Iterator, which yields the next state to be explored.
@@ -503,11 +507,11 @@ mod tests {
 
         let state1 = State {
             buses: vec![Unknown, Unknown, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![OnBus(1)],
         };
         let state2 = State {
             buses: vec![Unknown, Unknown, Unknown],
-            teams: vec![OnBus(1)],
+            teams: vec![EnRoute(1, 2, 3)],
         };
 
         assert_eq!(indexer.index_state(state1.clone()), 1);
@@ -558,13 +562,19 @@ mod tests {
         );
         assert_eq!(
             team_states,
-            ndarray::array![[OnBus(0)], [OnBus(0)], [OnBus(1)],]
+            ndarray::array![[OnBus(0)], [OnBus(1)], [EnRoute(1, 2, 3)],]
         );
     }
 
     #[test]
     fn stack_indexer_test() {
         let indexer = StackStateIndexer::new(3, 1);
+        generic_indexer_test(indexer, true);
+    }
+
+    #[test]
+    fn tight_stack_indexer_test() {
+        let indexer = BitStackStateIndexer::new(3, 1, 3);
         generic_indexer_test(indexer, true);
     }
 
