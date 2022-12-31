@@ -143,7 +143,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         let mut explorer = NaiveExplorer {
             iterator: AI::setup(graph),
             graph,
-            states: SI::new(graph.branches.len(), teams.len()),
+            states: SI::new(graph, &teams),
             transitions: Vec::new(),
         };
         explorer

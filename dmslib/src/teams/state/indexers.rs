@@ -6,7 +6,7 @@ use super::*;
 /// If the exploration is done, then the iterator will end.
 pub trait StateIndexer: Iterator<Item = (usize, State)> {
     /// New state indexer structure from graph.
-    fn new(bus_count: usize, team_count: usize) -> Self;
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self;
     /// Get the number of states.
     fn get_state_count(&self) -> usize;
     /// Get the index of given state, adding it to the hasmap when necessary.
@@ -51,7 +51,9 @@ impl Iterator for NaiveStateIndexer {
 }
 
 impl StateIndexer for NaiveStateIndexer {
-    fn new(bus_count: usize, team_count: usize) -> Self {
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
         NaiveStateIndexer {
             state_count: 0,
             explored_count: 0,
@@ -100,6 +102,17 @@ pub struct StackStateIndexer {
     stack: Vec<(usize, State)>,
 }
 
+impl StackStateIndexer {
+    fn new(bus_count: usize, team_count: usize) -> Self {
+        StackStateIndexer {
+            bus_count,
+            team_count,
+            state_to_index: HashMap::new(),
+            stack: Vec::new(),
+        }
+    }
+}
+
 impl Iterator for StackStateIndexer {
     type Item = (usize, State);
 
@@ -109,13 +122,10 @@ impl Iterator for StackStateIndexer {
 }
 
 impl StateIndexer for StackStateIndexer {
-    fn new(bus_count: usize, team_count: usize) -> Self {
-        StackStateIndexer {
-            bus_count,
-            team_count,
-            state_to_index: HashMap::new(),
-            stack: Vec::new(),
-        }
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
+        StackStateIndexer::new(bus_count, team_count)
     }
 
     fn get_state_count(&self) -> usize {
@@ -198,6 +208,18 @@ impl Iterator for MinifyingStateIndexer {
 }
 
 impl MinifyingStateIndexer {
+    fn new(bus_count: usize, team_count: usize) -> Self {
+        MinifyingStateIndexer {
+            state_count: 0,
+            bus_count,
+            total_reduction: 0,
+            bus_states: Array2::default((0, bus_count)),
+            team_states: Array2::default((0, team_count)),
+            state_to_index: HashMap::new(),
+            stack: Vec::new(),
+        }
+    }
+
     /// Attempt to minify the reverse lookup HashMap.
     fn minify(&mut self) {
         let mut mask = vec![0_u8; self.bus_count];
@@ -222,16 +244,10 @@ impl MinifyingStateIndexer {
 }
 
 impl StateIndexer for MinifyingStateIndexer {
-    fn new(bus_count: usize, team_count: usize) -> Self {
-        MinifyingStateIndexer {
-            state_count: 0,
-            bus_count,
-            total_reduction: 0,
-            bus_states: Array2::default((0, bus_count)),
-            team_states: Array2::default((0, team_count)),
-            state_to_index: HashMap::new(),
-            stack: Vec::new(),
-        }
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
+        MinifyingStateIndexer::new(bus_count, team_count)
     }
 
     #[inline]
@@ -240,7 +256,7 @@ impl StateIndexer for MinifyingStateIndexer {
     }
 
     fn index_state(&mut self, s: State) -> usize {
-        const MINIFY_PERIOD: usize = 1 << 15;
+        const MINIFY_PERIOD: usize = 1 << 20;
         match self.state_to_index.get(&s) {
             Some(i) => *i,
             None => {
@@ -285,8 +301,8 @@ impl<T: StateIndexer> Iterator for SortedStateIndexer<T> {
 
 impl<T: StateIndexer> StateIndexer for SortedStateIndexer<T> {
     #[inline]
-    fn new(bus_count: usize, team_count: usize) -> Self {
-        Self(T::new(bus_count, team_count))
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        Self(T::new(graph, teams))
     }
 
     #[inline]
@@ -338,6 +354,20 @@ pub struct ArrayStateIndexer {
 use std::cmp::Ordering;
 
 impl ArrayStateIndexer {
+    fn new(bus_count: usize, team_count: usize) -> Self {
+        ArrayStateIndexer {
+            state_count: 0,
+            explored_count: 0,
+            bus_count,
+            team_count,
+            bus_states: Array2::default((0, bus_count)),
+            team_states: Array2::default((0, team_count)),
+            reverse_buses: Vec::new(),
+            reverse_teams: Vec::new(),
+            reverse_indices: Vec::new(),
+        }
+    }
+
     /// Compare the stored state at given index in the reverse lookup array with the given state.
     fn compare(&self, index: usize, state: &State) -> Ordering {
         let buses = self.reverse_buses.iter().skip(index * self.bus_count);
@@ -412,18 +442,10 @@ impl Iterator for ArrayStateIndexer {
 }
 
 impl StateIndexer for ArrayStateIndexer {
-    fn new(bus_count: usize, team_count: usize) -> Self {
-        ArrayStateIndexer {
-            state_count: 0,
-            explored_count: 0,
-            bus_count,
-            team_count,
-            bus_states: Array2::default((0, bus_count)),
-            team_states: Array2::default((0, team_count)),
-            reverse_buses: Vec::new(),
-            reverse_teams: Vec::new(),
-            reverse_indices: Vec::new(),
-        }
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
+        ArrayStateIndexer::new(bus_count, team_count)
     }
 
     #[inline]
