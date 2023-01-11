@@ -381,12 +381,12 @@ impl StateIndexer for TrieStateIndexer {
 
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         let TrieStateIndexer {
-            state_count,
+            state_count: _,
             bus_count,
             team_count,
-            state_to_index,
+            state_to_index: _,
             stack,
-            compressor,
+            compressor: _,
         } = self;
         if !stack.is_empty() {
             panic!("State stack is not empty in deconstruct");

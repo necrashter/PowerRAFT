@@ -246,8 +246,8 @@ impl<T: Transition> Solution<T> {
         }
     }
 
-    /// Convert the solution to a [`io::BenchmarkResult`].
-    pub fn to_benchmark_result(self) -> io::BenchmarkResult {
+    /// Get [`io::BenchmarkResult`].
+    pub fn get_benchmark_result(&self) -> io::BenchmarkResult {
         io::BenchmarkResult {
             total_time: self.total_time,
             generation_time: self.generation_time,
@@ -256,6 +256,11 @@ impl<T: Transition> Solution<T> {
             value: self.get_min_value(),
             horizon: self.horizon,
         }
+    }
+
+    /// Convert the solution to a [`io::BenchmarkResult`].
+    pub fn to_benchmark_result(self) -> io::BenchmarkResult {
+        self.get_benchmark_result()
     }
 }
 
