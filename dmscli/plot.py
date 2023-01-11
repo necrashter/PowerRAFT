@@ -198,10 +198,8 @@ def plot_states(benchmark_data, options={}):
 
 
 def get_optimization_name(d):
-    indexer = {
-            "NaiveStateIndexer": [],
-            "SortedStateIndexer": ["S"],
-    }
+    def indexer(s):
+        return ["S"] if s.startswith("Sorted") else []
     actions = {
             "NaiveActions": [],
             "PermutationalActions": ["P"],
@@ -215,7 +213,7 @@ def get_optimization_name(d):
             "TimedActionApplier<TimeUntilArrival>": ["V"],
             "TimedActionApplier<TimeUntilEnergization>": ["W"],
     }
-    opts = indexer[d["indexer"]] + actions[d["actions"]] + transitions[d["transitions"]]
+    opts = indexer(d["indexer"]) + actions[d["actions"]] + transitions[d["transitions"]]
     if opts:
         return " + ".join(opts)
     else:
@@ -261,5 +259,5 @@ elif plot_type.startswith("s"):
 else:
     print("Unknown plot type:", plot_type)
 
-plt.savefig(filename + ".png")
+plt.savefig(filename + ".png", bbox_inches='tight')
 # plt.show()
