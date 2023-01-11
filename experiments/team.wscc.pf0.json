@@ -1,0 +1,111 @@
+{
+  "name": "Case Study on WSCC 9-Bus with P_f = 0",
+  "description": "Case study on WSCC 9-Bus system with different team configurations. Failure probability for all buses is 0.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "(9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(5, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 4 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(4, 5, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 3 },
+            { "index": 4 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(8, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 7 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(7, 8, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 6 },
+            { "index": 7 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(9, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "(9, 9, 9)",
+          "graph": "../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "pfo": 0.0,
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        }
+      ],
+      "optimizations": "optimizations/sov.json"
+    }
+  ]
+}

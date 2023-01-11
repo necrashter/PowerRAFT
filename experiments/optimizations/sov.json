@@ -1,0 +1,7 @@
+[
+  {
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "actions": "FilterOnWay<NaiveActions>",
+    "transitions": "TimedActionApplier<TimeUntilArrival>"
+  }
+]

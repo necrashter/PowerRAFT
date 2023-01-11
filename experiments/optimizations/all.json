@@ -60,62 +60,62 @@
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterEnergizedOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer",
+    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
     "actions": "FilterEnergizedOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   }

@@ -1,0 +1,83 @@
+{
+  "name": "Scaling Experiment - Buses with Degree 1",
+  "description": "Experiment to determine how the solution scales when a new bus is added with 1 connection.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "3,6,7,10,12,16",
+          "graph": "../graphs/midsize-17/c1-3-6-7-10-12-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "6,7,10,12,16",
+          "graph": "../graphs/midsize-17/c1-6-7-10-12-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "7,10,12,16",
+          "graph": "../graphs/midsize-17/c1-7-10-12-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "10,12,16",
+          "graph": "../graphs/midsize-17/c1-10-12-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "12,16",
+          "graph": "../graphs/midsize-17/c1-12-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "16",
+          "graph": "../graphs/midsize-17/c1-16.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        }
+      ],
+      "optimizations": "optimizations/spow.json"
+    }
+  ]
+}

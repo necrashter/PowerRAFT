@@ -17,7 +17,7 @@
           "divider": 0.43
         }
       }],
-      "optimizations": "optimizations.json"
+      "optimizations": "optimizations/all.json"
     }
   ]
 }

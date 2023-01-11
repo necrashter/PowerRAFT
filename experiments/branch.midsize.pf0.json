@@ -1,0 +1,141 @@
+{
+  "name": "Scaling Experiment - Branch",
+  "description": "Experiment to determine how the solution scales when new branches are added.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "-",
+          "graph": "../graphs/midsize-17/b0.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "10-16",
+          "graph": "../graphs/midsize-17/b1a.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "7-14",
+          "graph": "../graphs/midsize-17/b1b.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "3-11",
+          "graph": "../graphs/midsize-17/b1c.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "16-17",
+          "graph": "../graphs/midsize-17/b1d.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "10-16, 7-14",
+          "graph": "../graphs/midsize-17/b2a.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "3-11, 16-17",
+          "graph": "../graphs/midsize-17/b2b.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "10-16, 7-14, 3-11",
+          "graph": "../graphs/midsize-17/b3a.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "3-11, 16-17, 7-14",
+          "graph": "../graphs/midsize-17/b3b.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "10-16, 7-14, 3-11, 16-17",
+          "graph": "../graphs/midsize-17/b4a.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 14 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        }
+      ],
+      "optimizations": "optimizations/spow.json"
+    }
+  ]
+}

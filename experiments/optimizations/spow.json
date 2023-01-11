@@ -1,0 +1,7 @@
+[
+  {
+    "indexer": "SortedStateIndexer<StackStateIndexer>",
+    "actions": "FilterEnergizedOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>"
+  }
+]

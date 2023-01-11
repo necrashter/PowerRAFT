@@ -1,0 +1,23 @@
+{
+  "name": "Scaling Experiment - Base Case",
+  "description": "Base case for scaling experiments on MidSize 17-Bus system.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "-",
+          "graph": "../graphs/midsize-17/default.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        }
+      ],
+      "optimizations": "optimizations/spow.json"
+    }
+  ]
+}

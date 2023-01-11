@@ -1,0 +1,50 @@
+{
+  "name": "Scaling Experiment - Buses with Degree 2 - P_f = 0",
+  "description": "Experiment to determine how the solution scales when a new bus is added with 2 connections.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "9,11,15",
+          "graph": "../graphs/midsize-17/c2-9-11-15.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "11,15",
+          "graph": "../graphs/midsize-17/c2-11-15.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        },
+        {
+          "name": "15",
+          "graph": "../graphs/midsize-17/c2-15.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "pfo": 0.0,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        }
+      ],
+      "optimizations": "optimizations/spow.json"
+    }
+  ]
+}
