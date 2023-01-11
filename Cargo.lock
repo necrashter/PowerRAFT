@@ -197,6 +197,7 @@ dependencies = [
  "clap",
  "dmslib",
  "env_logger",
+ "log",
  "serde_json",
  "termcolor",
 ]

@@ -12,6 +12,8 @@ use dmslib::SolveFailure;
 use clap::{Parser, Subcommand};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
+const RESULTS_DIR: &str = "results";
+
 /// Command line arguments
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -293,7 +295,7 @@ fn main() {
 
     match args.command {
         Command::Run { path, json } => {
-            let experiment = match read_experiment_from_file(path) {
+            let experiment = match read_experiment_from_file(&path) {
                 Ok(s) => s,
                 Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
             };
@@ -389,7 +391,24 @@ fn main() {
                     Ok(s) => s,
                     Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
                 };
-                println!("{}", serialized);
+
+                // println!("{}", serialized);
+
+                // Save to file.
+                let mut results_path = match std::env::current_dir() {
+                    Ok(p) => p,
+                    Err(e) => fatal_error!(1, "Cannot open current working directory: {}", e),
+                };
+                results_path.push(RESULTS_DIR);
+                if let Err(e) = std::fs::create_dir_all(&results_path) {
+                    log::error!("Cannot create results directory: {e}");
+                }
+                results_path.push(path.file_name().unwrap());
+                let mut results_file = match std::fs::File::create(results_path) {
+                    Ok(f) => f,
+                    Err(e) => fatal_error!(1, "Cannot open results file: {}", e),
+                };
+                writeln!(&mut results_file, "{}", serialized).unwrap();
             }
 
             stderr
