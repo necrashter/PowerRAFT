@@ -25,6 +25,7 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Command {
     /// Run an experiment.
+    #[command(alias = "r")]
     Run {
         /// Path to the experiment JSON file.
         path: PathBuf,
@@ -33,6 +34,7 @@ enum Command {
         json: bool,
     },
     /// Solve a problem with custom optimizations.
+    #[command(alias = "s")]
     Solve {
         /// Path to the JSON file containing the problem.
         path: PathBuf,
@@ -50,12 +52,14 @@ enum Command {
         json: bool,
     },
     /// Print the travel time matrix for a field-teams problem.
-    Tt {
+    #[command(alias = "tt")]
+    TravelTimes {
         /// Path to the JSON file containing the problem.
         path: PathBuf,
     },
     /// Print the direct distance matrix for a field-teams problem.
-    D {
+    #[command(alias = "d")]
+    Distances {
         /// Path to the JSON file containing the problem.
         path: PathBuf,
         /// Number of decimal places in output.
@@ -452,7 +456,7 @@ fn main() {
             }
         }
 
-        Command::Tt { path } => {
+        Command::TravelTimes { path } => {
             let problems = match read_problems_from_file(path) {
                 Ok(x) => x,
                 Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),
@@ -462,7 +466,7 @@ fn main() {
             }
         }
 
-        Command::D { path, precision } => {
+        Command::Distances { path, precision } => {
             let problems = match read_problems_from_file(path) {
                 Ok(x) => x,
                 Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),
