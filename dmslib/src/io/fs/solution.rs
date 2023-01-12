@@ -230,6 +230,19 @@ impl From<TeamSolution<RegularTransition>> for saveable::GenericTeamSolution {
     }
 }
 
+pub struct SaveFile {
+    pub problem: TeamProblem,
+    pub solution: GenericTeamSolution,
+}
+
+use bincode::Options;
+
+macro_rules! bincode_options {
+    () => {{
+        bincode::DefaultOptions::new()
+    }};
+}
+
 pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
     problem: TeamProblem,
     solution: S,
@@ -240,7 +253,7 @@ pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
         solution: solution.into(),
     };
 
-    let encoded: Vec<u8> = match bincode::serialize(&file_content) {
+    let encoded: Vec<u8> = match bincode_options!().serialize(&file_content) {
         Ok(v) => v,
         Err(e) => {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, e));
@@ -253,17 +266,12 @@ pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
     Ok(())
 }
 
-pub struct SaveFile {
-    pub problem: TeamProblem,
-    pub solution: GenericTeamSolution,
-}
-
 pub fn load_solution<P: AsRef<Path>>(path: P) -> std::io::Result<SaveFile> {
     let mut file = std::fs::File::open(path)?;
     let mut encoded: Vec<u8> = Vec::new();
     file.read_to_end(&mut encoded)?;
 
-    let decoded: saveable::SaveFile = match bincode::deserialize(&encoded[..]) {
+    let decoded: saveable::SaveFile = match bincode_options!().deserialize(&encoded[..]) {
         Ok(v) => v,
         Err(e) => {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, e));
