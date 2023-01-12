@@ -239,11 +239,6 @@ pub fn save_solution<P: AsRef<Path>, S: SaveableSolution>(
     Ok(())
 }
 
-pub enum GenericTeamSolution {
-    Timed(TeamSolution<TimedTransition>),
-    Regular(TeamSolution<RegularTransition>),
-}
-
 impl From<saveable::GenericTeamSolution> for GenericTeamSolution {
     fn from(value: saveable::GenericTeamSolution) -> Self {
         match value {

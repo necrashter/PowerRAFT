@@ -472,6 +472,13 @@ pub struct TeamSolution<T: Transition> {
     pub horizon: usize,
 }
 
+/// A timed or regular [`TeamSolution`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum GenericTeamSolution {
+    Timed(TeamSolution<TimedTransition>),
+    Regular(TeamSolution<RegularTransition>),
+}
+
 impl<T: Transition> Serialize for TeamSolution<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

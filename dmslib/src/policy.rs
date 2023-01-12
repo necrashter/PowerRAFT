@@ -149,7 +149,7 @@ impl Serialize for RegularTransition {
 }
 
 /// A regular MDP transition with probability and cost.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct TimedTransition {
     /// Index of the successor state.
     pub successor: usize,

@@ -470,7 +470,7 @@ fn save_test_pe0_1_team() {
         solution: saved_solution,
     } = io::fs::load_solution(&path).unwrap();
 
-    let saved_solution = if let io::fs::GenericTeamSolution::Regular(s) = saved_solution {
+    let saved_solution = if let io::GenericTeamSolution::Regular(s) = saved_solution {
         s
     } else {
         panic!("saved solution type is wrong");
