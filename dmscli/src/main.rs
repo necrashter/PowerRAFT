@@ -49,14 +49,6 @@ enum Command {
         #[arg(short, long, default_value_t = false)]
         json: bool,
     },
-    /// Solve a problem for all optimization combinations.
-    Benchmark {
-        /// Path to the JSON file containing the problem.
-        path: PathBuf,
-        /// Print the results as JSON (Hint: redirect stdout)
-        #[arg(short, long, default_value_t = false)]
-        json: bool,
-    },
     /// Print the travel time matrix for a field-teams problem.
     Tt {
         /// Path to the JSON file containing the problem.
@@ -458,60 +450,6 @@ fn main() {
                 };
                 println!("{}", serialized);
             }
-        }
-
-        Command::Benchmark { path, json } => {
-            let (name, problem, config) = read_and_parse_team_problem(path);
-
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Problem Name:     ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(&mut stderr, "{}", name).unwrap();
-
-            let opt_list = teams::all_optimizations();
-            let total_optimizations = opt_list.len();
-
-            let results: Vec<OptimizationBenchmarkResult> = opt_list
-                .into_iter()
-                .enumerate()
-                .map(|(i, optimizations)| {
-                    writeln!(&mut stderr).unwrap();
-                    print_optimizations(&mut stderr, &optimizations).unwrap();
-
-                    stderr
-                        .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-                        .unwrap();
-                    write!(
-                        &mut stderr,
-                        "Solving {}/{}...\r",
-                        i + 1,
-                        total_optimizations
-                    )
-                    .unwrap();
-                    stderr.reset().unwrap();
-                    stderr.flush().unwrap();
-
-                    let result = benchmark(&problem, &config, &optimizations);
-
-                    print_benchmark_result(&mut stderr, &result.result).unwrap();
-
-                    result
-                })
-                .collect();
-
-            if json {
-                let serialized = match serde_json::to_string_pretty(&results) {
-                    Ok(s) => s,
-                    Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
-                };
-                println!("{}", serialized);
-            }
-
-            stderr
-                .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-                .unwrap();
-            writeln!(&mut stderr, "\nDone!").unwrap();
-            stderr.reset().unwrap();
         }
 
         Command::Tt { path } => {
