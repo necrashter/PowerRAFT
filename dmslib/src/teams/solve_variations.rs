@@ -251,6 +251,35 @@ pub fn solve_custom_timed(
 /// - action applier class
 /// - action set class
 ///
+/// Returns a [`io::GenericTeamSolution`] on success.
+pub fn solve_custom(
+    graph: &Graph,
+    initial_teams: Vec<TeamState>,
+    config: &Config,
+    indexer: &str,
+    action_set: &str,
+    action_applier: &str,
+) -> Result<io::GenericTeamSolution, SolveFailure> {
+    if action_applier == stringify!(NaiveActionApplier) {
+        let solution = solve_custom_regular(graph, initial_teams, config, indexer, action_set)?;
+        Ok(io::GenericTeamSolution::Regular(solution.into_io(graph)))
+    } else {
+        let solution = solve_custom_timed(
+            graph,
+            initial_teams,
+            config,
+            indexer,
+            action_set,
+            action_applier,
+        )?;
+        Ok(io::GenericTeamSolution::Timed(solution.into_io(graph)))
+    }
+}
+
+/// Solve the field-teams restoration problem with the given:
+/// - action applier class
+/// - action set class
+///
 /// Returns a [`io::BenchmarkResult`] on success.
 pub fn benchmark_custom(
     graph: &Graph,

@@ -3,8 +3,8 @@ use std::{io::Write, path::PathBuf};
 
 use dmslib::io::fs::read_problems_from_file;
 use dmslib::io::{
-    read_experiment_from_file, BenchmarkResult, ExperimentTask, OptimizationBenchmarkResult,
-    OptimizationInfo, TeamProblem,
+    read_experiment_from_file, BenchmarkResult, ExperimentTask, GenericTeamSolution,
+    OptimizationBenchmarkResult, OptimizationInfo, TeamProblem,
 };
 use dmslib::teams;
 use dmslib::SolveFailure;
@@ -29,9 +29,6 @@ enum Command {
     Run {
         /// Path to the experiment JSON file.
         path: PathBuf,
-        /// Print the results as JSON (Hint: redirect stdout)
-        #[arg(short, long, default_value_t = false)]
-        json: bool,
     },
     /// Solve a problem with custom optimizations.
     #[command(alias = "s")]
@@ -262,23 +259,31 @@ fn print_travel_times(out: &mut StandardStream, mut problem: TeamProblem) {
     println!("{}", &travel_times);
 }
 
-fn benchmark(
+fn solve(
     problem: &teams::Problem,
     config: &teams::Config,
     optimization: &OptimizationInfo,
-) -> OptimizationBenchmarkResult {
-    let result = teams::benchmark_custom(
+) -> Result<GenericTeamSolution, SolveFailure> {
+    teams::solve_custom(
         &problem.graph,
         problem.initial_teams.clone(),
         config,
         &optimization.indexer,
         &optimization.actions,
         &optimization.transitions,
-    );
+    )
+}
 
+fn get_optimization_result(
+    solution: &Result<GenericTeamSolution, SolveFailure>,
+    optimization: OptimizationInfo,
+) -> OptimizationBenchmarkResult {
     OptimizationBenchmarkResult {
-        result,
-        optimizations: optimization.clone(),
+        result: match solution {
+            Ok(solution) => Ok(solution.get_benchmark_result()),
+            Err(e) => Err(e.clone()),
+        },
+        optimizations: optimization,
     }
 }
 
@@ -290,7 +295,32 @@ fn main() {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
     match args.command {
-        Command::Run { path, json } => {
+        Command::Run { path } => {
+            let mut results_path = match std::env::current_dir() {
+                Ok(p) => p,
+                Err(e) => fatal_error!(1, "Cannot open current working directory: {}", e),
+            };
+
+            results_path.push(RESULTS_DIR);
+            if let Err(e) = std::fs::create_dir_all(&results_path) {
+                fatal_error!(1, "Cannot create results directory: {e}");
+            }
+            results_path.push(path.file_name().unwrap());
+            if results_path.exists() {
+                // TODO: overwrite this
+                fatal_error!(
+                    1,
+                    "Results file is present: {}",
+                    results_path.to_string_lossy()
+                );
+            }
+            let results_path = results_path;
+
+            let solutions_dir = results_path.with_extension("d");
+            if let Err(e) = std::fs::create_dir_all(&solutions_dir) {
+                fatal_error!(1, "Cannot create solutions directory: {e}");
+            }
+
             let experiment = match read_experiment_from_file(&path) {
                 Ok(s) => s,
                 Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
@@ -313,9 +343,7 @@ fn main() {
                 .map(|task| task.problems.len() * task.optimizations.len())
                 .sum();
 
-            let mut results: Vec<OptimizationBenchmarkResult> = Vec::new();
-            // Name of the task for each result
-            let mut names: Vec<Option<String>> = Vec::new();
+            let mut results: Vec<serde_json::Value> = Vec::new();
 
             for task in experiment.tasks.into_iter() {
                 let ExperimentTask {
@@ -323,6 +351,8 @@ fn main() {
                     optimizations,
                 } = task;
                 for mut problem in problems {
+                    let team_problem = problem.clone();
+
                     let name = problem.name.take();
 
                     stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
@@ -352,60 +382,63 @@ fn main() {
                         stderr.reset().unwrap();
                         stderr.flush().unwrap();
 
-                        let result = benchmark(&problem, &config, optimization);
+                        let solution = solve(&problem, &config, optimization);
+                        let result = get_optimization_result(&solution, optimization.clone());
 
                         print_benchmark_result(&mut stderr, &result.result).unwrap();
                         writeln!(&mut stderr).unwrap();
 
-                        results.push(result);
-                        names.push(name.clone());
+                        let mut result = match serde_json::to_value(result) {
+                            Ok(s) => s,
+                            Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+                        };
+                        let result_obj = result.as_object_mut().unwrap();
 
+                        if let Some(name) = name.clone() {
+                            result_obj.insert("name".to_string(), serde_json::Value::String(name));
+                        }
+
+                        // Save solution
+                        if let Ok(solution) = solution {
+                            let solution_path = {
+                                let mut path = solutions_dir.clone();
+                                path.push(format!("{:03}.bin", current));
+                                path
+                            };
+                            let err = dmslib::io::fs::save_solution(
+                                team_problem.clone(),
+                                solution,
+                                &solution_path,
+                            );
+                            if let Err(e) = err {
+                                log::error!("Failed to save solution {}: {}", current, e);
+                            } else {
+                                result_obj.insert(
+                                    "solution".to_string(),
+                                    serde_json::Value::String(
+                                        solution_path.to_string_lossy().to_string(),
+                                    ),
+                                );
+                            }
+                        }
+
+                        results.push(result);
                         current += 1;
                     }
                 }
             }
 
-            if json {
-                let results: Vec<serde_json::Value> = results
-                    .into_iter()
-                    .zip(names.into_iter())
-                    .map(|(result, name)| {
-                        let mut result = match serde_json::to_value(result) {
-                            Ok(s) => s,
-                            Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
-                        };
-                        if let Some(name) = name {
-                            result
-                                .as_object_mut()
-                                .unwrap()
-                                .insert("name".to_string(), serde_json::Value::String(name));
-                        }
-                        result
-                    })
-                    .collect();
-                let serialized = match serde_json::to_string_pretty(&results) {
-                    Ok(s) => s,
-                    Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
-                };
+            let serialized = match serde_json::to_string_pretty(&results) {
+                Ok(s) => s,
+                Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+            };
 
-                // println!("{}", serialized);
-
-                // Save to file.
-                let mut results_path = match std::env::current_dir() {
-                    Ok(p) => p,
-                    Err(e) => fatal_error!(1, "Cannot open current working directory: {}", e),
-                };
-                results_path.push(RESULTS_DIR);
-                if let Err(e) = std::fs::create_dir_all(&results_path) {
-                    log::error!("Cannot create results directory: {e}");
-                }
-                results_path.push(path.file_name().unwrap());
-                let mut results_file = match std::fs::File::create(results_path) {
-                    Ok(f) => f,
-                    Err(e) => fatal_error!(1, "Cannot open results file: {}", e),
-                };
-                writeln!(&mut results_file, "{}", serialized).unwrap();
-            }
+            // Save to file.
+            let mut results_file = match std::fs::File::create(results_path) {
+                Ok(f) => f,
+                Err(e) => fatal_error!(1, "Cannot open results file: {}", e),
+            };
+            writeln!(&mut results_file, "{}", serialized).unwrap();
 
             stderr
                 .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
@@ -443,7 +476,10 @@ fn main() {
             stderr.reset().unwrap();
             stderr.flush().unwrap();
 
-            let result = benchmark(&problem, &config, &optimizations);
+            let solution = solve(&problem, &config, &optimizations);
+            // TODO: save solution
+
+            let result = get_optimization_result(&solution, optimizations);
 
             print_benchmark_result(&mut stderr, &result.result).unwrap();
 

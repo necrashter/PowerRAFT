@@ -333,7 +333,7 @@ impl TeamProblem {
     pub fn solve_naive(self) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
         let (problem, config) = self.prepare()?;
         let solution = teams::solve_naive(&problem.graph, problem.initial_teams, &config)?;
-        Ok(solution.to_webclient(problem.graph))
+        Ok(solution.into_io(problem.graph))
     }
 
     /// Solve the field-teams restoration problem with [`RegularTransition`]s (classic MDP
@@ -353,7 +353,7 @@ impl TeamProblem {
             indexer,
             action_set,
         )?;
-        Ok(solution.to_webclient(problem.graph))
+        Ok(solution.into_io(problem.graph))
     }
 
     /// Solve the field-teams restoration problem with [`TimedTransition`]s and the given:
@@ -376,7 +376,7 @@ impl TeamProblem {
             action_set,
             action_applier,
         )?;
-        Ok(solution.to_webclient(problem.graph))
+        Ok(solution.into_io(problem.graph))
     }
 
     /// Solve the field-teams restoration problem with the given:
@@ -477,6 +477,30 @@ pub struct TeamSolution<T: Transition> {
 pub enum GenericTeamSolution {
     Timed(TeamSolution<TimedTransition>),
     Regular(TeamSolution<RegularTransition>),
+}
+
+impl<T: Transition> TeamSolution<T> {
+    /// Get [`BenchmarkResult`].
+    pub fn get_benchmark_result(&self) -> BenchmarkResult {
+        BenchmarkResult {
+            total_time: self.total_time,
+            generation_time: self.generation_time,
+            max_memory: self.max_memory,
+            states: self.transitions.len(),
+            value: teams::get_min_value(&self.values),
+            horizon: self.horizon,
+        }
+    }
+}
+
+impl GenericTeamSolution {
+    /// Get [`BenchmarkResult`].
+    pub fn get_benchmark_result(&self) -> BenchmarkResult {
+        match self {
+            GenericTeamSolution::Timed(s) => s.get_benchmark_result(),
+            GenericTeamSolution::Regular(s) => s.get_benchmark_result(),
+        }
+    }
 }
 
 impl<T: Transition> Serialize for TeamSolution<T> {

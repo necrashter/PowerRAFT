@@ -25,7 +25,7 @@ pub const GRAPHS_PATH: &str = "../graphs/";
 pub const EXPERIMENTS_PATH: &str = "../experiments/";
 
 /// Represents the reasons why a solution attempt might fail.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", content = "content")] // content will be used for BadInput(String)
 pub enum SolveFailure {
     BadInput(String),

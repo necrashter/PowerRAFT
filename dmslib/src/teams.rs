@@ -209,17 +209,40 @@ pub struct Solution<T: Transition> {
     pub horizon: usize,
 }
 
+pub trait GraphRefOrVal {
+    fn get_info(self) -> (Array2<f64>, Array2<Time>);
+}
+
+impl GraphRefOrVal for Graph {
+    fn get_info(self) -> (Array2<f64>, Array2<Time>) {
+        (self.team_nodes, self.travel_times)
+    }
+}
+
+impl GraphRefOrVal for &Graph {
+    fn get_info(self) -> (Array2<f64>, Array2<Time>) {
+        (self.team_nodes.clone(), self.travel_times.clone())
+    }
+}
+
+/// Get the minimum value of value function in the first state.
+pub fn get_min_value(values: &[Vec<f64>]) -> f64 {
+    *(values[0]
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap())
+}
+
 impl<T: Transition> Solution<T> {
     /// Get the minimum value of value function in the first state.
     pub fn get_min_value(&self) -> f64 {
-        *self.values[0]
-            .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
+        get_min_value(&self.values)
     }
 
     /// Convert the solution to the io representation together with the corresponding graph.
-    pub fn to_webclient(self, graph: Graph) -> io::TeamSolution<T> {
+    ///
+    /// Graph can be passed by value or reference.
+    pub fn into_io<G: GraphRefOrVal>(self, graph: G) -> io::TeamSolution<T> {
         let Solution {
             total_time,
             generation_time,
@@ -231,12 +254,13 @@ impl<T: Transition> Solution<T> {
             policy,
             horizon,
         } = self;
+        let (team_nodes, travel_times) = graph.get_info();
         io::TeamSolution {
             total_time,
             generation_time,
             max_memory,
-            team_nodes: graph.team_nodes,
-            travel_times: graph.travel_times,
+            team_nodes,
+            travel_times,
             states,
             teams,
             transitions,

@@ -200,30 +200,44 @@ mod saveable {
     }
 }
 
-pub trait SaveableSolution {
-    fn to_generic_solution(self) -> saveable::GenericTeamSolution;
-}
-
-impl SaveableSolution for TeamSolution<RegularTransition> {
-    fn to_generic_solution(self) -> saveable::GenericTeamSolution {
-        saveable::GenericTeamSolution::Regular(self.into())
+impl From<GenericTeamSolution> for saveable::GenericTeamSolution {
+    fn from(value: GenericTeamSolution) -> Self {
+        match value {
+            GenericTeamSolution::Timed(a) => saveable::GenericTeamSolution::Timed(a.into()),
+            GenericTeamSolution::Regular(a) => saveable::GenericTeamSolution::Regular(a.into()),
+        }
     }
 }
 
-impl SaveableSolution for TeamSolution<TimedTransition> {
-    fn to_generic_solution(self) -> saveable::GenericTeamSolution {
-        saveable::GenericTeamSolution::Timed(self.into())
+impl From<saveable::GenericTeamSolution> for GenericTeamSolution {
+    fn from(value: saveable::GenericTeamSolution) -> Self {
+        match value {
+            saveable::GenericTeamSolution::Timed(a) => GenericTeamSolution::Timed(a.into()),
+            saveable::GenericTeamSolution::Regular(a) => GenericTeamSolution::Regular(a.into()),
+        }
     }
 }
 
-pub fn save_solution<P: AsRef<Path>, S: SaveableSolution>(
+impl From<TeamSolution<TimedTransition>> for saveable::GenericTeamSolution {
+    fn from(value: TeamSolution<TimedTransition>) -> Self {
+        saveable::GenericTeamSolution::Timed(value.into())
+    }
+}
+
+impl From<TeamSolution<RegularTransition>> for saveable::GenericTeamSolution {
+    fn from(value: TeamSolution<RegularTransition>) -> Self {
+        saveable::GenericTeamSolution::Regular(value.into())
+    }
+}
+
+pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
     problem: TeamProblem,
     solution: S,
     path: P,
 ) -> std::io::Result<()> {
     let file_content = saveable::SaveFile {
         problem: problem.into(),
-        solution: solution.to_generic_solution(),
+        solution: solution.into(),
     };
 
     let encoded: Vec<u8> = match bincode::serialize(&file_content) {
@@ -237,15 +251,6 @@ pub fn save_solution<P: AsRef<Path>, S: SaveableSolution>(
     file.write_all(&encoded[..])?;
 
     Ok(())
-}
-
-impl From<saveable::GenericTeamSolution> for GenericTeamSolution {
-    fn from(value: saveable::GenericTeamSolution) -> Self {
-        match value {
-            saveable::GenericTeamSolution::Timed(a) => GenericTeamSolution::Timed(a.into()),
-            saveable::GenericTeamSolution::Regular(a) => GenericTeamSolution::Regular(a.into()),
-        }
-    }
 }
 
 pub struct SaveFile {
