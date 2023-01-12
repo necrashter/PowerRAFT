@@ -442,3 +442,40 @@ fn pe0_2_team() {
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 2478);
 }
+
+#[test]
+#[ignore]
+fn save_test_pe0_1_team() {
+    let input_graph: io::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
+    let problem = io::TeamProblem {
+        name: Some("Save Test Team Problem PE0 1-Team".to_string()),
+        graph: input_graph,
+        teams: vec![io::Team {
+            index: Some(0),
+            latlng: None,
+        }],
+        horizon: Some(10),
+        pfo: None,
+        time_func: Default::default(),
+    };
+
+    let solution = problem.clone().solve_naive().unwrap();
+
+    let mut path: std::path::PathBuf = std::env::temp_dir();
+    path.push("dmslib-test.pe0-1-team.bin");
+    io::fs::save_solution(problem.clone(), solution.clone(), &path).unwrap();
+
+    let io::fs::SaveFile {
+        problem: saved_problem,
+        solution: saved_solution,
+    } = io::fs::load_solution(&path).unwrap();
+
+    let saved_solution = if let io::fs::GenericTeamSolution::Regular(s) = saved_solution {
+        s
+    } else {
+        panic!("saved solution type is wrong");
+    };
+
+    assert_eq!(problem, saved_problem);
+    assert_eq!(solution, saved_solution);
+}

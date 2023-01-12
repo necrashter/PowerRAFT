@@ -21,7 +21,7 @@ pub trait Transition: Serialize {
 }
 
 /// A regular MDP transition with probability and cost.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct RegularTransition {
     /// Index of the successor state.
     pub successor: usize,

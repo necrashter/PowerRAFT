@@ -18,12 +18,12 @@ pub use experiments::*;
 mod tests;
 
 /// Tuple for nodes that a branch connects.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct BranchNodes(pub usize, pub usize);
 
 /// Holds latitude and longitude values as a tuple.
 /// Serialized to JSON as an array of length 2.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct LatLng(pub f64, pub f64);
 
 /// Holds latitude and longtitude values of `view` field in graphs.
@@ -55,24 +55,24 @@ impl LatLng {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Branch {
     pub nodes: BranchNodes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ExtBranch {
     pub node: usize,
     pub source: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Node {
     pub pf: f64,
     pub latlng: LatLng,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Resource {
     pub latlng: LatLng,
     /// "type" is a keyword...
@@ -81,7 +81,7 @@ pub struct Resource {
 }
 
 /// JSON representation of a distribution system graph.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Graph {
     pub name: String,
     pub branches: Vec<Branch>,
@@ -101,17 +101,17 @@ pub struct GraphEntry {
     pub view: View,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Team {
     pub index: Option<usize>,
     pub latlng: Option<LatLng>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(tag = "type")]
 pub enum TimeFunc {
-    /// Calculate "as the crow flies" distance between two points, multiply and/or divide it with
-    /// the given factor(s), and round it up (to avoid 0) to find travel times.
+    /// Calculate "as the crow flies" distance between two points, multiply and/or divide
+    /// it with the given factor(s), and round it up (to avoid 0) to find travel times.
     DirectDistance {
         multiplier: Option<f64>,
         divider: Option<f64>,
@@ -183,7 +183,7 @@ impl Default for TimeFunc {
 }
 
 /// Represents a field teams restoration problem.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TeamProblem {
     pub name: Option<String>,
     pub graph: Graph,
@@ -441,6 +441,7 @@ pub fn parse_teams_problem(req: &serde_json::Value) -> Result<(Graph, Vec<Team>)
 
 /// This struct will be the response to a client's request to solve a field teams restoration
 /// problem.
+#[derive(Clone, PartialEq, Debug)]
 pub struct TeamSolution<T: Transition> {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,
