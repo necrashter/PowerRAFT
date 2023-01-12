@@ -2,6 +2,8 @@
 //!
 //! Common functionality for DMS server and command line interface.
 
+#![allow(clippy::unnecessary_cast)]
+
 use serde::{Deserialize, Serialize};
 
 pub mod io;
