@@ -22,6 +22,13 @@ fn push_bits(bv: &mut BitVec, value: usize, bits: usize) {
     bv[start..(start + bits)].store::<usize>(value);
 }
 
+#[inline]
+fn push_key_bits(bv: &mut BitVec, value: TrieKey) {
+    let start = bv.len();
+    bv.resize(start + TRIE_KEY_BITS, false);
+    bv[start..(start + TRIE_KEY_BITS)].store::<TrieKey>(value);
+}
+
 struct StateCompressor {
     bus_count: usize,
     team_count: usize,
@@ -114,6 +121,12 @@ struct Trie<T> {
     links: Vec<(TrieKey, TrieLink<T>)>,
 }
 
+struct TrieIntoIterator<T> {
+    trie: Trie<T>,
+    prev_bits: BitVec,
+    sub_iterator: Option<Box<TrieIntoIterator<T>>>,
+}
+
 impl<T> Trie<T> {
     fn new() -> Self {
         Trie {
@@ -203,6 +216,55 @@ impl<T> Trie<T> {
             }
         }
     }
+
+    pub fn into_sub_iterator(self, prev_bits: BitVec) -> TrieIntoIterator<T> {
+        TrieIntoIterator {
+            trie: self,
+            prev_bits,
+            sub_iterator: None,
+        }
+    }
+}
+
+impl<T> IntoIterator for Trie<T> {
+    type Item = (BitVec, T);
+
+    type IntoIter = TrieIntoIterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_sub_iterator(BitVec::new())
+    }
+}
+
+impl<T> Iterator for TrieIntoIterator<T> {
+    type Item = (BitVec, T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(sub_iterator) = &mut self.sub_iterator {
+            if let Some(item) = sub_iterator.next() {
+                return Some(item);
+            } else {
+                self.sub_iterator = None;
+            }
+        }
+        if let Some(t) = self.trie.element.take() {
+            return Some((self.prev_bits.clone(), t));
+        }
+        if let Some((key, link)) = self.trie.links.pop() {
+            let mut bv = self.prev_bits.clone();
+            push_key_bits(&mut bv, key);
+            match link {
+                TrieLink::Leaf(t) => Some((bv, t)),
+                TrieLink::Link(subtrie) => {
+                    let sub_it = subtrie.into_sub_iterator(bv);
+                    self.sub_iterator = Some(Box::new(sub_it));
+                    self.next()
+                }
+            }
+        } else {
+            None
+        }
+    }
 }
 
 /// Same as StackStateIndexer but inner representation of states is smaller.
@@ -284,34 +346,28 @@ impl StateIndexer for BitStackStateIndexer {
             panic!("State stack is not empty in deconstruct");
         }
         drop(stack);
-        const IGNORE_OUTPUT: bool = false;
-        if IGNORE_OUTPUT {
-            let bus_states = Array2::default((1, bus_count));
-            let team_states = Array2::default((1, team_count));
-            (bus_states, team_states)
-        } else {
-            let state_count = state_to_index.len();
-            let mut bus_states = Array2::default((state_count, bus_count));
-            let mut team_states = Array2::default((state_count, team_count));
-            for (bits, i) in state_to_index.into_iter() {
-                let state = compressor.bits_to_state(bits);
-                for (x, y) in bus_states
-                    .row_mut(i)
-                    .iter_mut()
-                    .zip(state.buses.into_iter())
-                {
-                    *x = y;
-                }
-                for (x, y) in team_states
-                    .row_mut(i)
-                    .iter_mut()
-                    .zip(state.teams.into_iter())
-                {
-                    *x = y;
-                }
+
+        let state_count = state_to_index.len();
+        let mut bus_states = Array2::default((state_count, bus_count));
+        let mut team_states = Array2::default((state_count, team_count));
+        for (bits, i) in state_to_index.into_iter() {
+            let state = compressor.bits_to_state(bits);
+            for (x, y) in bus_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.buses.into_iter())
+            {
+                *x = y;
             }
-            (bus_states, team_states)
+            for (x, y) in team_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.teams.into_iter())
+            {
+                *x = y;
+            }
         }
+        (bus_states, team_states)
     }
 }
 
@@ -381,20 +437,37 @@ impl StateIndexer for TrieStateIndexer {
 
     fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
         let TrieStateIndexer {
-            state_count: _,
+            state_count,
             bus_count,
             team_count,
-            state_to_index: _,
+            state_to_index,
             stack,
-            compressor: _,
+            compressor,
         } = self;
         if !stack.is_empty() {
             panic!("State stack is not empty in deconstruct");
         }
         drop(stack);
-        // TODO
-        let bus_states = Array2::default((1, bus_count));
-        let team_states = Array2::default((1, team_count));
+
+        let mut bus_states = Array2::default((state_count, bus_count));
+        let mut team_states = Array2::default((state_count, team_count));
+        for (bits, i) in state_to_index.into_iter() {
+            let state = compressor.bits_to_state(bits);
+            for (x, y) in bus_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.buses.into_iter())
+            {
+                *x = y;
+            }
+            for (x, y) in team_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.teams.into_iter())
+            {
+                *x = y;
+            }
+        }
         (bus_states, team_states)
     }
 }

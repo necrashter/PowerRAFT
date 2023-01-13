@@ -510,7 +510,7 @@ mod tests {
             teams: vec![OnBus(1)],
         };
         let state2 = State {
-            buses: vec![Unknown, Unknown, Unknown],
+            buses: vec![Energized, Energized, Unknown],
             teams: vec![EnRoute(1, 2, 3)],
         };
 
@@ -557,7 +557,7 @@ mod tests {
             ndarray::array![
                 [Unknown, Unknown, Unknown],
                 [Unknown, Unknown, Damaged],
-                [Unknown, Unknown, Unknown],
+                [Energized, Energized, Unknown],
             ]
         );
         assert_eq!(
