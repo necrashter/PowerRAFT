@@ -29,7 +29,8 @@ fn push_key_bits(bv: &mut BitVec, value: TrieKey) {
     bv[start..(start + TRIE_KEY_BITS)].store::<TrieKey>(value);
 }
 
-struct StateCompressor {
+/// Struct for compressing the states using BitVec.
+pub struct StateCompressor {
     bus_count: usize,
     team_count: usize,
     bus_bits: usize,
@@ -37,7 +38,7 @@ struct StateCompressor {
 }
 
 impl StateCompressor {
-    fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
+    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
         StateCompressor {
             bus_count,
             team_count,
@@ -46,13 +47,13 @@ impl StateCompressor {
         }
     }
 
-    fn state_to_bits(&self, state: State) -> BitVec {
+    /// Convert a single state from its slices to BitVec representation.
+    pub fn slice_to_bits(&self, buses: &[BusState], teams: &[TeamState]) -> BitVec {
         let mut out: BitVec = BitVec::new();
-        let State { buses, teams } = state;
         {
             let mut i = 0;
             let mut current: usize = 0;
-            for bus in buses.into_iter() {
+            for &bus in buses.iter() {
                 let position = (i % 32) * 2;
                 current |= (bus as usize) << position;
                 if i != 0 && i % 32 == 0 {
@@ -64,8 +65,8 @@ impl StateCompressor {
                 push_bits(&mut out, current, i * 2);
             }
         }
-        for team in teams.into_iter() {
-            match team {
+        for team in teams.iter() {
+            match *team {
                 TeamState::OnBus(i) => {
                     out.push(false);
                     push_bits(&mut out, i, self.bus_bits);
@@ -81,7 +82,14 @@ impl StateCompressor {
         out
     }
 
-    fn bits_to_state(&self, bits: BitVec) -> State {
+    /// Convert a single state to BitVec representation.
+    pub fn state_to_bits(&self, state: State) -> BitVec {
+        let State { buses, teams } = state;
+        self.slice_to_bits(&buses, &teams)
+    }
+
+    /// Obtain a single state from its BitVec representation.
+    pub fn bits_to_state(&self, bits: BitVec) -> State {
         let mut buses: Vec<BusState> = Vec::new();
         let mut teams: Vec<TeamState> = Vec::new();
         let mut index: usize = 0;
@@ -108,6 +116,168 @@ impl StateCompressor {
             }
         }
         State { buses, teams }
+    }
+
+    /// Convert states given in Array2 representation to bitvecs.
+    pub fn compress(&self, buses: Array2<BusState>, teams: Array2<TeamState>) -> Vec<BitVec> {
+        assert_eq!(buses.shape()[1], self.bus_count);
+        assert_eq!(teams.shape()[1], self.team_count);
+        assert_eq!(buses.shape()[0], teams.shape()[0]);
+
+        let state_count = buses.shape()[0];
+        let buses = buses.into_raw_vec();
+        let teams = teams.into_raw_vec();
+
+        let mut bitvecs: Vec<BitVec> = Vec::new();
+        bitvecs.reserve_exact(state_count);
+
+        let mut bus_i: usize = 0;
+        let mut team_i: usize = 0;
+
+        for _ in 0..state_count {
+            let bitvec = self.slice_to_bits(
+                &buses[bus_i..(bus_i + self.bus_count)],
+                &teams[team_i..(team_i + self.team_count)],
+            );
+            bitvecs.push(bitvec);
+            bus_i += self.bus_count;
+            team_i += self.team_count;
+        }
+
+        bitvecs
+    }
+
+    /// Convert given bitvec representation of states to Array2 representation.
+    pub fn decompress(&self, bitvecs: Vec<BitVec>) -> (Array2<BusState>, Array2<TeamState>) {
+        let state_count = bitvecs.len();
+
+        let mut bus_states: Array2<BusState> = Array2::default((state_count, self.bus_count));
+        let mut team_states: Array2<TeamState> = Array2::default((state_count, self.team_count));
+
+        for (i, bitvec) in bitvecs.into_iter().enumerate() {
+            let state = self.bits_to_state(bitvec);
+
+            for (x, y) in bus_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.buses.into_iter())
+            {
+                *x = y;
+            }
+            for (x, y) in team_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.teams.into_iter())
+            {
+                *x = y;
+            }
+        }
+
+        (bus_states, team_states)
+    }
+}
+
+/// Same as StackStateIndexer but inner representation of states is smaller.
+///
+/// A state indexer that uses stack to keep track of states to be explored:
+/// - New states are added to a stack.
+/// - HashMap is used as reverse index.
+/// - State `Array2`s are built by deconstructing the hashmap.
+pub struct BitStackStateIndexer {
+    bus_count: usize,
+    team_count: usize,
+    compressor: StateCompressor,
+    state_to_index: HashMap<BitVec, usize>,
+    stack: Vec<(usize, BitVec)>,
+}
+
+impl BitStackStateIndexer {
+    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
+        BitStackStateIndexer {
+            bus_count,
+            team_count,
+            compressor: StateCompressor::new(bus_count, team_count, max_time),
+            state_to_index: HashMap::new(),
+            stack: Vec::new(),
+        }
+    }
+}
+
+impl Iterator for BitStackStateIndexer {
+    type Item = (usize, State);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some((i, bits)) = self.stack.pop() {
+            Some((i, self.compressor.bits_to_state(bits)))
+        } else {
+            None
+        }
+    }
+}
+
+impl StateIndexer for BitStackStateIndexer {
+    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
+        let bus_count = graph.branches.len();
+        let team_count = teams.len();
+        let max_time = graph
+            .travel_times
+            .iter()
+            .max()
+            .expect("Cannot get max travel time");
+        BitStackStateIndexer::new(bus_count, team_count, *max_time)
+    }
+
+    fn get_state_count(&self) -> usize {
+        self.state_to_index.len()
+    }
+
+    fn index_state(&mut self, s: State) -> usize {
+        let bits = self.compressor.state_to_bits(s);
+        match self.state_to_index.get(&bits) {
+            Some(i) => *i,
+            None => {
+                let i = self.state_to_index.len();
+                self.stack.push((i, bits.clone()));
+                self.state_to_index.insert(bits, i);
+                i
+            }
+        }
+    }
+
+    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
+        let BitStackStateIndexer {
+            bus_count,
+            team_count,
+            state_to_index,
+            stack,
+            compressor,
+        } = self;
+        if !stack.is_empty() {
+            panic!("State stack is not empty in deconstruct");
+        }
+        drop(stack);
+
+        let state_count = state_to_index.len();
+        let mut bus_states = Array2::default((state_count, bus_count));
+        let mut team_states = Array2::default((state_count, team_count));
+        for (bits, i) in state_to_index.into_iter() {
+            let state = compressor.bits_to_state(bits);
+            for (x, y) in bus_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.buses.into_iter())
+            {
+                *x = y;
+            }
+            for (x, y) in team_states
+                .row_mut(i)
+                .iter_mut()
+                .zip(state.teams.into_iter())
+            {
+                *x = y;
+            }
+        }
+        (bus_states, team_states)
     }
 }
 
@@ -267,110 +437,6 @@ impl<T> Iterator for TrieIntoIterator<T> {
     }
 }
 
-/// Same as StackStateIndexer but inner representation of states is smaller.
-///
-/// A state indexer that uses stack to keep track of states to be explored:
-/// - New states are added to a stack.
-/// - HashMap is used as reverse index.
-/// - State `Array2`s are built by deconstructing the hashmap.
-pub struct BitStackStateIndexer {
-    bus_count: usize,
-    team_count: usize,
-    compressor: StateCompressor,
-    state_to_index: HashMap<BitVec, usize>,
-    stack: Vec<(usize, BitVec)>,
-}
-
-impl BitStackStateIndexer {
-    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
-        BitStackStateIndexer {
-            bus_count,
-            team_count,
-            compressor: StateCompressor::new(bus_count, team_count, max_time),
-            state_to_index: HashMap::new(),
-            stack: Vec::new(),
-        }
-    }
-}
-
-impl Iterator for BitStackStateIndexer {
-    type Item = (usize, State);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some((i, bits)) = self.stack.pop() {
-            Some((i, self.compressor.bits_to_state(bits)))
-        } else {
-            None
-        }
-    }
-}
-
-impl StateIndexer for BitStackStateIndexer {
-    fn new(graph: &Graph, teams: &[TeamState]) -> Self {
-        let bus_count = graph.branches.len();
-        let team_count = teams.len();
-        let max_time = graph
-            .travel_times
-            .iter()
-            .max()
-            .expect("Cannot get max travel time");
-        BitStackStateIndexer::new(bus_count, team_count, *max_time)
-    }
-
-    fn get_state_count(&self) -> usize {
-        self.state_to_index.len()
-    }
-
-    fn index_state(&mut self, s: State) -> usize {
-        let bits = self.compressor.state_to_bits(s);
-        match self.state_to_index.get(&bits) {
-            Some(i) => *i,
-            None => {
-                let i = self.state_to_index.len();
-                self.stack.push((i, bits.clone()));
-                self.state_to_index.insert(bits, i);
-                i
-            }
-        }
-    }
-
-    fn deconstruct(self) -> (Array2<BusState>, Array2<TeamState>) {
-        let BitStackStateIndexer {
-            bus_count,
-            team_count,
-            state_to_index,
-            stack,
-            compressor,
-        } = self;
-        if !stack.is_empty() {
-            panic!("State stack is not empty in deconstruct");
-        }
-        drop(stack);
-
-        let state_count = state_to_index.len();
-        let mut bus_states = Array2::default((state_count, bus_count));
-        let mut team_states = Array2::default((state_count, team_count));
-        for (bits, i) in state_to_index.into_iter() {
-            let state = compressor.bits_to_state(bits);
-            for (x, y) in bus_states
-                .row_mut(i)
-                .iter_mut()
-                .zip(state.buses.into_iter())
-            {
-                *x = y;
-            }
-            for (x, y) in team_states
-                .row_mut(i)
-                .iter_mut()
-                .zip(state.teams.into_iter())
-            {
-                *x = y;
-            }
-        }
-        (bus_states, team_states)
-    }
-}
-
 pub struct TrieStateIndexer {
     state_count: usize,
     bus_count: usize,
@@ -475,6 +541,7 @@ impl StateIndexer for TrieStateIndexer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::array;
     use BusState::*;
     use TeamState::*;
 
@@ -543,5 +610,34 @@ mod tests {
             trie.insert(&bits, 0, i);
             assert_eq!(trie.get(&bits, 0), Some(&i));
         }
+    }
+
+    #[test]
+    fn compress_states_test() {
+        let comp = StateCompressor::new(4, 3, 3);
+
+        let bus_states: Array2<BusState> = array![
+            [Unknown, Damaged, Damaged, Damaged],
+            [Unknown, Unknown, Unknown, Unknown],
+            [Damaged, Damaged, Damaged, Damaged],
+            [Unknown, Damaged, Energized, Damaged],
+            [Energized, Energized, Unknown, Energized],
+            [Energized, Energized, Energized, Energized],
+        ];
+
+        let team_states: Array2<TeamState> = array![
+            [OnBus(2), OnBus(0), EnRoute(2, 1, 3)],
+            [OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+            [EnRoute(2, 2, 3), OnBus(1), OnBus(1)],
+            [OnBus(0), OnBus(0), OnBus(0)],
+            [OnBus(0), EnRoute(0, 2, 1), EnRoute(2, 2, 3)],
+            [EnRoute(2, 2, 3), EnRoute(0, 2, 1), OnBus(1)],
+        ];
+
+        let bitvecs = comp.compress(bus_states.clone(), team_states.clone());
+        let (bus2, team2) = comp.decompress(bitvecs);
+
+        assert_eq!(bus2, bus_states);
+        assert_eq!(team2, team_states);
     }
 }
