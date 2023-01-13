@@ -1,5 +1,13 @@
+use std::time::Instant;
+
 use super::*;
 
+/// This module contains different implementations of structs related to field-teams
+/// restoration problem and solution.
+///
+/// Structs in this module usually have different Serialize and Deserialize implementations
+/// than their counterparts in other modules.
+/// Some have different internal representation to make the save file smaller.
 mod saveable {
     use crate::{Index, Time};
     use serde::{Deserialize, Serialize};
@@ -230,6 +238,7 @@ impl From<TeamSolution<RegularTransition>> for saveable::GenericTeamSolution {
     }
 }
 
+/// Struct that represents the contents of a save file.
 pub struct SaveFile {
     pub problem: TeamProblem,
     pub solution: GenericTeamSolution,
@@ -243,11 +252,14 @@ macro_rules! bincode_options {
     }};
 }
 
+/// Save the field-teams restoration problem and solution to the given file.
 pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
     problem: TeamProblem,
     solution: S,
     path: P,
 ) -> std::io::Result<()> {
+    let start_time = Instant::now();
+
     let file_content = saveable::SaveFile {
         problem: problem.into(),
         solution: solution.into(),
@@ -260,14 +272,24 @@ pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
         }
     };
 
-    let mut file = std::fs::File::create(path)?;
+    let mut file = std::fs::File::create(&path)?;
     file.write_all(&encoded[..])?;
+
+    log::info!(
+        "Saved {} bytes to {} in {:.4} seconds.",
+        encoded.len(),
+        path.as_ref().to_string_lossy().to_string(),
+        start_time.elapsed().as_secs_f64()
+    );
 
     Ok(())
 }
 
+/// Load the field-teams restoration problem and solution from the given file.
 pub fn load_solution<P: AsRef<Path>>(path: P) -> std::io::Result<SaveFile> {
-    let mut file = std::fs::File::open(path)?;
+    let start_time = Instant::now();
+
+    let mut file = std::fs::File::open(&path)?;
     let mut encoded: Vec<u8> = Vec::new();
     file.read_to_end(&mut encoded)?;
 
@@ -280,8 +302,17 @@ pub fn load_solution<P: AsRef<Path>>(path: P) -> std::io::Result<SaveFile> {
 
     let saveable::SaveFile { problem, solution } = decoded;
 
-    Ok(SaveFile {
+    let output = SaveFile {
         problem: problem.into(),
         solution: solution.into(),
-    })
+    };
+
+    log::info!(
+        "Loaded {} bytes from {} in {:.4} seconds.",
+        encoded.len(),
+        path.as_ref().to_string_lossy().to_string(),
+        start_time.elapsed().as_secs_f64()
+    );
+
+    Ok(output)
 }
