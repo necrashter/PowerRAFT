@@ -28,3 +28,7 @@ Note that `ArrayStateIndexer` couldn't run the experiment due to horrible comple
 ![Memory Usage](./mem.mem.png)
 
 ![Execution Time](./mem.exec.png)
+
+In `mem2.json`, I benchmarked the best 2 implementations again: `BitStackStateIndexer` (`tight stack`) and `TrieStateIndexer` (`trie8`).
+There were no significant difference between their runtime performance and memory usage.
+Note that this benchmark was performed without `nobuild` unlike the previous one, after Trie iterator was implemented (commit `d14f85e36fd9aabefed0250193aaccea181589c5`).

@@ -1,0 +1,40 @@
+[
+  {
+    "name": "Memory Test",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 92.543242788,
+        "horizon": 59,
+        "max_memory": 5926153955,
+        "states": 12577773,
+        "total_time": 165.5638631,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/001.bin"
+  },
+  {
+    "name": "Memory Test",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 91.550799024,
+        "horizon": 59,
+        "max_memory": 5949514302,
+        "states": 12577773,
+        "total_time": 166.639984905,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/002.bin"
+  }
+]
