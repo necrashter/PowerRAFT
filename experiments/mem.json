@@ -1,0 +1,28 @@
+{
+  "name": "Memory/Storage Experiment",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "Memory Test",
+          "graph": "../graphs/midsize-17/default.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 16 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.5
+          }
+        }
+      ],
+      "optimizations": [
+        {
+          "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+          "actions": "FilterEnergizedOnWay<PermutationalActions>",
+          "transitions": "TimedActionApplier<TimeUntilEnergization>"
+        }
+      ]
+    }
+  ]
+}

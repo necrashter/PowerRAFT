@@ -1,0 +1,220 @@
+[
+  {
+    "name": "Naive",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 89.427457943,
+        "horizon": 59,
+        "max_memory": 8140460714,
+        "states": 12577773,
+        "total_time": 180.735750096,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "Stack HashMap",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<StackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 87.0225695,
+        "horizon": 59,
+        "max_memory": 6945141431,
+        "states": 12577773,
+        "total_time": 173.373921294,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "Stack BTreeMap",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<StackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 133.865757075,
+        "horizon": 59,
+        "max_memory": 7111385616,
+        "states": 12577773,
+        "total_time": 219.308607416,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "Stack hashbrown",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<StackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 78.247415935,
+        "horizon": 59,
+        "max_memory": 6945141521,
+        "states": 12577773,
+        "total_time": 163.234477871,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "Naive hashbrown",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 80.19443292,
+        "horizon": 59,
+        "max_memory": 8140460729,
+        "states": 12577773,
+        "total_time": 171.483827228,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "Queue hashbrown",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<StackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 81.037920576,
+        "horizon": 59,
+        "max_memory": 7251268278,
+        "states": 12577773,
+        "total_time": 171.625549665,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "minify 2^15",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<MinifyingStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 166.457160446,
+        "horizon": 59,
+        "max_memory": 7978651923,
+        "states": 12577773,
+        "total_time": 254.511912261,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "minify 2^20",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<MinifyingStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "log": "Minify removed 4017827 states in total",
+      "success": {
+        "generation_time": 90.175396648,
+        "horizon": 59,
+        "max_memory": 7978651923,
+        "states": 12577773,
+        "total_time": 179.079479553,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "tight stack",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 92.797860007,
+        "horizon": 59,
+        "max_memory": 5926152778,
+        "states": 12577773,
+        "total_time": 164.998982216,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "tight stack nobuild",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 92.94864045,
+        "horizon": 59,
+        "max_memory": 5926152788,
+        "states": 12577773,
+        "total_time": 165.55242356,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "trie8 nobuild",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 82.206355325,
+        "horizon": 59,
+        "max_memory": 5949509847,
+        "states": 12577773,
+        "total_time": 156.657907463,
+        "value": 665.257214397192
+      }
+    }
+  },
+  {
+    "name": "trie16 nobuild",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 128.952526117,
+        "horizon": 59,
+        "max_memory": 5930189321,
+        "states": 12577773,
+        "total_time": 224.579083683,
+        "value": 665.257214397192
+      }
+    },
+    "INFO": "Max stack: 641; Stack reserved: 1024"
+  }
+]
