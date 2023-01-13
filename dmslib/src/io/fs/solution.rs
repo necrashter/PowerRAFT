@@ -9,7 +9,8 @@ use super::*;
 /// than their counterparts in other modules.
 /// Some have different internal representation to make the save file smaller.
 mod saveable {
-    use crate::{Index, Time};
+    use crate::{teams::state::StateCompressor, Index, Time};
+    use bitvec::prelude::*;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize)]
@@ -35,8 +36,8 @@ mod saveable {
         pub team_nodes: Vec<f64>,
         pub travel_times: Vec<Time>,
 
-        pub states: Vec<BusState>,
-        pub teams: Vec<TeamState>,
+        pub compressor: StateCompressor,
+        pub states: Vec<BitVec>,
         pub transitions: Vec<Vec<Vec<T>>>,
 
         pub values: Vec<Vec<f64>>,
@@ -59,15 +60,30 @@ mod saveable {
                 policy,
                 horizon,
             } = $a;
+
+            let team_node_count = team_nodes.shape()[0];
+            let team_nodes = team_nodes.into_raw_vec();
+            let travel_times = travel_times.into_raw_vec();
+
+            let bus_count = states.shape()[1];
+            let team_count = teams.shape()[1];
+            let max_time = *travel_times
+                .iter()
+                .max()
+                .expect("Cannot get max travel time");
+            let compressor = StateCompressor::new(bus_count, team_count, max_time);
+
+            let states = compressor.compress(states, teams);
+
             TeamSolution {
                 total_time,
                 generation_time,
                 max_memory,
-                team_node_count: team_nodes.shape()[0],
-                team_nodes: team_nodes.into_raw_vec(),
-                travel_times: travel_times.into_raw_vec(),
-                states: unsafe { std::mem::transmute(states.into_raw_vec()) },
-                teams: unsafe { std::mem::transmute(teams.into_raw_vec()) },
+                team_node_count,
+                team_nodes,
+                travel_times,
+                compressor,
+                states,
                 transitions: unsafe { std::mem::transmute(transitions) },
                 values,
                 policy,
@@ -97,16 +113,16 @@ mod saveable {
                 team_node_count,
                 team_nodes,
                 travel_times,
+                compressor,
                 states,
-                teams,
                 transitions,
                 values,
                 policy,
                 horizon,
             } = $a;
-            let state_count = transitions.len();
-            let bus_count = states.len() / state_count;
-            let team_count = teams.len() / state_count;
+
+            let (states, teams) = compressor.decompress(states);
+
             super::TeamSolution {
                 total_time,
                 generation_time,
@@ -117,16 +133,8 @@ mod saveable {
                 travel_times: ndarray::Array::from_vec(travel_times)
                     .into_shape((team_node_count, team_node_count))
                     .unwrap(),
-                states: ndarray::Array::from_vec(unsafe {
-                    std::mem::transmute::<Vec<BusState>, Vec<super::BusState>>(states)
-                })
-                .into_shape((state_count, bus_count))
-                .unwrap(),
-                teams: ndarray::Array::from_vec(unsafe {
-                    std::mem::transmute::<Vec<TeamState>, Vec<super::TeamState>>(teams)
-                })
-                .into_shape((state_count, team_count))
-                .unwrap(),
+                states,
+                teams,
                 transitions: unsafe { std::mem::transmute(transitions) },
                 values,
                 policy,

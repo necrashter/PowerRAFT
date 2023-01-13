@@ -1,6 +1,7 @@
 use super::*;
 use bitvec::prelude::*;
 use num_traits::FromPrimitive;
+use serde::Deserialize;
 
 type TrieKey = u8;
 const TRIE_KEY_BITS: usize = 8;
@@ -30,9 +31,10 @@ fn push_key_bits(bv: &mut BitVec, value: TrieKey) {
 }
 
 /// Struct for compressing the states using BitVec.
+#[derive(Serialize, Deserialize)]
 pub struct StateCompressor {
-    bus_count: usize,
-    team_count: usize,
+    pub bus_count: usize,
+    pub team_count: usize,
     bus_bits: usize,
     time_bits: usize,
 }
