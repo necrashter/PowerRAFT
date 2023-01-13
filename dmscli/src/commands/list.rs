@@ -114,6 +114,7 @@ impl TravelTimes {
     pub fn run(self) {
         let mut stderr = StandardStream::stderr(ColorChoice::Auto);
         let TravelTimes { path } = self;
+
         let problems = match read_problems_from_file(path) {
             Ok(x) => x,
             Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),
@@ -128,6 +129,7 @@ impl Distances {
     pub fn run(self) {
         let mut stderr = StandardStream::stderr(ColorChoice::Auto);
         let Distances { path, precision } = self;
+
         let problems = match read_problems_from_file(path) {
             Ok(x) => x,
             Err(err) => fatal_error!(1, "Cannot read team problem(s): {}", err),

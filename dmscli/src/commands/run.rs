@@ -1,3 +1,8 @@
+use dmslib::{
+    io::Experiment,
+    teams::{Config, Problem},
+};
+
 /// Commands related to running experiments and solving problems.
 use super::*;
 
@@ -110,10 +115,137 @@ fn print_benchmark_result(
     Ok(())
 }
 
+/// Run a single task in experiment.
+fn run_experiment_task(
+    stderr: &mut StandardStream,
+    team_problem: &TeamProblem,
+    optimization: &OptimizationInfo,
+    problem: &Problem,
+    config: &Config,
+    solutions_dir: Option<&PathBuf>,
+    current: usize,
+) -> serde_json::Value {
+    writeln!(stderr).unwrap();
+    print_optimizations(stderr, optimization).unwrap();
+
+    let solution = solve(problem, config, optimization);
+    let result = get_optimization_result(&solution, optimization.clone());
+
+    print_benchmark_result(stderr, &result.result).unwrap();
+    writeln!(stderr).unwrap();
+
+    let mut result = match serde_json::to_value(result) {
+        Ok(s) => s,
+        Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
+    };
+    let result_obj = result.as_object_mut().unwrap();
+
+    if let Some(name) = &team_problem.name {
+        result_obj.insert("name".to_string(), serde_json::Value::String(name.clone()));
+    }
+
+    // Save solution
+    if let Ok(solution) = solution {
+        if let Some(solutions_dir) = solutions_dir {
+            let mut path = solutions_dir.clone();
+            path.push(format!("{:03}.bin", current));
+            let err = dmslib::io::fs::save_solution(team_problem.clone(), solution, &path);
+            if let Err(e) = err {
+                log::error!("Failed to save solution {}: {}", current, e);
+            } else {
+                result_obj.insert(
+                    "solution".to_string(),
+                    serde_json::Value::String(path.to_string_lossy().to_string()),
+                );
+            }
+        }
+    }
+
+    result
+}
+
+/// Run all tasks in experiment.
+fn run_experiment(
+    experiment: Experiment,
+    solutions_dir: Option<&PathBuf>,
+) -> Vec<serde_json::Value> {
+    let mut stderr = StandardStream::stderr(ColorChoice::Auto);
+
+    stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+    write!(&mut stderr, "Experiment Name:  ").unwrap();
+    stderr.reset().unwrap();
+    writeln!(
+        &mut stderr,
+        "{}\n",
+        experiment.name.as_ref().map(String::as_ref).unwrap_or("-")
+    )
+    .unwrap();
+
+    let mut current: usize = 1;
+    let total_benchmarks: usize = experiment
+        .tasks
+        .iter()
+        .map(|task| task.problems.len() * task.optimizations.len())
+        .sum();
+
+    let mut results: Vec<serde_json::Value> = Vec::new();
+
+    for task in experiment.tasks.into_iter() {
+        let ExperimentTask {
+            problems,
+            optimizations,
+        } = task;
+        for mut problem in problems {
+            let team_problem = problem.clone();
+
+            let name = problem.name.take();
+
+            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
+            write!(&mut stderr, "Problem Name:     ").unwrap();
+            stderr.reset().unwrap();
+            writeln!(
+                &mut stderr,
+                "{}",
+                name.as_ref().map(String::as_ref).unwrap_or("-")
+            )
+            .unwrap();
+
+            let (problem, config) = match problem.prepare() {
+                Ok(x) => x,
+                Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+            };
+
+            for optimization in &optimizations {
+                stderr
+                    .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
+                    .unwrap();
+                writeln!(&mut stderr, "Solving {}/{}...", current, total_benchmarks).unwrap();
+                stderr.reset().unwrap();
+                stderr.flush().unwrap();
+
+                results.push(run_experiment_task(
+                    &mut stderr,
+                    &team_problem,
+                    optimization,
+                    &problem,
+                    &config,
+                    solutions_dir,
+                    current,
+                ));
+
+                current += 1;
+            }
+        }
+    }
+
+    results
+}
+
 impl Run {
     pub fn run(self) {
         let mut stderr = StandardStream::stderr(ColorChoice::Auto);
         let Run { path } = self;
+
         let mut results_path = match std::env::current_dir() {
             Ok(p) => p,
             Err(e) => fatal_error!(1, "Cannot open current working directory: {}", e),
@@ -144,106 +276,7 @@ impl Run {
             Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
         };
 
-        stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-        write!(&mut stderr, "Experiment Name:  ").unwrap();
-        stderr.reset().unwrap();
-        writeln!(
-            &mut stderr,
-            "{}\n",
-            experiment.name.as_ref().map(String::as_ref).unwrap_or("-")
-        )
-        .unwrap();
-
-        let mut current: usize = 1;
-        let total_benchmarks: usize = experiment
-            .tasks
-            .iter()
-            .map(|task| task.problems.len() * task.optimizations.len())
-            .sum();
-
-        let mut results: Vec<serde_json::Value> = Vec::new();
-
-        for task in experiment.tasks.into_iter() {
-            let ExperimentTask {
-                problems,
-                optimizations,
-            } = task;
-            for mut problem in problems {
-                let team_problem = problem.clone();
-
-                let name = problem.name.take();
-
-                stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-                write!(&mut stderr, "Problem Name:     ").unwrap();
-                stderr.reset().unwrap();
-                writeln!(
-                    &mut stderr,
-                    "{}",
-                    name.as_ref().map(String::as_ref).unwrap_or("-")
-                )
-                .unwrap();
-
-                let (problem, config) = match problem.prepare() {
-                    Ok(x) => x,
-                    Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
-                };
-
-                for optimization in &optimizations {
-                    writeln!(&mut stderr).unwrap();
-                    print_optimizations(&mut stderr, optimization).unwrap();
-
-                    stderr
-                        .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-                        .unwrap();
-                    write!(&mut stderr, "Solving {}/{}...\r", current, total_benchmarks).unwrap();
-                    stderr.reset().unwrap();
-                    stderr.flush().unwrap();
-
-                    let solution = solve(&problem, &config, optimization);
-                    let result = get_optimization_result(&solution, optimization.clone());
-
-                    print_benchmark_result(&mut stderr, &result.result).unwrap();
-                    writeln!(&mut stderr).unwrap();
-
-                    let mut result = match serde_json::to_value(result) {
-                        Ok(s) => s,
-                        Err(e) => fatal_error!(1, "Error while serializing results: {}", e),
-                    };
-                    let result_obj = result.as_object_mut().unwrap();
-
-                    if let Some(name) = name.clone() {
-                        result_obj.insert("name".to_string(), serde_json::Value::String(name));
-                    }
-
-                    // Save solution
-                    if let Ok(solution) = solution {
-                        let solution_path = {
-                            let mut path = solutions_dir.clone();
-                            path.push(format!("{:03}.bin", current));
-                            path
-                        };
-                        let err = dmslib::io::fs::save_solution(
-                            team_problem.clone(),
-                            solution,
-                            &solution_path,
-                        );
-                        if let Err(e) = err {
-                            log::error!("Failed to save solution {}: {}", current, e);
-                        } else {
-                            result_obj.insert(
-                                "solution".to_string(),
-                                serde_json::Value::String(
-                                    solution_path.to_string_lossy().to_string(),
-                                ),
-                            );
-                        }
-                    }
-
-                    results.push(result);
-                    current += 1;
-                }
-            }
-        }
+        let results = run_experiment(experiment, Some(&solutions_dir));
 
         let serialized = match serde_json::to_string_pretty(&results) {
             Ok(s) => s,
@@ -275,6 +308,7 @@ impl Solve {
             transition,
             json,
         } = self;
+
         let (name, problem, config) = read_and_parse_team_problem(path);
 
         stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
