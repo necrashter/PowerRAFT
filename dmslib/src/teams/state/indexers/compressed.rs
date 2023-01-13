@@ -90,11 +90,13 @@ impl StateCompressor {
         self.slice_to_bits(&buses, &teams)
     }
 
-    /// Obtain a single state from its BitVec representation.
-    pub fn bits_to_state(&self, bits: BitVec) -> State {
+    /// Obtain a single state from its bits representation in the given BitVec at the given offset.
+    ///
+    /// Returns the state and the new offset (given offset + size) in a pair.
+    pub fn offbits_to_state(&self, bits: &BitVec, offset: usize) -> (State, usize) {
         let mut buses: Vec<BusState> = Vec::new();
         let mut teams: Vec<TeamState> = Vec::new();
-        let mut index: usize = 0;
+        let mut index: usize = offset;
         for _ in 0..self.bus_count {
             let bus = bits[index..(index + 2)].load::<usize>();
             buses.push(FromPrimitive::from_usize(bus).unwrap());
@@ -117,11 +119,17 @@ impl StateCompressor {
                 teams.push(TeamState::OnBus(i));
             }
         }
-        State { buses, teams }
+        (State { buses, teams }, index)
+    }
+
+    /// Obtain a single state from its BitVec representation.
+    pub fn bits_to_state(&self, bits: BitVec) -> State {
+        let (state, _) = self.offbits_to_state(&bits, 0);
+        state
     }
 
     /// Convert states given in Array2 representation to bitvecs.
-    pub fn compress(&self, buses: Array2<BusState>, teams: Array2<TeamState>) -> Vec<BitVec> {
+    pub fn compress(&self, buses: Array2<BusState>, teams: Array2<TeamState>) -> BitVec {
         assert_eq!(buses.shape()[1], self.bus_count);
         assert_eq!(teams.shape()[1], self.team_count);
         assert_eq!(buses.shape()[0], teams.shape()[0]);
@@ -130,34 +138,38 @@ impl StateCompressor {
         let buses = buses.into_raw_vec();
         let teams = teams.into_raw_vec();
 
-        let mut bitvecs: Vec<BitVec> = Vec::new();
-        bitvecs.reserve_exact(state_count);
+        let mut bitvec = BitVec::new();
 
         let mut bus_i: usize = 0;
         let mut team_i: usize = 0;
 
         for _ in 0..state_count {
-            let bitvec = self.slice_to_bits(
+            let state_bitvec = self.slice_to_bits(
                 &buses[bus_i..(bus_i + self.bus_count)],
                 &teams[team_i..(team_i + self.team_count)],
             );
-            bitvecs.push(bitvec);
+            bitvec.extend_from_bitslice(&state_bitvec);
             bus_i += self.bus_count;
             team_i += self.team_count;
         }
 
-        bitvecs
+        bitvec
     }
 
     /// Convert given bitvec representation of states to Array2 representation.
-    pub fn decompress(&self, bitvecs: Vec<BitVec>) -> (Array2<BusState>, Array2<TeamState>) {
-        let state_count = bitvecs.len();
-
+    pub fn decompress(
+        &self,
+        bitvec: BitVec,
+        state_count: usize,
+    ) -> (Array2<BusState>, Array2<TeamState>) {
         let mut bus_states: Array2<BusState> = Array2::default((state_count, self.bus_count));
         let mut team_states: Array2<TeamState> = Array2::default((state_count, self.team_count));
 
-        for (i, bitvec) in bitvecs.into_iter().enumerate() {
-            let state = self.bits_to_state(bitvec);
+        let mut offset: usize = 0;
+
+        for i in 0..state_count {
+            let (state, new_offset) = self.offbits_to_state(&bitvec, offset);
+            offset = new_offset;
 
             for (x, y) in bus_states
                 .row_mut(i)
@@ -637,7 +649,7 @@ mod tests {
         ];
 
         let bitvecs = comp.compress(bus_states.clone(), team_states.clone());
-        let (bus2, team2) = comp.decompress(bitvecs);
+        let (bus2, team2) = comp.decompress(bitvecs, bus_states.shape()[0]);
 
         assert_eq!(bus2, bus_states);
         assert_eq!(team2, team_states);

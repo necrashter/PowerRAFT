@@ -37,7 +37,8 @@ mod saveable {
         pub travel_times: Vec<Time>,
 
         pub compressor: StateCompressor,
-        pub states: Vec<BitVec>,
+        pub state_count: usize,
+        pub states: BitVec,
         pub transitions: Vec<Vec<Vec<T>>>,
 
         pub values: Vec<Vec<f64>>,
@@ -83,6 +84,7 @@ mod saveable {
                 team_nodes,
                 travel_times,
                 compressor,
+                state_count: transitions.len(),
                 states,
                 transitions: unsafe { std::mem::transmute(transitions) },
                 values,
@@ -114,6 +116,7 @@ mod saveable {
                 team_nodes,
                 travel_times,
                 compressor,
+                state_count,
                 states,
                 transitions,
                 values,
@@ -121,7 +124,7 @@ mod saveable {
                 horizon,
             } = $a;
 
-            let (states, teams) = compressor.decompress(states);
+            let (states, teams) = compressor.decompress(states, state_count);
 
             super::TeamSolution {
                 total_time,
