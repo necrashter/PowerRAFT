@@ -248,6 +248,7 @@ impl TeamProblem {
 
         let mut locations: Vec<LatLng> =
             graph.nodes.iter().map(|node| node.latlng.clone()).collect();
+
         let pfs: Array1<f64> = if let Some(pfo) = pfo {
             Array1::from(vec![pfo; graph.nodes.len()])
         } else {
@@ -489,6 +490,14 @@ impl<T: Transition> TeamSolution<T> {
             states: self.transitions.len(),
             value: teams::get_min_value(&self.values),
             horizon: self.horizon,
+        }
+    }
+
+    /// Get the state at given index.
+    pub fn get_state(&self, index: usize) -> teams::state::State {
+        teams::state::State {
+            buses: self.states.row(index).to_vec(),
+            teams: self.teams.row(index).to_vec(),
         }
     }
 }

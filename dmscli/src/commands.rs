@@ -6,6 +6,9 @@ pub use run::*;
 mod list;
 pub use list::*;
 
+mod simulation;
+pub use simulation::*;
+
 /// All CLI commands available in this binary.
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
@@ -27,6 +30,9 @@ pub enum Command {
 
     /// Print the list of all possible optimizations.
     ListAllOpt,
+
+    /// Load the solution and exit (check integrity).
+    Load(Load),
 }
 
 #[derive(clap::Args, Debug)]
@@ -68,6 +74,12 @@ pub struct Distances {
     precision: usize,
 }
 
+#[derive(clap::Args, Debug)]
+pub struct Load {
+    /// Path to the binary file containing the solution.
+    path: PathBuf,
+}
+
 impl Command {
     pub fn run(self) {
         match self {
@@ -76,6 +88,7 @@ impl Command {
             Command::TravelTimes(args) => args.run(),
             Command::Distances(args) => args.run(),
             Command::ListAllOpt => list_all_opt(),
+            Command::Load(args) => args.run(),
         }
     }
 }
