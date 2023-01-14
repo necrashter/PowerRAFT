@@ -1,8 +1,8 @@
-# Memory Benchmarks
+# Benchmarks
 
-Results of the benchmarks that measure the memory usage of the program.
+Results of the benchmarks that measure the memory and storage usage of the program.
 
-## State Indexers
+## State Indexers Memory Usage
 
 Benchmarking the memory usage of different state indexer implementations.
 
@@ -32,3 +32,20 @@ Note that `ArrayStateIndexer` couldn't run the experiment due to horrible comple
 In `mem2.json`, I benchmarked the best 2 implementations again: `BitStackStateIndexer` (`tight stack`) and `TrieStateIndexer` (`trie8`).
 There were no significant difference between their runtime performance and memory usage.
 Note that this benchmark was performed without `nobuild` unlike the previous one, after Trie iterator was implemented (commit `d14f85e36fd9aabefed0250193aaccea181589c5`).
+
+
+## Size of Save File
+
+In [storage.json](./storage.json), size of the save file is measured. `bincode` is for serialization.
+
+Implementations:
+- `vec fixint`: Using regular `Vec<BusState>` and `Vec<TeamState>` to store. Fixed integer encoding in `bincode` settings.
+- `vec varint`: Varying integer encoding in `bincode` settings.
+- `comp varint`: Using `Vec<BitVec>` to save states (commit 62ff5b097e463c79c6d9905fef6a51ed25e82a90).
+- `comp2 varint`: Using `BitVec` to save states (commit 66d8ccf5076031bf24f05676d51cf97c578b0b93).
+
+Transition recomputation is in `dmscli/src/commands/simulation.rs` in commit 41447a7dbc726a57c8454bdec39abfcf4b374ded.
+
+I think the compression is not worth the decrease in performance.
+Might return to this if storage becomes an issue.
+Can also implement a separate subcommand for compression.

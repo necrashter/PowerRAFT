@@ -1,0 +1,90 @@
+[
+  {
+    "name": "vec fixint",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 90.876371209,
+        "horizon": 59,
+        "max_memory": 5949510832,
+        "states": 12577773,
+        "total_time": 164.531150325,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/001.bin",
+    "size": 5165216133,
+    "saveTime": 18.6594
+  },
+  {
+    "name": "vec varint",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 89.66441368,
+        "horizon": 59,
+        "max_memory": 5926153755,
+        "states": 12577773,
+        "total_time": 161.282247564,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/001.bin",
+    "size": 2668414778,
+    "saveTime": 9.7858,
+    "loadTime": 12.5073,
+    "recomputeCostP": 19.7598
+  },
+  {
+    "name": "comp varint",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 90.976020806,
+        "horizon": 59,
+        "max_memory": 5949510832,
+        "states": 12577773,
+        "total_time": 164.977917853,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/001.bin",
+    "size": 2797516397,
+    "saveTime": 12.4747
+  },
+  {
+    "name": "comp2 varint",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<TrieStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generation_time": 87.226587025,
+        "horizon": 59,
+        "max_memory": 5949510832,
+        "states": 12577773,
+        "total_time": 161.03774611,
+        "value": 665.257214397192
+      }
+    },
+    "solution": "/home/ilker/cps/rust/dmscli/results/mem.d/001.bin",
+    "size": 2476092697,
+    "saveTime": 10.6101,
+    "loadTime": 15.6288,
+    "recomputeCostP": 19.9498
+  }
+]
