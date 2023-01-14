@@ -74,6 +74,21 @@ impl State {
             .count() as f64
     }
 
+    /// Compute the transition probability from this state to another based on given
+    /// failure probabilities.
+    pub fn get_probability(&self, other: &State, pfs: &[f64]) -> f64 {
+        let mut p: f64 = 1.0;
+        for (i, (&a, &b)) in self.buses.iter().zip(other.buses.iter()).enumerate() {
+            if a != b {
+                debug_assert_eq!(a, BusState::Unknown);
+                debug_assert_ne!(b, BusState::Unknown);
+                let pf = pfs[i];
+                p *= if b == BusState::Damaged { pf } else { 1.0 - pf };
+            }
+        }
+        p
+    }
+
     pub fn is_terminal(&self, graph: &Graph) -> bool {
         !self.buses.iter().enumerate().any(|(i, bus)| {
             if *bus != BusState::Unknown {
