@@ -12,8 +12,18 @@ pub trait Transition: Serialize {
     /// Generate a transition without cost with probability.
     /// In teams, this is used for the case when a bus is energizable immediately at the start.
     fn costless_transition(index: usize, p: f64) -> Self;
+
     /// Set the index of successor state.
     fn set_successor(&mut self, index: usize);
+    /// Get the index of successor state.
+    fn get_successor(&self) -> usize;
+    /// Get the probability of this transition.
+    fn get_probability(&self) -> f64;
+    /// Get the probability of this transition.
+    fn get_cost(&self) -> f64;
+    /// Get time required for this transition.
+    fn get_time(&self) -> usize;
+
     /// Determine the optimization horizon from transition space.
     fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
     where
@@ -61,6 +71,26 @@ impl Transition for RegularTransition {
     #[inline]
     fn set_successor(&mut self, index: usize) {
         self.successor = index;
+    }
+
+    #[inline]
+    fn get_successor(&self) -> usize {
+        self.successor
+    }
+
+    #[inline]
+    fn get_probability(&self) -> f64 {
+        self.p
+    }
+
+    #[inline]
+    fn get_cost(&self) -> f64 {
+        self.cost
+    }
+
+    #[inline]
+    fn get_time(&self) -> usize {
+        1
     }
 
     fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
@@ -187,6 +217,26 @@ impl Transition for TimedTransition {
     #[inline]
     fn set_successor(&mut self, index: usize) {
         self.successor = index;
+    }
+
+    #[inline]
+    fn get_successor(&self) -> usize {
+        self.successor
+    }
+
+    #[inline]
+    fn get_probability(&self) -> f64 {
+        self.p
+    }
+
+    #[inline]
+    fn get_cost(&self) -> f64 {
+        self.cost
+    }
+
+    #[inline]
+    fn get_time(&self) -> usize {
+        self.time
     }
 
     fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
