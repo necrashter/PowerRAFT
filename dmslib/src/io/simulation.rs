@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::teams::state::State;
 
 use super::*;
@@ -13,11 +15,17 @@ pub struct RestorationSimulationResult {
     pub energization_p: f64,
     /// For all buses, average time until energization (in all paths that energize it).
     pub avg_time: f64,
+    /// Number of transitions simulated.
+    pub simulated_transitions: usize,
+    /// Execution time in seconds.
+    pub runtime: f64,
 }
 
 impl<T: Transition> TeamSolution<T> {
     /// Simulate a all possible restoration processes starting from the inital state.
     pub fn simulate_all(&self) -> RestorationSimulationResult {
+        let start_time = Instant::now();
+
         let bus_count: usize = self.states.shape()[1];
 
         let mut result = RestorationSimulationResult {
@@ -25,6 +33,8 @@ impl<T: Transition> TeamSolution<T> {
             bus_avg_time: vec![0.0; bus_count],
             energization_p: 0.0,
             avg_time: 0.0,
+            simulated_transitions: 0,
+            runtime: 0.0,
         };
 
         fn visit<T: Transition>(
@@ -64,6 +74,7 @@ impl<T: Transition> TeamSolution<T> {
                 }
 
                 visit(successor_state, successor_index, p, time, solution, result);
+                result.simulated_transitions += 1;
             }
         }
 
@@ -71,6 +82,14 @@ impl<T: Transition> TeamSolution<T> {
 
         result.energization_p = result.bus_energization_p.iter().sum::<f64>() / (bus_count as f64);
         result.avg_time = result.bus_avg_time.iter().sum::<f64>() / (bus_count as f64);
+
+        result.runtime = start_time.elapsed().as_secs_f64();
+
+        log::info!(
+            "Simulated {} transitions in {:.4} seconds",
+            result.simulated_transitions,
+            result.runtime,
+        );
 
         result
     }
