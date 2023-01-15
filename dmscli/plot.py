@@ -139,8 +139,8 @@ def plot_time(benchmark_data, options={}):
         **options,
         "title": "Execution Time",
         "fields": [
-            [b["total_time"] if "total_time" in b else 0 for b in benchmark_data],
-            [b["generation_time"] if "generation_time" in b else 0 for b in benchmark_data],
+            [b["totalTime"] if "totalTime" in b else 0 for b in benchmark_data],
+            [b["generationTime"] if "generationTime" in b else 0 for b in benchmark_data],
         ],
         "xlabel": "Time (seconds)",
         "side_field": "states",
@@ -153,7 +153,7 @@ def plot_memory(benchmark_data, options={}):
         **options,
         "title": "Max Memory Usage",
         "fields": [
-            [b["max_memory"] / 1024 / 1024 if "max_memory" in b else 0 for b in benchmark_data],
+            [b["maxMemory"] / 1024 / 1024 if "maxMemory" in b else 0 for b in benchmark_data],
         ],
         "xlabel": "Maximum Memory Usage (MB)",
         "side_field": "states",

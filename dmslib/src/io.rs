@@ -573,6 +573,7 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
 
 /// Simplified solution struct for storing benchmark-related data.
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct BenchmarkResult {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,
