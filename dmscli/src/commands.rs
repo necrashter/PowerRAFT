@@ -39,6 +39,12 @@ pub enum Command {
 pub struct Run {
     /// Path to the experiment JSON file.
     path: PathBuf,
+    /// Don't save solutions alongside results JSON file.
+    #[arg(long, default_value_t = false)]
+    no_save: bool,
+    /// Don't simulate the restoration process.
+    #[arg(long, default_value_t = false)]
+    no_sim: bool,
 }
 
 #[derive(clap::Args, Debug)]

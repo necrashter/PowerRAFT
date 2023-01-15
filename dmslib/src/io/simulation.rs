@@ -5,7 +5,8 @@ use crate::teams::state::State;
 use super::*;
 
 /// Result of taking all possible paths to terminal states in an MDP.
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RestorationSimulationResult {
     /// For each bus, energization probability.
     pub bus_energization_p: Vec<f64>,
@@ -92,5 +93,15 @@ impl<T: Transition> TeamSolution<T> {
         );
 
         result
+    }
+}
+
+impl GenericTeamSolution {
+    /// Simulate a all possible restoration processes starting from the inital state.
+    pub fn simulate_all(&self) -> RestorationSimulationResult {
+        match self {
+            GenericTeamSolution::Timed(solution) => solution.simulate_all(),
+            GenericTeamSolution::Regular(solution) => solution.simulate_all(),
+        }
     }
 }

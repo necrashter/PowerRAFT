@@ -46,6 +46,10 @@ impl Load {
             }
         }
 
-        log::info!("Recomputed {} transitions in {:.4} seconds", transition_count, start_time.elapsed().as_secs_f64());
+        log::info!(
+            "Recomputed {} transitions in {:.4} seconds",
+            transition_count,
+            start_time.elapsed().as_secs_f64()
+        );
     }
 }

@@ -123,6 +123,7 @@ fn run_experiment_task(
     problem: &Problem,
     config: &Config,
     solutions_dir: Option<&PathBuf>,
+    simulate: bool,
     current: usize,
 ) -> serde_json::Value {
     writeln!(stderr).unwrap();
@@ -144,8 +145,16 @@ fn run_experiment_task(
         result_obj.insert("name".to_string(), serde_json::Value::String(name.clone()));
     }
 
-    // Save solution
     if let Ok(solution) = solution {
+        if simulate {
+            let simulation_result = solution.simulate_all();
+            result_obj.insert(
+                "simulation".to_string(),
+                serde_json::to_value(simulation_result)
+                    .expect("Cannot serialize simulation result"),
+            );
+        }
+        // Save solution
         if let Some(solutions_dir) = solutions_dir {
             let mut path = solutions_dir.clone();
             path.push(format!("{:03}.bin", current));
@@ -167,7 +176,8 @@ fn run_experiment_task(
 /// Run all tasks in experiment.
 fn run_experiment(
     experiment: Experiment,
-    solutions_dir: Option<&PathBuf>,
+    solutions_dir: Option<PathBuf>,
+    simulate: bool,
 ) -> Vec<serde_json::Value> {
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
 
@@ -229,7 +239,8 @@ fn run_experiment(
                     optimization,
                     &problem,
                     &config,
-                    solutions_dir,
+                    solutions_dir.as_ref(),
+                    simulate,
                     current,
                 ));
 
@@ -244,7 +255,11 @@ fn run_experiment(
 impl Run {
     pub fn run(self) {
         let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-        let Run { path } = self;
+        let Run {
+            path,
+            no_save,
+            no_sim,
+        } = self;
 
         let mut results_path = match std::env::current_dir() {
             Ok(p) => p,
@@ -266,17 +281,22 @@ impl Run {
         }
         let results_path = results_path;
 
-        let solutions_dir = results_path.with_extension("d");
-        if let Err(e) = std::fs::create_dir_all(&solutions_dir) {
-            fatal_error!(1, "Cannot create solutions directory: {e}");
-        }
+        let solutions_dir = if no_save {
+            None
+        } else {
+            let dir = results_path.with_extension("d");
+            if let Err(e) = std::fs::create_dir_all(&dir) {
+                fatal_error!(1, "Cannot create solutions directory: {e}");
+            }
+            Some(dir)
+        };
 
         let experiment = match read_experiment_from_file(&path) {
             Ok(s) => s,
             Err(err) => fatal_error!(1, "Cannot parse experiment: {}", err),
         };
 
-        let results = run_experiment(experiment, Some(&solutions_dir));
+        let results = run_experiment(experiment, solutions_dir, !no_sim);
 
         let serialized = match serde_json::to_string_pretty(&results) {
             Ok(s) => s,
