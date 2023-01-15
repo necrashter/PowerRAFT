@@ -488,7 +488,7 @@ impl<T: Transition> TeamSolution<T> {
             generation_time: self.generation_time,
             max_memory: self.max_memory,
             states: self.transitions.len(),
-            value: teams::get_min_value(&self.values),
+            value: get_min_value(&self.values),
             horizon: self.horizon,
         }
     }

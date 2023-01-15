@@ -427,6 +427,14 @@ impl PolicySynthesizer<TimedTransition> for NaiveTimedPolicySynthesizer {
     }
 }
 
+/// Get the minimum value of value function in the first state.
+pub fn get_min_value(values: &[Vec<f64>]) -> f64 {
+    *(values[0]
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

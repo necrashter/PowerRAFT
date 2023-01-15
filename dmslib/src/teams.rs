@@ -225,14 +225,6 @@ impl GraphRefOrVal for &Graph {
     }
 }
 
-/// Get the minimum value of value function in the first state.
-pub fn get_min_value(values: &[Vec<f64>]) -> f64 {
-    *(values[0]
-        .iter()
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap())
-}
-
 impl<T: Transition> Solution<T> {
     /// Get the minimum value of value function in the first state.
     pub fn get_min_value(&self) -> f64 {
