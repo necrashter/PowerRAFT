@@ -490,6 +490,7 @@ impl<T: Transition> TeamSolution<T> {
             generation_time: self.generation_time,
             max_memory: self.max_memory,
             states: self.transitions.len(),
+            transitions: get_transition_count(&self.transitions),
             value: get_min_value(&self.values),
             horizon: self.horizon,
         }
@@ -571,7 +572,7 @@ impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
 }
 
 /// Simplified solution struct for storing benchmark-related data.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BenchmarkResult {
     /// Total time to generate the complete solution in seconds.
     pub total_time: f64,
@@ -581,6 +582,8 @@ pub struct BenchmarkResult {
     pub max_memory: usize,
     /// Number of states.
     pub states: usize,
+    /// Number of transitions.
+    pub transitions: usize,
     /// Minimum value in the initial state.
     pub value: f64,
     /// Given or computed Optimization horizon.

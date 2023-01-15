@@ -269,6 +269,7 @@ impl<T: Transition> Solution<T> {
             generation_time: self.generation_time,
             max_memory: self.max_memory,
             states: self.transitions.len(),
+            transitions: get_transition_count(&self.transitions),
             value: self.get_min_value(),
             horizon: self.horizon,
         }

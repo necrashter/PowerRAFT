@@ -485,6 +485,19 @@ pub fn get_min_value(values: &[Vec<f64>]) -> f64 {
         .unwrap())
 }
 
+/// Get the total number of transitions.
+pub fn get_transition_count<T>(transitions: &[Vec<Vec<T>>]) -> usize {
+    transitions
+        .iter()
+        .map(|actions| {
+            actions
+                .iter()
+                .map(|transitions| transitions.len())
+                .sum::<usize>()
+        })
+        .sum::<usize>()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -612,6 +625,7 @@ mod tests {
                 time: 1,
             }]],
         ];
+        assert_eq!(get_transition_count(&transitions), 3);
         let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&transitions, 10);
         assert_eq!(values, vec![vec![7.5, 10.0], vec![10.0]]);
         assert_eq!(actions, vec![0, 0]);
@@ -648,6 +662,7 @@ mod tests {
                 time: 1,
             }]],
         ];
+        assert_eq!(get_transition_count(&transitions), 4);
         let (values, actions) = NaiveTimedPolicySynthesizer::synthesize_policy(&transitions, 10);
         assert_eq!(values, vec![vec![15.0], vec![10.0], vec![20.0]]);
         assert_eq!(actions, vec![0, 0, 0]);
