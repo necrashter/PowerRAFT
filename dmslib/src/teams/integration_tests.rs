@@ -479,3 +479,33 @@ fn save_test_pe0_1_team() {
     assert_eq!(problem, saved_problem);
     assert_eq!(solution, saved_solution);
 }
+
+#[test]
+fn simulation_test_pf0_pe0_1_team() {
+    let input_graph: io::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
+    let problem = io::TeamProblem {
+        name: Some("Simulation Test Team Problem PE0 1-Team".to_string()),
+        graph: input_graph,
+        teams: vec![io::Team {
+            index: Some(0),
+            latlng: None,
+        }],
+        horizon: Some(10),
+        pfo: Some(0.0),
+        time_func: Default::default(),
+    };
+
+    let solution = problem.solve_naive().unwrap();
+
+    let simulation_result = solution.simulate_all();
+
+    let bus_count = solution.states.shape()[1];
+
+    dbg!(&simulation_result);
+
+    assert_eq!(simulation_result.energization_p, 1.0);
+    assert_eq!(
+        simulation_result.avg_time,
+        get_min_value(&solution.values) / (bus_count as f64),
+    );
+}

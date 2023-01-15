@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize, Serializer};
 mod experiments;
 pub mod fs;
 pub use experiments::*;
+mod simulation;
+pub use simulation::*;
 
 #[cfg(test)]
 mod tests;
