@@ -294,7 +294,7 @@ impl TeamProblem {
 
         let travel_times = time_func.get_travel_times(&locations);
 
-        let mut branches = vec![Vec::<Index>::new(); graph.nodes.len()];
+        let mut branches = vec![Vec::<BusIndex>::new(); graph.nodes.len()];
 
         for branch in graph.branches.iter() {
             let a = branch.nodes.0;

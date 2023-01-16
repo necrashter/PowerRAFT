@@ -6,13 +6,13 @@ use serde::{Serialize, Serializer};
 /// State of a single team. Use a `Vec` to represent multiple teams.
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum TeamState {
-    OnBus(Index),
-    EnRoute(Index, Index, Time),
+    OnBus(BusIndex),
+    EnRoute(BusIndex, BusIndex, Time),
 }
 
 impl Default for TeamState {
     fn default() -> Self {
-        TeamState::OnBus(Index::MAX)
+        TeamState::OnBus(BusIndex::MAX)
     }
 }
 
@@ -117,8 +117,8 @@ impl State {
     /// energizable buses, we determine minbeta values and hence unreachable buses,
     /// for which minbeta = infinity.
     #[inline]
-    pub fn compute_minbeta(&self, graph: &Graph) -> Vec<Index> {
-        let mut minbeta: Vec<Index> = self
+    pub fn compute_minbeta(&self, graph: &Graph) -> Vec<BusIndex> {
+        let mut minbeta: Vec<BusIndex> = self
             .buses
             .iter()
             .enumerate()
@@ -134,18 +134,18 @@ impl State {
                         return 1;
                     }
                 }
-                Index::MAX
+                BusIndex::MAX
             })
             .collect();
         {
             // Determine the remaining beta values
-            let mut deque: VecDeque<Index> = minbeta
+            let mut deque: VecDeque<BusIndex> = minbeta
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &beta)| if beta == 1 { Some(i as Index) } else { None })
+                .filter_map(|(i, &beta)| if beta == 1 { Some(i as BusIndex) } else { None })
                 .collect();
             while let Some(i) = deque.pop_front() {
-                let next_beta: Index = minbeta[i as usize] + 1;
+                let next_beta: BusIndex = minbeta[i as usize] + 1;
                 for &j in graph.branches[i as usize].iter() {
                     if next_beta < minbeta[j as usize] {
                         minbeta[j as usize] = next_beta;

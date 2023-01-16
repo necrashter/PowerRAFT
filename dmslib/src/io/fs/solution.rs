@@ -14,8 +14,8 @@ mod saveable {
 
     #[derive(Serialize, Deserialize)]
     pub enum TeamState {
-        OnBus(Index),
-        EnRoute(Index, Index, Time),
+        OnBus(BusIndex),
+        EnRoute(BusIndex, BusIndex, Time),
     }
 
     #[derive(Serialize, Deserialize)]

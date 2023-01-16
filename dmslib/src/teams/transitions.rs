@@ -157,7 +157,7 @@ fn recursive_energization(
     buses: Vec<BusState>,
 ) -> (bool, Vec<(Probability, Vec<BusState>)>) {
     // Buses on which a team is present
-    let team_buses: Vec<Index> = teams
+    let team_buses: Vec<BusIndex> = teams
         .iter()
         .filter_map(|team| match team {
             TeamState::OnBus(i) => {
@@ -228,7 +228,7 @@ fn recursive_energization(
     // Handle initial state
     {
         let mut state = buses;
-        let alpha: Vec<Index> = get_alpha!(state);
+        let alpha: Vec<BusIndex> = get_alpha!(state);
         if alpha.is_empty() {
             outcomes.push((1.0, state));
             return (false, outcomes);
@@ -239,7 +239,7 @@ fn recursive_energization(
     // Handle states in queue
     while let Some(next) = queue.pop() {
         let (p, mut state) = next;
-        let alpha: Vec<Index> = get_alpha!(state);
+        let alpha: Vec<BusIndex> = get_alpha!(state);
         if alpha.is_empty() {
             // Discard transitions with p = 0
             if p != 0.0 {

@@ -30,7 +30,7 @@ use hashbrown::HashMap;
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.
 /// For en-route teams (continue action), this must be the index of the destination bus.
-pub type TeamAction = Index;
+pub type TeamAction = BusIndex;
 
 /// Contains information about the distribution system.
 #[derive(Clone)]
@@ -42,7 +42,7 @@ pub struct Graph {
     /// Triangle inequality is assumed by some [`ActionSet`]s.
     pub travel_times: Array2<Time>,
     /// Adjacency list for branch connections.
-    pub branches: Vec<Vec<Index>>,
+    pub branches: Vec<Vec<BusIndex>>,
     /// True if a bus at given index is directly connected to energy resource.
     pub connected: Vec<bool>,
     /// Failure probabilities.
@@ -57,9 +57,9 @@ impl Graph {
     ///
     /// A bus k is on path (i, j) if w(i, k) + w(k, j) is smaller or equal to w(i, j) where w is
     /// the travel time function.
-    pub fn get_components_on_way(&self) -> Array2<Vec<Index>> {
+    pub fn get_components_on_way(&self) -> Array2<Vec<BusIndex>> {
         let bus_count = self.branches.len();
-        let mut on_way: Array2<Vec<Index>> = Array2::default(self.travel_times.raw_dim());
+        let mut on_way: Array2<Vec<BusIndex>> = Array2::default(self.travel_times.raw_dim());
         for (((i, j), elem), &direct) in on_way.indexed_iter_mut().zip(self.travel_times.iter()) {
             if i == j {
                 continue;
@@ -70,7 +70,7 @@ impl Graph {
                 }
                 let through_k = self.travel_times[[i, k]] + self.travel_times[[k, j]];
                 if through_k <= direct {
-                    elem.push(k as Index);
+                    elem.push(k as BusIndex);
                 }
             }
         }

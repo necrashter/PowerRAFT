@@ -347,7 +347,7 @@ fn beta_values_on_paper_example() {
     };
     assert_eq!(
         state.compute_minbeta(&graph),
-        vec![0, 1, 2, 0, 0, Index::MAX]
+        vec![0, 1, 2, 0, 0, BusIndex::MAX]
     );
 
     let state = State {
@@ -369,7 +369,14 @@ fn beta_values_on_paper_example() {
     };
     assert_eq!(
         state.compute_minbeta(&graph),
-        vec![0, Index::MAX, Index::MAX, 0, Index::MAX, Index::MAX,]
+        vec![
+            0,
+            BusIndex::MAX,
+            BusIndex::MAX,
+            0,
+            BusIndex::MAX,
+            BusIndex::MAX,
+        ]
     );
 }
 

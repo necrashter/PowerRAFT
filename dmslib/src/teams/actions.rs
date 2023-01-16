@@ -10,18 +10,18 @@ pub struct ActionState {
     /// `i` is an element of beta_j(s).
     /// j=0 if the bus is not Unknown,
     /// `usize::MAX` if unreachable.
-    pub minbeta: Vec<Index>,
+    pub minbeta: Vec<BusIndex>,
     /// This vector contains the elements in the set of reachable buses with Unknown
     /// status, beta(s), in ascending order.
-    target_buses: Vec<Index>,
+    target_buses: Vec<BusIndex>,
     /// Each element of this list at position i will give the smallest j for which
     /// `target_buses[i]` is an element of beta_j(s). j=0 is there's no such j.
-    target_minbeta: Vec<Index>,
+    target_minbeta: Vec<BusIndex>,
     /// Node (bus or initial position) at which each team is located, represented by its index.
     /// usize;:MAX if en-route.
-    team_nodes: Vec<Index>,
+    team_nodes: Vec<BusIndex>,
     /// Set of buses in beta_1
-    energizable_buses: Vec<Index>,
+    energizable_buses: Vec<BusIndex>,
     /// True if the progress condition is satisfied by an en-route team.
     progress_satisfied: bool,
 }
@@ -30,12 +30,12 @@ impl State {
     /// Construct ActionState from a state and graph.
     pub fn to_action_state(self, graph: &Graph) -> ActionState {
         let minbeta = self.compute_minbeta(graph);
-        let (target_buses, target_minbeta): (Vec<Index>, Vec<Index>) = minbeta
+        let (target_buses, target_minbeta): (Vec<BusIndex>, Vec<BusIndex>) = minbeta
             .iter()
             .enumerate()
             .filter_map(|(i, &beta)| {
-                if beta != 0 && beta != Index::MAX {
-                    Some((i as Index, beta))
+                if beta != 0 && beta != BusIndex::MAX {
+                    Some((i as BusIndex, beta))
                 } else {
                     None
                 }
@@ -46,13 +46,13 @@ impl State {
             .iter()
             .map(|team| match team {
                 TeamState::OnBus(i) => *i,
-                TeamState::EnRoute(_, _, _) => Index::MAX,
+                TeamState::EnRoute(_, _, _) => BusIndex::MAX,
             })
             .collect();
-        let energizable_buses: Vec<Index> = target_buses
+        let energizable_buses: Vec<BusIndex> = target_buses
             .iter()
             .zip(target_minbeta.iter())
-            .filter_map(|(&i, &beta)| if beta == 1 { Some(i as Index) } else { None })
+            .filter_map(|(&i, &beta)| if beta == 1 { Some(i as BusIndex) } else { None })
             .collect();
         let progress_satisfied = self.teams.iter().any(|team| {
             if let TeamState::EnRoute(_, b, _) = team {
@@ -114,7 +114,7 @@ impl<'a> NaiveIterator<'a> {
                 .iter()
                 .map(|team_state| match team_state {
                     TeamState::OnBus(_) => 0,
-                    TeamState::EnRoute(_, _, _) => Index::MAX,
+                    TeamState::EnRoute(_, _, _) => BusIndex::MAX,
                 })
                 .collect(),
         );
@@ -149,7 +149,7 @@ impl<'a> NaiveIterator<'a> {
         self.action_state.progress_satisfied
             || action
                 .iter()
-                .any(|&i| i != Index::MAX && self.action_state.target_minbeta[i as usize] == 1)
+                .any(|&i| i != BusIndex::MAX && self.action_state.target_minbeta[i as usize] == 1)
     }
 }
 
@@ -214,9 +214,9 @@ pub struct PermutationalIterator<'a> {
     /// Teams that are ready to receive orders, i.e., not en-route.
     ready_teams: Vec<usize>,
     /// The node on which each ready team is located.
-    ready_team_nodes: Vec<Index>,
+    ready_team_nodes: Vec<BusIndex>,
     /// Iterator over bus combinations
-    bus_combination_iter: CombinationsWithReplacement<std::vec::IntoIter<Index>>,
+    bus_combination_iter: CombinationsWithReplacement<std::vec::IntoIter<BusIndex>>,
     /// Stack of next actions from the permutations of last team-bus combination.
     next_actions: Vec<Vec<TeamAction>>,
 }
@@ -307,7 +307,7 @@ impl<'a> PermutationalIterator<'a> {
                 .teams
                 .iter()
                 .map(|s| match s {
-                    TeamState::OnBus(_) => Index::MAX,
+                    TeamState::OnBus(_) => BusIndex::MAX,
                     TeamState::EnRoute(_, destination, _) => *destination,
                 })
                 .collect_vec();
@@ -371,7 +371,7 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
     type IT<'b> = PermutationalIterator<'b> where Self: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
-        let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<Index>) = action_state
+        let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<BusIndex>) = action_state
             .state
             .teams
             .iter()
@@ -488,7 +488,7 @@ pub struct EnergizedOnWayIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Size
     iter: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
     /// order.
-    on_way: &'a Array2<Vec<Index>>,
+    on_way: &'a Array2<Vec<BusIndex>>,
     action_state: &'a ActionState,
 }
 
@@ -503,7 +503,7 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
                     .iter()
                     .zip(action.iter())
                     .any(|(&i, &j)| {
-                        if i == Index::MAX {
+                        if i == BusIndex::MAX {
                             false
                         } else {
                             sorted_intersects(
@@ -527,7 +527,7 @@ pub struct FilterEnergizedOnWay<'a, T: ActionSet<'a>> {
     base: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
     /// order.
-    on_way: Array2<Vec<Index>>,
+    on_way: Array2<Vec<BusIndex>>,
     /// This struct semantically stores a reference with `'a` lifetime due to wrapped
     /// ActionSet.
     _phantom: std::marker::PhantomData<&'a ()>,
@@ -564,7 +564,7 @@ pub struct FilterOnWay<'a, T: ActionSet<'a>> {
     base: T,
     /// For each path i to j, there's an entry for the list of components on that path in ascending
     /// order.
-    on_way: Array2<Vec<Index>>,
+    on_way: Array2<Vec<BusIndex>>,
     /// This struct semantically stores a reference with `'a` lifetime due to wrapped ActionSet.
     _phantom: std::marker::PhantomData<&'a ()>,
 }

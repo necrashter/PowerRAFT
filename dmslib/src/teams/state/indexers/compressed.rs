@@ -101,16 +101,16 @@ impl StateCompressor {
         for _ in 0..self.team_count {
             if bits[index] {
                 index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<Index>();
+                let i = bits[index..(index + self.bus_bits)].load::<BusIndex>();
                 index += self.bus_bits;
-                let j = bits[index..(index + self.bus_bits)].load::<Index>();
+                let j = bits[index..(index + self.bus_bits)].load::<BusIndex>();
                 index += self.bus_bits;
                 let k = bits[index..(index + self.time_bits)].load::<Time>();
                 index += self.time_bits;
                 teams.push(TeamState::EnRoute(i, j, k));
             } else {
                 index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<Index>();
+                let i = bits[index..(index + self.bus_bits)].load::<BusIndex>();
                 index += self.bus_bits;
                 teams.push(TeamState::OnBus(i));
             }

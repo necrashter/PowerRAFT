@@ -1,7 +1,7 @@
 //! Primitive data types.
 
 /// Data type for bus indices.
-pub type Index = usize;
+pub type BusIndex = usize;
 /// Data type for state indices.
 pub type StateIndex = usize;
 /// Data type for measuring time.
