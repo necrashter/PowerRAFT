@@ -199,9 +199,10 @@ where
 {
     let size = matrix.shape()[0];
     debug_assert_eq!(size, matrix.shape()[1]);
-    let sum = matrix.sum();
+    let mut sum = 0.0;
+    matrix.for_each(|x| sum += x.as_());
     let n_nondiag_elements = size * (size - 1);
-    sum.as_() / n_nondiag_elements as f64
+    sum / n_nondiag_elements as f64
 }
 
 /// Get the distances between neighbors in graph.
