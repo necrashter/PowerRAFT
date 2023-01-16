@@ -156,7 +156,7 @@ where
 
     let generation_time: f64 = start_time.elapsed().as_secs_f64();
 
-    let auto_horizon = TT::determine_horizon(&transitions);
+    let auto_horizon = determine_horizon(&transitions);
     log::info!("Automatically determined horizon: {auto_horizon}");
     let horizon = if let Some(v) = config.horizon {
         if auto_horizon > v {

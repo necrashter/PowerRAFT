@@ -23,11 +23,6 @@ pub trait Transition: Serialize {
     fn get_cost(&self) -> f64;
     /// Get time required for this transition.
     fn get_time(&self) -> usize;
-
-    /// Determine the optimization horizon from transition space.
-    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
-    where
-        Self: Sized;
 }
 
 /// A regular MDP transition with probability and cost.
@@ -91,41 +86,6 @@ impl Transition for RegularTransition {
     #[inline]
     fn get_time(&self) -> usize {
         1
-    }
-
-    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
-    where
-        Self: Sized,
-    {
-        let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
-
-        fn visit(
-            index: usize,
-            transitions: &[Vec<Vec<RegularTransition>>],
-            memoization: &mut [DfsState<usize>],
-        ) -> usize {
-            let m = &mut memoization[index];
-            if let DfsState::Done(v) = m {
-                return *v;
-            } else if *m == DfsState::Visiting {
-                panic!("MDP state graph is cyclic");
-            }
-            *m = DfsState::Visiting;
-            let mut max_depth = 0;
-            for action in transitions[index].iter() {
-                for t in action.iter() {
-                    let depth: usize = if t.successor == index {
-                        1
-                    } else {
-                        visit(t.successor, transitions, memoization) + 1
-                    };
-                    max_depth = std::cmp::max(max_depth, depth);
-                }
-            }
-            memoization[index] = DfsState::Done(max_depth);
-            max_depth
-        }
-        visit(0, transitions, &mut memoization)
     }
 }
 
@@ -238,41 +198,6 @@ impl Transition for TimedTransition {
     fn get_time(&self) -> usize {
         self.time
     }
-
-    fn determine_horizon(transitions: &[Vec<Vec<Self>>]) -> usize
-    where
-        Self: Sized,
-    {
-        let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
-
-        fn visit(
-            index: usize,
-            transitions: &[Vec<Vec<TimedTransition>>],
-            memoization: &mut [DfsState<usize>],
-        ) -> usize {
-            let m = &mut memoization[index];
-            if let DfsState::Done(v) = m {
-                return *v;
-            } else if *m == DfsState::Visiting {
-                panic!("MDP state graph is cyclic");
-            }
-            *m = DfsState::Visiting;
-            let mut max_depth = 0;
-            for action in transitions[index].iter() {
-                for t in action.iter() {
-                    let depth: usize = if t.successor == index {
-                        t.time
-                    } else {
-                        visit(t.successor, transitions, memoization) + t.time
-                    };
-                    max_depth = std::cmp::max(max_depth, depth);
-                }
-            }
-            memoization[index] = DfsState::Done(max_depth);
-            max_depth
-        }
-        visit(0, transitions, &mut memoization)
-    }
 }
 
 impl Serialize for TimedTransition {
@@ -287,6 +212,41 @@ impl Serialize for TimedTransition {
         seq.serialize_element(&self.time)?;
         seq.end()
     }
+}
+
+/// Determine the optimization horizon from transition space.
+pub fn determine_horizon<T: Transition>(transitions: &[Vec<Vec<T>>]) -> usize {
+    let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
+
+    fn visit<T: Transition>(
+        index: Index,
+        transitions: &[Vec<Vec<T>>],
+        memoization: &mut [DfsState<usize>],
+    ) -> usize {
+        let m = &mut memoization[index];
+        if let DfsState::Done(v) = m {
+            return *v;
+        } else if *m == DfsState::Visiting {
+            panic!("MDP state graph is cyclic");
+        }
+        *m = DfsState::Visiting;
+        let mut max_depth = 0;
+        for action in transitions[index].iter() {
+            for t in action.iter() {
+                let successor = t.get_successor();
+                let time = t.get_time();
+                let depth: usize = if successor == index {
+                    time
+                } else {
+                    visit(successor, transitions, memoization) + time
+                };
+                max_depth = std::cmp::max(max_depth, depth);
+            }
+        }
+        memoization[index] = DfsState::Done(max_depth);
+        max_depth
+    }
+    visit(0, transitions, &mut memoization)
 }
 
 /// Generic policy synthesizer for the given transition type.
