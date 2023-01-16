@@ -22,6 +22,9 @@ All indexers that are present in git commit `58e50ecaf353f79442426d3ee1875b12d4a
 Modifiers;
 - `nobuild` in name denotes that the indexer didn't build the state `Array2` in `deconstruct` call, i.e., indexed states are left in the HashMap.
 
+Added in commit 7bc360ca6af5c255f91976f30bdc13fd8dea3b66:
+- `minmem`: Uses smaller primitive types (e.g. `u8` for cost instead of `f64`, `u8` for bus indices instead of `usize`, etc.). Uses `tight stack` state indexer.
+
 These were tested on `experiments/mem.json`.
 Note that `ArrayStateIndexer` couldn't run the experiment due to horrible complexity (worst case `O(n)` for a single addition where `n` is the explored states).
 

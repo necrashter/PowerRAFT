@@ -8,11 +8,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 90.876371209,
+        "generationTime": 90.876371209,
         "horizon": 59,
-        "max_memory": 5949510832,
+        "maxMemory": 5949510832,
         "states": 12577773,
-        "total_time": 164.531150325,
+        "totalTime": 164.531150325,
         "value": 665.257214397192
       }
     },
@@ -29,11 +29,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 89.66441368,
+        "generationTime": 89.66441368,
         "horizon": 59,
-        "max_memory": 5926153755,
+        "maxMemory": 5926153755,
         "states": 12577773,
-        "total_time": 161.282247564,
+        "totalTime": 161.282247564,
         "value": 665.257214397192
       }
     },
@@ -52,11 +52,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 90.976020806,
+        "generationTime": 90.976020806,
         "horizon": 59,
-        "max_memory": 5949510832,
+        "maxMemory": 5949510832,
         "states": 12577773,
-        "total_time": 164.977917853,
+        "totalTime": 164.977917853,
         "value": 665.257214397192
       }
     },
@@ -73,11 +73,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 87.226587025,
+        "generationTime": 87.226587025,
         "horizon": 59,
-        "max_memory": 5949510832,
+        "maxMemory": 5949510832,
         "states": 12577773,
-        "total_time": 161.03774611,
+        "totalTime": 161.03774611,
         "value": 665.257214397192
       }
     },

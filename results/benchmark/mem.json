@@ -8,11 +8,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 89.427457943,
+        "generationTime": 89.427457943,
         "horizon": 59,
-        "max_memory": 8140460714,
+        "maxMemory": 8140460714,
         "states": 12577773,
-        "total_time": 180.735750096,
+        "totalTime": 180.735750096,
         "value": 665.257214397192
       }
     }
@@ -26,11 +26,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 87.0225695,
+        "generationTime": 87.0225695,
         "horizon": 59,
-        "max_memory": 6945141431,
+        "maxMemory": 6945141431,
         "states": 12577773,
-        "total_time": 173.373921294,
+        "totalTime": 173.373921294,
         "value": 665.257214397192
       }
     }
@@ -44,11 +44,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 133.865757075,
+        "generationTime": 133.865757075,
         "horizon": 59,
-        "max_memory": 7111385616,
+        "maxMemory": 7111385616,
         "states": 12577773,
-        "total_time": 219.308607416,
+        "totalTime": 219.308607416,
         "value": 665.257214397192
       }
     }
@@ -62,11 +62,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 78.247415935,
+        "generationTime": 78.247415935,
         "horizon": 59,
-        "max_memory": 6945141521,
+        "maxMemory": 6945141521,
         "states": 12577773,
-        "total_time": 163.234477871,
+        "totalTime": 163.234477871,
         "value": 665.257214397192
       }
     }
@@ -80,11 +80,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 80.19443292,
+        "generationTime": 80.19443292,
         "horizon": 59,
-        "max_memory": 8140460729,
+        "maxMemory": 8140460729,
         "states": 12577773,
-        "total_time": 171.483827228,
+        "totalTime": 171.483827228,
         "value": 665.257214397192
       }
     }
@@ -98,11 +98,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 81.037920576,
+        "generationTime": 81.037920576,
         "horizon": 59,
-        "max_memory": 7251268278,
+        "maxMemory": 7251268278,
         "states": 12577773,
-        "total_time": 171.625549665,
+        "totalTime": 171.625549665,
         "value": 665.257214397192
       }
     }
@@ -116,11 +116,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 166.457160446,
+        "generationTime": 166.457160446,
         "horizon": 59,
-        "max_memory": 7978651923,
+        "maxMemory": 7978651923,
         "states": 12577773,
-        "total_time": 254.511912261,
+        "totalTime": 254.511912261,
         "value": 665.257214397192
       }
     }
@@ -135,11 +135,11 @@
     "result": {
       "log": "Minify removed 4017827 states in total",
       "success": {
-        "generation_time": 90.175396648,
+        "generationTime": 90.175396648,
         "horizon": 59,
-        "max_memory": 7978651923,
+        "maxMemory": 7978651923,
         "states": 12577773,
-        "total_time": 179.079479553,
+        "totalTime": 179.079479553,
         "value": 665.257214397192
       }
     }
@@ -153,11 +153,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 92.797860007,
+        "generationTime": 92.797860007,
         "horizon": 59,
-        "max_memory": 5926152778,
+        "maxMemory": 5926152778,
         "states": 12577773,
-        "total_time": 164.998982216,
+        "totalTime": 164.998982216,
         "value": 665.257214397192
       }
     }
@@ -171,11 +171,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 92.94864045,
+        "generationTime": 92.94864045,
         "horizon": 59,
-        "max_memory": 5926152788,
+        "maxMemory": 5926152788,
         "states": 12577773,
-        "total_time": 165.55242356,
+        "totalTime": 165.55242356,
         "value": 665.257214397192
       }
     }
@@ -189,11 +189,11 @@
     },
     "result": {
       "success": {
-        "generation_time": 82.206355325,
+        "generationTime": 82.206355325,
         "horizon": 59,
-        "max_memory": 5949509847,
+        "maxMemory": 5949509847,
         "states": 12577773,
-        "total_time": 156.657907463,
+        "totalTime": 156.657907463,
         "value": 665.257214397192
       }
     }
@@ -207,14 +207,33 @@
     },
     "result": {
       "success": {
-        "generation_time": 128.952526117,
+        "generationTime": 128.952526117,
         "horizon": 59,
-        "max_memory": 5930189321,
+        "maxMemory": 5930189321,
         "states": 12577773,
-        "total_time": 224.579083683,
+        "totalTime": 224.579083683,
         "value": 665.257214397192
       }
     },
     "INFO": "Max stack: 641; Stack reserved: 1024"
+  },
+  {
+    "name": "minmem",
+    "optimizations": {
+      "actions": "FilterEnergizedOnWay<PermutationalActions>",
+      "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+      "transitions": "TimedActionApplier<TimeUntilEnergization>"
+    },
+    "result": {
+      "success": {
+        "generationTime": 89.016268456,
+        "horizon": 59,
+        "maxMemory": 4128094925,
+        "states": 12577773,
+        "totalTime": 149.073902977,
+        "transitions": 89902699,
+        "value": 665.2572631835938
+      }
+    }
   }
 ]
