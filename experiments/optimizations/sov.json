@@ -1,6 +1,6 @@
 [
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   }

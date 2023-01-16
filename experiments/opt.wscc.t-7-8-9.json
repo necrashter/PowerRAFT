@@ -1,0 +1,22 @@
+{
+  "name": "Optimizations Experiment",
+  "description": "Measures the impact of optimizations on a 9-Bus 3-Team problem.",
+  "tasks": [
+    {
+      "problems": [{
+        "name": "WSCC 9-Bus (7, 8, 9)",
+        "graph": "../graphs/wscc.json",
+        "teams": [
+          { "index": 6 },
+          { "index": 7 },
+          { "index": 8 }
+        ],
+        "timeFunction": {
+          "type": "DirectDistance",
+          "divider": 0.43
+        }
+      }],
+      "optimizations": "optimizations/all.json"
+    }
+  ]
+}

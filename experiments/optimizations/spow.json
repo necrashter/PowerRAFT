@@ -1,6 +1,6 @@
 [
   {
-    "indexer": "SortedStateIndexer<StackStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterEnergizedOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   }

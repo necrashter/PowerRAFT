@@ -1,5 +1,5 @@
 {
-  "name": "Case Study on WSCC 9-Bus",
+  "name": "Scaling with Teams on WSCC 9-Bus",
   "description": "Case study on WSCC 9-Bus system with different team configurations.",
   "tasks": [
     {
@@ -10,7 +10,7 @@
           "teams": [
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -23,7 +23,7 @@
             { "index": 4 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -37,7 +37,7 @@
             { "index": 4 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -50,7 +50,7 @@
             { "index": 7 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -64,7 +64,7 @@
             { "index": 7 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -77,7 +77,7 @@
             { "index": 8 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43
@@ -91,7 +91,7 @@
             { "index": 8 },
             { "index": 8 }
           ],
-          "horizon": 30,
+          "horizon": 24,
           "timeFunction": {
             "type": "DirectDistance",
             "divider": 0.43

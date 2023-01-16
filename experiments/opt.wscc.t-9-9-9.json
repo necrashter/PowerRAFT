@@ -1,17 +1,16 @@
 {
-  "name": "Optimizations Experiment with Constant Horizon",
-  "description": "Measures the impact of optimizations on a 9-Bus 3-Team problem with constant optimization horizon 30.",
+  "name": "Optimizations Experiment",
+  "description": "Measures the impact of optimizations on a 9-Bus 3-Team problem.",
   "tasks": [
     {
       "problems": [{
-        "name": "WSCC 9-Bus 3 Teams on 8",
+        "name": "WSCC 9-Bus (9, 9, 9)",
         "graph": "../graphs/wscc.json",
         "teams": [
           { "index": 8 },
           { "index": 8 },
           { "index": 8 }
         ],
-        "horizon": 30,
         "timeFunction": {
           "type": "DirectDistance",
           "divider": 0.43

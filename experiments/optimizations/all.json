@@ -1,121 +1,121 @@
 [
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "NaiveActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "PermutationalActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterEnergizedOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "NaiveStateIndexer",
+    "indexer": "BitStackStateIndexer",
     "actions": "FilterEnergizedOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "NaiveActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "PermutationalActions",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterEnergizedOnWay<NaiveActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "NaiveActionApplier"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilArrival>"
   },
   {
-    "indexer": "SortedStateIndexer<NaiveStateIndexer>",
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
     "actions": "FilterEnergizedOnWay<PermutationalActions>",
     "transitions": "TimedActionApplier<TimeUntilEnergization>"
   }
