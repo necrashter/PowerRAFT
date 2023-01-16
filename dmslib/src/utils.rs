@@ -1,6 +1,7 @@
 //! Various utility functions.
 
 use ndarray::Array2;
+use num_traits::{ToPrimitive, Unsigned};
 
 /// Given 2 sorted iterators, returns true if at least one element is common.
 pub fn sorted_intersects<'a, T, IT>(mut a: IT, mut b: IT) -> bool
@@ -204,13 +205,17 @@ where
 }
 
 /// Get the distances between neighbors in graph.
-pub fn neighbor_distances<T>(matrix: &Array2<T>, adj: &[Vec<usize>]) -> Vec<T>
+pub fn neighbor_distances<T, U: Unsigned + ToPrimitive>(
+    matrix: &Array2<T>,
+    adj: &[Vec<U>],
+) -> Vec<T>
 where
     T: Copy,
 {
     let mut out = Vec::new();
     for (i, adj) in adj.iter().enumerate() {
-        for &j in adj.iter() {
+        for j in adj.iter() {
+            let j: usize = (*j).to_usize().unwrap();
             out.push(matrix[(i, j)])
         }
     }

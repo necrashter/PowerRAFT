@@ -33,20 +33,26 @@ impl State {
         let (target_buses, target_minbeta): (Vec<Index>, Vec<Index>) = minbeta
             .iter()
             .enumerate()
-            .filter(|(_i, &beta)| beta != 0 && beta != usize::MAX)
+            .filter_map(|(i, &beta)| {
+                if beta != 0 && beta != Index::MAX {
+                    Some((i as Index, beta))
+                } else {
+                    None
+                }
+            })
             .unzip();
         let team_nodes = self
             .teams
             .iter()
             .map(|team| match team {
                 TeamState::OnBus(i) => *i,
-                TeamState::EnRoute(_, _, _) => usize::MAX,
+                TeamState::EnRoute(_, _, _) => Index::MAX,
             })
             .collect();
         let energizable_buses: Vec<Index> = target_buses
             .iter()
             .zip(target_minbeta.iter())
-            .filter_map(|(&i, &beta)| if beta == 1 { Some(i) } else { None })
+            .filter_map(|(&i, &beta)| if beta == 1 { Some(i as Index) } else { None })
             .collect();
         let progress_satisfied = self.teams.iter().any(|team| {
             if let TeamState::EnRoute(_, b, _) = team {
@@ -108,7 +114,7 @@ impl<'a> NaiveIterator<'a> {
                 .iter()
                 .map(|team_state| match team_state {
                     TeamState::OnBus(_) => 0,
-                    TeamState::EnRoute(_, _, _) => usize::MAX,
+                    TeamState::EnRoute(_, _, _) => Index::MAX,
                 })
                 .collect(),
         );
@@ -143,7 +149,7 @@ impl<'a> NaiveIterator<'a> {
         self.action_state.progress_satisfied
             || action
                 .iter()
-                .any(|&i| i != usize::MAX && self.action_state.target_minbeta[i] == 1)
+                .any(|&i| i != Index::MAX && self.action_state.target_minbeta[i as usize] == 1)
     }
 }
 
@@ -163,7 +169,7 @@ impl Iterator for NaiveIterator<'_> {
                     if let TeamState::EnRoute(_, destination, _) = team {
                         *destination
                     } else {
-                        self.action_state.target_buses[target]
+                        self.action_state.target_buses[target as usize]
                     }
                 })
                 .collect();
@@ -208,9 +214,9 @@ pub struct PermutationalIterator<'a> {
     /// Teams that are ready to receive orders, i.e., not en-route.
     ready_teams: Vec<usize>,
     /// The node on which each ready team is located.
-    ready_team_nodes: Vec<usize>,
+    ready_team_nodes: Vec<Index>,
     /// Iterator over bus combinations
-    bus_combination_iter: CombinationsWithReplacement<std::vec::IntoIter<usize>>,
+    bus_combination_iter: CombinationsWithReplacement<std::vec::IntoIter<Index>>,
     /// Stack of next actions from the permutations of last team-bus combination.
     next_actions: Vec<Vec<TeamAction>>,
 }
@@ -226,7 +232,7 @@ impl<'a> PermutationalIterator<'a> {
             if !self.action_state.progress_satisfied
                 && bus_combination
                     .iter()
-                    .all(|&i| self.action_state.minbeta[i] > 1)
+                    .all(|&i| self.action_state.minbeta[i as usize] > 1)
             {
                 return self.next_bus_combination();
             }
@@ -259,12 +265,16 @@ impl<'a> PermutationalIterator<'a> {
                     let a = permutations[i]
                         .iter()
                         .zip(bus_combination.iter())
-                        .map(|(&x, &y)| self.travel_times[[self.ready_team_nodes[x], y]])
+                        .map(|(&x, &y)| {
+                            self.travel_times[(self.ready_team_nodes[x] as usize, y as usize)]
+                        })
                         .collect_vec();
                     let b = permutations[j]
                         .iter()
                         .zip(bus_combination.iter())
-                        .map(|(&x, &y)| self.travel_times[[self.ready_team_nodes[x], y]])
+                        .map(|(&x, &y)| {
+                            self.travel_times[(self.ready_team_nodes[x] as usize, y as usize)]
+                        })
                         .collect_vec();
                     let mut all_smaller_eq = true;
                     let mut all_greater_eq = true;
@@ -297,7 +307,7 @@ impl<'a> PermutationalIterator<'a> {
                 .teams
                 .iter()
                 .map(|s| match s {
-                    TeamState::OnBus(_) => usize::MAX,
+                    TeamState::OnBus(_) => Index::MAX,
                     TeamState::EnRoute(_, destination, _) => *destination,
                 })
                 .collect_vec();
@@ -361,7 +371,7 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
     type IT<'b> = PermutationalIterator<'b> where Self: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
-        let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<usize>) = action_state
+        let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<Index>) = action_state
             .state
             .teams
             .iter()
@@ -443,8 +453,8 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
             .iter()
             .filter_map(|t| match t {
                 TeamState::OnBus(b) => {
-                    if *b >= action_state.state.buses.len()
-                        || action_state.state.buses[*b] != BusState::Unknown
+                    if (*b as usize) >= action_state.state.buses.len()
+                        || action_state.state.buses[*b as usize] != BusState::Unknown
                     {
                         None
                     } else {
@@ -493,11 +503,11 @@ impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWa
                     .iter()
                     .zip(action.iter())
                     .any(|(&i, &j)| {
-                        if i == usize::MAX {
+                        if i == Index::MAX {
                             false
                         } else {
                             sorted_intersects(
-                                self.on_way[(i, j)].iter(),
+                                self.on_way[(i as usize, j as usize)].iter(),
                                 self.action_state.energizable_buses.iter(),
                             )
                         }
@@ -595,11 +605,17 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterOnWay<'a, T> {
                     if ai == aj {
                         continue;
                     }
-                    if self.on_way[(team, ai)].binary_search(&aj).is_err() {
+                    if self.on_way[(team as usize, ai as usize)]
+                        .binary_search(&aj)
+                        .is_err()
+                    {
                         // aj is NOT on way
                         j_is_on_way = false;
                     }
-                    if self.on_way[(team, aj)].binary_search(&ai).is_err() {
+                    if self.on_way[(team as usize, aj as usize)]
+                        .binary_search(&ai)
+                        .is_err()
+                    {
                         // ai is NOT on way
                         i_is_on_way = false;
                     }

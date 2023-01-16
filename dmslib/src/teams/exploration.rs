@@ -56,7 +56,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
             "Energization succeeded at the start of a non-initial state"
         );
         let action_transitions: Vec<Vec<TT>> = if state.is_terminal(self.graph) {
-            vec![vec![TT::terminal_transition(index, cost)]]
+            vec![vec![TT::terminal_transition(index as StateIndex, cost)]]
         } else {
             let state = state.to_action_state(self.graph);
             self.iterator
@@ -67,7 +67,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
                             let successor_index = self.states.index_state(successor_state);
-                            transition.set_successor(successor_index);
+                            transition.set_successor(successor_index as StateIndex);
                             transition
                         })
                         .collect()
@@ -90,7 +90,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
         let (index, state) = input;
         let cost = state.get_cost();
         let action_transitions: Vec<Vec<TT>> = if state.is_terminal(self.graph) {
-            vec![vec![TT::terminal_transition(index, cost)]]
+            vec![vec![TT::terminal_transition(index as StateIndex, cost)]]
         } else if let Some(bus_outcomes) = state.energize(self.graph) {
             vec![bus_outcomes
                 .into_iter()
@@ -100,7 +100,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         buses: bus_state,
                     };
                     let successor_index = self.states.index_state(successor_state);
-                    TT::costless_transition(successor_index, p)
+                    TT::costless_transition(successor_index as StateIndex, p)
                 })
                 .collect()]
         } else {
@@ -113,7 +113,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         .map(|(mut transition, successor_state)| {
                             // Index the successor states
                             let successor_index = self.states.index_state(successor_state);
-                            transition.set_successor(successor_index);
+                            transition.set_successor(successor_index as StateIndex);
                             transition
                         })
                         .collect()

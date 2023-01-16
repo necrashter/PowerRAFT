@@ -19,7 +19,7 @@ fn pe0_1_team() {
             Some(30),
         )
         .unwrap();
-    const OPTIMAL_VALUE: f64 = 129.283203125;
+    const OPTIMAL_VALUE: Value = 129.283203125;
 
     let solution = solve_generic::<
         RegularTransition,
@@ -215,7 +215,7 @@ fn pe0_2_team() {
             Some(30),
         )
         .unwrap();
-    const OPTIMAL_VALUE: f64 = 132.0810546875;
+    const OPTIMAL_VALUE: Value = 132.0810546875;
 
     let solution = solve_generic::<
         RegularTransition,
@@ -505,7 +505,7 @@ fn simulation_test_pf0_pe0_1_team() {
 
     assert_eq!(simulation_result.energization_p, 1.0);
     assert_eq!(
-        simulation_result.avg_time,
-        get_min_value(&solution.values) / (bus_count as f64),
+        simulation_result.avg_time as Value,
+        get_min_value(&solution.values) / (bus_count as Value),
     );
 }

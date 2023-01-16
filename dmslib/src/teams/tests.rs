@@ -39,7 +39,7 @@ fn paper_example_4_1_1() {
     let state = State { buses, teams };
 
     let cost = state.get_cost();
-    assert_eq!(cost, 4.0);
+    assert_eq!(cost, 4 as Cost);
 
     let iter = NaiveActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
@@ -47,7 +47,7 @@ fn paper_example_4_1_1() {
     assert_eq!(actions, vec![vec![1, 2]]);
 
     let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
-    let expected_outcomes: Vec<(f64, State)> = vec![
+    let expected_outcomes: Vec<(Probability, State)> = vec![
         (
             0.5,
             State {
@@ -91,7 +91,7 @@ fn paper_example_4_1_1() {
             },
         ),
     ];
-    let outcomes: Vec<(f64, State)> =
+    let outcomes: Vec<(Probability, State)> =
         NaiveActionApplier::apply_state(&state, cost, &graph, &actions[0])
             .into_iter()
             .map(|(transition, state)| {
@@ -118,14 +118,14 @@ fn test_timed_action_applier() {
     let state = State { buses, teams };
 
     let cost = state.get_cost();
-    assert_eq!(cost, 4.0);
+    assert_eq!(cost, 4 as Cost);
 
     let action: Vec<TeamAction> = vec![1, 2];
 
     // Naive action
     let expected_team_outcome: Vec<TeamState> =
         vec![TeamState::EnRoute(0, 1, 1), TeamState::EnRoute(4, 2, 3)];
-    let expected_outcomes: Vec<(f64, State)> = vec![(
+    let expected_outcomes: Vec<(Probability, State)> = vec![(
         1.0,
         State {
             teams: expected_team_outcome,
@@ -139,7 +139,7 @@ fn test_timed_action_applier() {
             ],
         },
     )];
-    let outcomes: Vec<(f64, State)> =
+    let outcomes: Vec<(Probability, State)> =
         NaiveActionApplier::apply_state(&state, cost, &graph, &action)
             .into_iter()
             .map(|(transition, state)| {
@@ -151,7 +151,7 @@ fn test_timed_action_applier() {
 
     // Timed action
     let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
-    let expected_outcomes: Vec<(f64, State)> = vec![
+    let expected_outcomes: Vec<(Probability, State)> = vec![
         (
             0.5,
             State {
@@ -195,7 +195,7 @@ fn test_timed_action_applier() {
             },
         ),
     ];
-    let outcomes: Vec<(f64, State)> =
+    let outcomes: Vec<(Probability, State)> =
         TimedActionApplier::<TimeUntilArrival>::apply_state(&state, cost, &graph, &action)
             .into_iter()
             .map(|(transition, state)| {
@@ -221,7 +221,7 @@ fn on_energized_bus_actions() {
     let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::OnBus(3)];
     let state = State { buses, teams };
 
-    assert_eq!(state.get_cost(), 4.0);
+    assert_eq!(state.get_cost(), 4 as Cost);
 
     let iter = NaiveActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
@@ -308,7 +308,7 @@ fn wait_moving_elimination() {
     let teams: Vec<TeamState> = vec![TeamState::OnBus(2), TeamState::EnRoute(5, 0, 1)];
     let state = State { buses, teams };
 
-    assert_eq!(state.get_cost(), 3.0);
+    assert_eq!(state.get_cost(), 3 as Cost);
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 0], vec![0, 0], vec![1, 0]];
 
@@ -347,7 +347,7 @@ fn beta_values_on_paper_example() {
     };
     assert_eq!(
         state.compute_minbeta(&graph),
-        vec![0, 1, 2, 0, 0, usize::MAX]
+        vec![0, 1, 2, 0, 0, Index::MAX]
     );
 
     let state = State {
@@ -369,7 +369,7 @@ fn beta_values_on_paper_example() {
     };
     assert_eq!(
         state.compute_minbeta(&graph),
-        vec![0, usize::MAX, usize::MAX, 0, usize::MAX, usize::MAX,]
+        vec![0, Index::MAX, Index::MAX, 0, Index::MAX, Index::MAX,]
     );
 }
 

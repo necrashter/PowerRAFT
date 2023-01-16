@@ -3,7 +3,8 @@
 //! Contains structs to serialize and deserialize various representation of graphs.
 use crate::policy::*;
 use crate::teams;
-use crate::{SolveFailure, Time};
+use crate::types::*;
+use crate::SolveFailure;
 use teams::state::{BusState, TeamState};
 
 use ndarray::{Array1, Array2, ArrayView1};
@@ -251,10 +252,14 @@ impl TeamProblem {
         let mut locations: Vec<LatLng> =
             graph.nodes.iter().map(|node| node.latlng.clone()).collect();
 
-        let pfs: Array1<f64> = if let Some(pfo) = pfo {
-            Array1::from(vec![pfo; graph.nodes.len()])
+        let pfs: Array1<Probability> = if let Some(pfo) = pfo {
+            Array1::from(vec![pfo as Probability; graph.nodes.len()])
         } else {
-            graph.nodes.iter().map(|node| node.pf).collect()
+            graph
+                .nodes
+                .iter()
+                .map(|node| node.pf as Probability)
+                .collect()
         };
 
         for (i, team) in teams.iter().enumerate() {
@@ -277,26 +282,26 @@ impl TeamProblem {
             .into_iter()
             .map(|t| {
                 if let Some(i) = t.index {
-                    TeamState::OnBus(i)
+                    TeamState::OnBus(i.try_into().expect("Bus index overflow"))
                 } else {
                     let i = locations.len();
                     // We did error checking above
                     locations.push(t.latlng.as_ref().unwrap().clone());
-                    TeamState::OnBus(i)
+                    TeamState::OnBus(i.try_into().expect("Bus index overflow"))
                 }
             })
             .collect();
 
         let travel_times = time_func.get_travel_times(&locations);
 
-        let mut branches = vec![Vec::new(); graph.nodes.len()];
+        let mut branches = vec![Vec::<Index>::new(); graph.nodes.len()];
 
         for branch in graph.branches.iter() {
             let a = branch.nodes.0;
             let b = branch.nodes.1;
             // TODO: throw error on duplicate branch?
-            branches[a].push(b);
-            branches[b].push(a);
+            branches[a].push(b.try_into().expect("Bus index overflow in branch"));
+            branches[b].push(a.try_into().expect("Bus index overflow in branch"));
         }
 
         let mut connected: Vec<bool> = vec![false; graph.nodes.len()];
@@ -468,9 +473,9 @@ pub struct TeamSolution<T: Transition> {
     pub transitions: Vec<Vec<Vec<T>>>,
 
     /// Value function for each action.
-    pub values: Vec<Vec<f64>>,
+    pub values: Vec<Vec<Value>>,
     /// Index of optimal actions in each state.
-    pub policy: Vec<usize>,
+    pub policy: Vec<ActionIndex>,
     /// Given or computed Optimization horizon.
     pub horizon: usize,
 }
@@ -586,7 +591,7 @@ pub struct BenchmarkResult {
     /// Number of transitions.
     pub transitions: usize,
     /// Minimum value in the initial state.
-    pub value: f64,
+    pub value: Value,
     /// Given or computed Optimization horizon.
     pub horizon: usize,
 }

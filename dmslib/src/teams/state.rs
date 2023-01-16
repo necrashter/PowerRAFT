@@ -12,7 +12,7 @@ pub enum TeamState {
 
 impl Default for TeamState {
     fn default() -> Self {
-        TeamState::OnBus(usize::MAX)
+        TeamState::OnBus(Index::MAX)
     }
 }
 
@@ -67,17 +67,17 @@ impl State {
     }
 
     /// Cost function: the count of unenergized (damaged or unknown) buses.
-    pub fn get_cost(&self) -> f64 {
+    pub fn get_cost(&self) -> Cost {
         self.buses
             .iter()
             .filter(|&b| *b != BusState::Energized)
-            .count() as f64
+            .count() as Cost
     }
 
     /// Compute the transition probability from this state to another based on given
     /// failure probabilities.
-    pub fn get_probability(&self, other: &State, pfs: &[f64]) -> f64 {
-        let mut p: f64 = 1.0;
+    pub fn get_probability(&self, other: &State, pfs: &[Probability]) -> Probability {
+        let mut p: Probability = 1.0;
         for (i, (&a, &b)) in self.buses.iter().zip(other.buses.iter()).enumerate() {
             if a != b {
                 debug_assert_eq!(a, BusState::Unknown);
@@ -98,7 +98,7 @@ impl State {
                 return true;
             }
             for &j in graph.branches[i].iter() {
-                if self.buses[j] == BusState::Energized {
+                if self.buses[j as usize] == BusState::Energized {
                     return true;
                 }
             }
@@ -130,11 +130,11 @@ impl State {
                     return 1;
                 }
                 for &j in graph.branches[i].iter() {
-                    if self.buses[j] == BusState::Energized {
+                    if self.buses[j as usize] == BusState::Energized {
                         return 1;
                     }
                 }
-                usize::MAX
+                Index::MAX
             })
             .collect();
         {
@@ -142,13 +142,13 @@ impl State {
             let mut deque: VecDeque<Index> = minbeta
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &beta)| if beta == 1 { Some(i) } else { None })
+                .filter_map(|(i, &beta)| if beta == 1 { Some(i as Index) } else { None })
                 .collect();
             while let Some(i) = deque.pop_front() {
-                let next_beta: Index = minbeta[i] + 1;
-                for &j in graph.branches[i].iter() {
-                    if next_beta < minbeta[j] {
-                        minbeta[j] = next_beta;
+                let next_beta: Index = minbeta[i as usize] + 1;
+                for &j in graph.branches[i as usize].iter() {
+                    if next_beta < minbeta[j as usize] {
+                        minbeta[j as usize] = next_beta;
                         deque.push_back(j);
                     }
                 }

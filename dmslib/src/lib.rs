@@ -9,15 +9,11 @@ use serde::{Deserialize, Serialize};
 pub mod io;
 pub mod policy;
 pub mod teams;
+pub mod types;
 pub mod utils;
 
 #[global_allocator]
 static ALLOCATOR: cap::Cap<std::alloc::System> = cap::Cap::new(std::alloc::System, usize::MAX);
-
-/// Data type for bus indices.
-pub type Index = usize;
-/// Data type for measuring time.
-pub type Time = usize;
 
 /// Path where graphs are stored.
 /// Must end with `/`, or all subdirectory names will start with `/`.

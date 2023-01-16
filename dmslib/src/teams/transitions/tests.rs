@@ -3,7 +3,7 @@ use super::*;
 fn get_distance_matrix(size: usize) -> Array2<Time> {
     let mut a = ndarray::Array2::<Time>::zeros((size, size));
     for ((x, y), v) in a.indexed_iter_mut() {
-        *v = x.abs_diff(y);
+        *v = x.abs_diff(y) as Time;
     }
     a
 }

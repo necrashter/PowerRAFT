@@ -20,13 +20,13 @@ fn min_time_until_arrival(
                     None
                 } else {
                     let dest = action as usize;
-                    let travel_time = graph.travel_times[(*source, dest)];
+                    let travel_time = graph.travel_times[(*source as usize, dest)];
                     Some(travel_time)
                 }
             }
             TeamState::EnRoute(source, dest, t) => {
-                debug_assert!(action == *dest);
-                let travel_time = graph.travel_times[(*source, *dest)];
+                debug_assert_eq!(action, *dest);
+                let travel_time = graph.travel_times[(*source as usize, *dest as usize)];
                 Some(travel_time - t)
             }
         })
@@ -85,7 +85,7 @@ impl DetermineActionTime for TimeUntilEnergization {
             .zip(actions.iter())
             .filter_map(|(team, &action)| {
                 // Only consider buses that are energizable.
-                let beta = action_state.minbeta[action];
+                let beta = action_state.minbeta[action as usize];
                 if beta != 1 {
                     return None;
                 }
@@ -95,12 +95,12 @@ impl DetermineActionTime for TimeUntilEnergization {
                             action, *source,
                             "A team cannot reach & wait on a bus without energizing it."
                         );
-                        let travel_time = graph.travel_times[(*source, action)];
+                        let travel_time = graph.travel_times[(*source as usize, action as usize)];
                         Some(travel_time)
                     }
                     TeamState::EnRoute(source, dest, t) => {
-                        debug_assert!(action == *dest);
-                        let travel_time = graph.travel_times[(*source, *dest)];
+                        debug_assert_eq!(action, *dest);
+                        let travel_time = graph.travel_times[(*source as usize, *dest as usize)];
                         Some(travel_time - t)
                     }
                 }
@@ -116,7 +116,7 @@ fn advance_time_for_teams(
     graph: &Graph,
     teams: &[TeamState],
     actions: &[TeamAction],
-    time: usize,
+    time: Time,
 ) -> Vec<TeamState> {
     teams
         .iter()
@@ -125,8 +125,8 @@ fn advance_time_for_teams(
             let team = team.clone();
             match team {
                 TeamState::OnBus(source) => {
-                    let dest = action as usize;
-                    let travel_time = graph.travel_times[(source, dest)];
+                    let dest = action;
+                    let travel_time = graph.travel_times[(source as usize, dest as usize)];
                     if time >= travel_time {
                         TeamState::OnBus(dest)
                     } else {
@@ -135,7 +135,7 @@ fn advance_time_for_teams(
                 }
                 TeamState::EnRoute(source, dest, t) => {
                     debug_assert!(action == dest);
-                    let travel_time = graph.travel_times[(source, dest)];
+                    let travel_time = graph.travel_times[(source as usize, dest as usize)];
                     if time + t >= travel_time {
                         TeamState::OnBus(dest)
                     } else {
@@ -155,14 +155,14 @@ fn recursive_energization(
     graph: &Graph,
     teams: &[TeamState],
     buses: Vec<BusState>,
-) -> (bool, Vec<(f64, Vec<BusState>)>) {
+) -> (bool, Vec<(Probability, Vec<BusState>)>) {
     // Buses on which a team is present
-    let team_buses: Vec<usize> = teams
+    let team_buses: Vec<Index> = teams
         .iter()
         .filter_map(|team| match team {
             TeamState::OnBus(i) => {
                 let i = *i;
-                if i < buses.len() {
+                if (i as usize) < buses.len() {
                     Some(i)
                 } else {
                     None
@@ -173,9 +173,9 @@ fn recursive_energization(
         .unique()
         .collect();
     // All energization outcomes with probability.
-    let mut outcomes: Vec<(f64, Vec<BusState>)> = Vec::new();
+    let mut outcomes: Vec<(Probability, Vec<BusState>)> = Vec::new();
     // Recursive energization process
-    let mut queue: Vec<(f64, Vec<BusState>)> = Vec::new();
+    let mut queue: Vec<(Probability, Vec<BusState>)> = Vec::new();
 
     /// Compute alpha as defined in paper
     macro_rules! get_alpha {
@@ -184,12 +184,12 @@ fn recursive_energization(
                 .clone()
                 .into_iter()
                 .filter(|i| {
-                    let i = *i;
+                    let i = *i as usize;
                     $state[i] == BusState::Unknown && {
                         graph.connected[i]
                             || graph.branches[i]
                                 .iter()
-                                .any(|j| $state[*j] == BusState::Energized)
+                                .any(|j| $state[*j as usize] == BusState::Energized)
                     }
                 })
                 .collect()
@@ -199,19 +199,20 @@ fn recursive_energization(
     macro_rules! add_permutations {
         ($p:expr, $state:expr, $alpha:expr) => {{
             for &i in &$alpha {
-                $state[i] = BusState::Damaged;
+                $state[i as usize] = BusState::Damaged;
             }
             'permutations: loop {
                 let p = $alpha.iter().fold($p, |acc, &i| {
-                    let pf = graph.pfs[i];
-                    acc * if $state[i] == BusState::Damaged {
+                    let pf = graph.pfs[i as usize];
+                    acc * if $state[i as usize] == BusState::Damaged {
                         pf
                     } else {
                         1.0 - pf
                     }
                 });
                 queue.push((p, $state.clone()));
-                for &i in &$alpha {
+                for i in &$alpha {
+                    let i = *i as usize;
                     if $state[i] == BusState::Damaged {
                         $state[i] = BusState::Energized;
                         continue 'permutations;
@@ -227,7 +228,7 @@ fn recursive_energization(
     // Handle initial state
     {
         let mut state = buses;
-        let alpha: Vec<usize> = get_alpha!(state);
+        let alpha: Vec<Index> = get_alpha!(state);
         if alpha.is_empty() {
             outcomes.push((1.0, state));
             return (false, outcomes);
@@ -238,7 +239,7 @@ fn recursive_energization(
     // Handle states in queue
     while let Some(next) = queue.pop() {
         let (p, mut state) = next;
-        let alpha: Vec<usize> = get_alpha!(state);
+        let alpha: Vec<Index> = get_alpha!(state);
         if alpha.is_empty() {
             // Discard transitions with p = 0
             if p != 0.0 {
@@ -254,7 +255,7 @@ fn recursive_energization(
 
 impl State {
     /// Attempt to energize without moving the teams.
-    pub fn energize(&self, graph: &Graph) -> Option<Vec<(f64, Vec<BusState>)>> {
+    pub fn energize(&self, graph: &Graph) -> Option<Vec<(Probability, Vec<BusState>)>> {
         let (success, outcomes) = recursive_energization(graph, &self.teams, self.buses.clone());
         if success {
             Some(outcomes)
@@ -274,7 +275,7 @@ pub trait ActionApplier<TransitionType: Transition> {
     /// successor states.
     fn apply(
         action_state: &ActionState,
-        cost: f64,
+        cost: Cost,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(TransitionType, State)>;
@@ -286,7 +287,7 @@ pub trait ActionApplier<TransitionType: Transition> {
     #[inline]
     fn apply_state(
         state: &State,
-        cost: f64,
+        cost: Cost,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(TransitionType, State)> {
@@ -302,7 +303,7 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
     #[inline]
     fn apply(
         action_state: &ActionState,
-        cost: f64,
+        cost: Cost,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(RegularTransition, State)> {
@@ -313,7 +314,7 @@ impl ActionApplier<RegularTransition> for NaiveActionApplier {
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = RegularTransition {
-                    successor: usize::MAX,
+                    successor: StateIndex::MAX,
                     p,
                     cost,
                 };
@@ -340,7 +341,7 @@ impl<F: DetermineActionTime> ActionApplier<TimedTransition> for TimedActionAppli
     #[inline]
     fn apply(
         action_state: &ActionState,
-        cost: f64,
+        cost: Cost,
         graph: &Graph,
         actions: &[TeamAction],
     ) -> Vec<(TimedTransition, State)> {
@@ -353,7 +354,7 @@ impl<F: DetermineActionTime> ActionApplier<TimedTransition> for TimedActionAppli
             .into_iter()
             .map(|(p, bus_state)| {
                 let transition = TimedTransition {
-                    successor: usize::MAX,
+                    successor: StateIndex::MAX,
                     p,
                     cost,
                     time,

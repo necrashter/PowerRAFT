@@ -1,5 +1,5 @@
 use super::*;
-use bitvec::prelude::*;
+use bitvec::{macros::internal::funty::Integral, prelude::*};
 use num_traits::FromPrimitive;
 
 type TrieKey = u8;
@@ -16,10 +16,10 @@ fn get_bits_required_for(mut number: usize) -> usize {
 }
 
 #[inline]
-fn push_bits(bv: &mut BitVec, value: usize, bits: usize) {
+fn push_bits<T: Integral>(bv: &mut BitVec, value: T, bits: usize) {
     let start = bv.len();
     bv.resize(start + bits, false);
-    bv[start..(start + bits)].store::<usize>(value);
+    bv[start..(start + bits)].store::<T>(value);
 }
 
 #[inline]
@@ -101,16 +101,16 @@ impl StateCompressor {
         for _ in 0..self.team_count {
             if bits[index] {
                 index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<usize>();
+                let i = bits[index..(index + self.bus_bits)].load::<Index>();
                 index += self.bus_bits;
-                let j = bits[index..(index + self.bus_bits)].load::<usize>();
+                let j = bits[index..(index + self.bus_bits)].load::<Index>();
                 index += self.bus_bits;
-                let k = bits[index..(index + self.time_bits)].load::<usize>();
+                let k = bits[index..(index + self.time_bits)].load::<Time>();
                 index += self.time_bits;
                 teams.push(TeamState::EnRoute(i, j, k));
             } else {
                 index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<usize>();
+                let i = bits[index..(index + self.bus_bits)].load::<Index>();
                 index += self.bus_bits;
                 teams.push(TeamState::OnBus(i));
             }
@@ -224,7 +224,7 @@ impl StateIndexer for BitStackStateIndexer {
             .iter()
             .max()
             .expect("Cannot get max travel time");
-        BitStackStateIndexer::new(bus_count, team_count, *max_time)
+        BitStackStateIndexer::new(bus_count, team_count, *max_time as usize)
     }
 
     fn get_state_count(&self) -> usize {
@@ -480,7 +480,7 @@ impl StateIndexer for TrieStateIndexer {
             .iter()
             .max()
             .expect("Cannot get max travel time");
-        TrieStateIndexer::new(bus_count, team_count, *max_time)
+        TrieStateIndexer::new(bus_count, team_count, *max_time as usize)
     }
 
     fn get_state_count(&self) -> usize {

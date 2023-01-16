@@ -13,8 +13,8 @@ use transitions::*;
 
 use crate::io;
 use crate::policy::*;
+use crate::types::*;
 use crate::SolveFailure;
-use crate::{Index, Time};
 
 use itertools::Itertools;
 use ndarray::{Array1, Array2};
@@ -30,7 +30,7 @@ use hashbrown::HashMap;
 /// Represents the action of a single team with the index of the destination bus.
 /// For waiting teams, this is the index of the current bus.
 /// For en-route teams (continue action), this must be the index of the destination bus.
-pub type TeamAction = usize;
+pub type TeamAction = Index;
 
 /// Contains information about the distribution system.
 #[derive(Clone)]
@@ -46,7 +46,7 @@ pub struct Graph {
     /// True if a bus at given index is directly connected to energy resource.
     pub connected: Vec<bool>,
     /// Failure probabilities.
-    pub pfs: Array1<f64>,
+    pub pfs: Array1<Probability>,
     /// The latitude and longtitude for each vertex in team graph.
     pub team_nodes: Array2<f64>,
 }
@@ -70,7 +70,7 @@ impl Graph {
                 }
                 let through_k = self.travel_times[[i, k]] + self.travel_times[[k, j]];
                 if through_k <= direct {
-                    elem.push(k);
+                    elem.push(k as Index);
                 }
             }
         }
@@ -202,9 +202,9 @@ pub struct Solution<T: Transition> {
     pub transitions: Vec<Vec<Vec<T>>>,
 
     /// Value function for each action.
-    pub values: Vec<Vec<f64>>,
+    pub values: Vec<Vec<Value>>,
     /// Index of optimal actions in each state.
-    pub policy: Vec<usize>,
+    pub policy: Vec<ActionIndex>,
     /// Given or computed Optimization horizon.
     pub horizon: usize,
 }
@@ -227,7 +227,7 @@ impl GraphRefOrVal for &Graph {
 
 impl<T: Transition> Solution<T> {
     /// Get the minimum value of value function in the first state.
-    pub fn get_min_value(&self) -> f64 {
+    pub fn get_min_value(&self) -> Value {
         get_min_value(&self.values)
     }
 

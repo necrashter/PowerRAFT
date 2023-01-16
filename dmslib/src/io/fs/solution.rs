@@ -9,7 +9,7 @@ use super::*;
 /// than their counterparts in other modules.
 /// Some have different internal representation to make the save file smaller.
 mod saveable {
-    use crate::{Index, Time};
+    use crate::types::*;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize)]
@@ -39,8 +39,8 @@ mod saveable {
         pub teams: Vec<TeamState>,
         pub transitions: Vec<Vec<Vec<T>>>,
 
-        pub values: Vec<Vec<f64>>,
-        pub policy: Vec<usize>,
+        pub values: Vec<Vec<Value>>,
+        pub policy: Vec<ActionIndex>,
         pub horizon: usize,
     }
 

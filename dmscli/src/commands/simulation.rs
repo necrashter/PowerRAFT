@@ -1,5 +1,5 @@
 /// Loading solutions and simulating the restoration process.
-use dmslib::io::fs::SaveFile;
+use dmslib::{io::fs::SaveFile, types::Probability};
 use std::time::Instant;
 
 use super::*;
@@ -18,10 +18,15 @@ impl Load {
 
         let start_time = Instant::now();
 
-        let pfs: Vec<f64> = if let Some(pfo) = problem.pfo {
-            vec![pfo; problem.graph.nodes.len()]
+        let pfs: Vec<Probability> = if let Some(pfo) = problem.pfo {
+            vec![pfo as Probability; problem.graph.nodes.len()]
         } else {
-            problem.graph.nodes.iter().map(|node| node.pf).collect()
+            problem
+                .graph
+                .nodes
+                .iter()
+                .map(|node| node.pf as Probability)
+                .collect()
         };
 
         let mut transition_count: usize = 0;
@@ -33,7 +38,7 @@ impl Load {
                 for action in state_actions {
                     for transition in action {
                         let state = solution.get_state(i);
-                        let successor = solution.get_state(transition.successor);
+                        let successor = solution.get_state(transition.successor as usize);
 
                         state.get_cost();
                         // assert_eq!(state.get_cost(), transition.cost);

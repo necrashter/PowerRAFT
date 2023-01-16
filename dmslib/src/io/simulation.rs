@@ -46,20 +46,21 @@ impl<T: Transition> TeamSolution<T> {
             solution: &TeamSolution<T>,
             result: &mut RestorationSimulationResult,
         ) {
-            let action = &solution.transitions[index][solution.policy[index]];
-            if action.len() == 1 && action[0].get_successor() == index {
+            let action_index = solution.policy[index] as usize;
+            let action = &solution.transitions[index][action_index];
+            if action.len() == 1 && action[0].get_successor() as usize == index {
                 // Terminal state
                 return;
             }
             for transition in action {
-                let successor_index = transition.get_successor();
+                let successor_index = transition.get_successor() as usize;
                 let successor_state = solution.get_state(successor_index);
-                let p = p * transition.get_probability();
+                let p = p * (transition.get_probability() as f64);
                 // This is because costless transition still has time = 1.
-                let time = if transition.get_cost() == 0.0 {
+                let time = if transition.get_cost() == (0 as Cost) {
                     time
                 } else {
-                    time + transition.get_time()
+                    time + (transition.get_time() as usize)
                 };
 
                 for (i, (&a, &b)) in state
