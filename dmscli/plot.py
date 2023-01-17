@@ -54,6 +54,9 @@ def plot(benchmark_data, options):
     ax1.xaxis.set_major_locator(MaxNLocator(11))
     ax1.xaxis.grid(True, linestyle='--', which='major',
                    color='grey', alpha=.25)
+    if "xlim" in options:
+        ax1.set_xlim(*options["xlim"])
+        minmaxavg = options["xlim"][0] * 0.25 + options["xlim"][1] * 0.75
 
     ax1.yaxis.set_ticks([i*0.999 for i in range(len(benchmark_names)) if i % 2 == 1], minor=True)
     ax1.yaxis.grid(True,
@@ -160,6 +163,19 @@ def plot_memory(benchmark_data, options={}):
         "side_label": "Number of States",
         })
 
+def plot_ep(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Average Energization Probability",
+        "fields": [
+            [b["energizationP"] if "energizationP" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Energization Probability",
+        "xlim": (0, 1),
+        "side_field": "avgTime",
+        "side_label": "Avg. Time",
+        })
+
 def plot_value(benchmark_data, options={}):
     plot(benchmark_data, {
         **options,
@@ -177,12 +193,11 @@ def plot_avg(benchmark_data, options={}):
         **options,
         "title": "Average Time Until Energization",
         "fields": [
-            [b["value"] / (b["buses"] if "buses" in b else options["bus_count"])
-             if "value" in b else 0 for b in benchmark_data],
+            [b["avgTime"] if "avgTime" in b else 0 for b in benchmark_data],
         ],
         "xlabel": "Average Time Until Energization",
-        "side_field": "states",
-        "side_label": "Number of States",
+        "side_field": "energizationP",
+        "side_label": "Energization Probability",
         })
 
 def plot_states(benchmark_data, options={}):
@@ -193,6 +208,18 @@ def plot_states(benchmark_data, options={}):
             [b["states"] if "states" in b else 0 for b in benchmark_data],
         ],
         "xlabel": "Number of States",
+        "field_format": "%d",
+        })
+
+def plot_st(benchmark_data, options={}):
+    plot(benchmark_data, {
+        **options,
+        "title": "Number of Transitions/States",
+        "fields": [
+            [b["transitions"] if "transitions" in b else 0 for b in benchmark_data],
+            [b["states"] if "states" in b else 0 for b in benchmark_data],
+        ],
+        "xlabel": "Number of States/Transitions",
         "field_format": "%d",
         })
 
@@ -225,6 +252,8 @@ def process_datum(d, name):
         o["error"] = d["result"]["description"]
     if "success" in d["result"]:
         o.update(d["result"]["success"])
+    if "simulation" in d:
+        o.update(d["simulation"])
     return o
 
 
@@ -248,11 +277,15 @@ elif plot_type.startswith("m"):
 elif plot_type.startswith("v"):
     plot_value(data[::-1], {})
     filename += ".val"
+elif plot_type.startswith("e"):
+    plot_ep(data[::-1], {})
+    filename += ".ep"
 elif plot_type.startswith("a"):
-    plot_avg(data[::-1], {
-        "bus_count": args.bus_count,
-        })
+    plot_avg(data[::-1], {})
     filename += ".avg"
+elif plot_type.startswith("st"):
+    plot_st(data[::-1], {})
+    filename += ".st"
 elif plot_type.startswith("s"):
     plot_states(data[::-1], {})
     filename += ".states"
