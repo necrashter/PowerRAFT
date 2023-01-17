@@ -1,0 +1,95 @@
+{
+  "name": "TG Experiment",
+  "description": "Scaling with additional TG",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "1",
+          "graph": "../graphs/12-bus/tg-1.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "6",
+          "graph": "../graphs/12-bus/tg-6.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "10",
+          "graph": "../graphs/12-bus/tg-10.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "1, 6",
+          "graph": "../graphs/12-bus/tg-1-6.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "1, 10",
+          "graph": "../graphs/12-bus/tg-1-10.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "6, 10",
+          "graph": "../graphs/12-bus/tg-6-10.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "1, 6, 10",
+          "graph": "../graphs/12-bus/tg-1-6-10.json",
+          "teams": [
+            { "index": 0 },
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        }
+      ],
+      "optimizations": "optimizations/spow.json"
+    }
+  ]
+}
