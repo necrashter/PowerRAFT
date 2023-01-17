@@ -1,0 +1,22 @@
+{
+  "name": "Optimizations Experiment",
+  "description": "Measures the impact of optimizations on a 12-bus 3-Team problem. Discretized such that grid diagonal is 1.",
+  "tasks": [
+    {
+      "problems": [{
+        "name": "12-Bus TG (1) Team (1, 1, 1)",
+        "graph": "../graphs/12-bus/tg-1.json",
+        "teams": [
+          { "index": 0 },
+          { "index": 0 },
+          { "index": 0 }
+        ],
+        "timeFunction": {
+          "type": "DirectDistance",
+          "divider": 0.34
+        }
+      }],
+      "optimizations": "optimizations/all.json"
+    }
+  ]
+}
