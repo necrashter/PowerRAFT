@@ -100,7 +100,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> NaiveExplorer<'a, 
                         buses: bus_state,
                     };
                     let successor_index = self.states.index_state(successor_state);
-                    TT::costless_transition(successor_index as StateIndex, p)
+                    TT::time1_transition(successor_index as StateIndex, cost, p)
                 })
                 .collect()]
         } else {

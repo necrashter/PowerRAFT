@@ -9,9 +9,8 @@ use serde::{Serialize, Serializer};
 pub trait Transition: Serialize {
     /// Generate a self-transition for a terminal state.
     fn terminal_transition(index: StateIndex, cost: Cost) -> Self;
-    /// Generate a transition without cost with probability.
-    /// In teams, this is used for the case when a bus is energizable immediately at the start.
-    fn costless_transition(index: StateIndex, p: Probability) -> Self;
+    /// Generate a transition with given cost, probability and time = 1.
+    fn time1_transition(index: StateIndex, cost: Cost, p: Probability) -> Self;
 
     /// Set the index of successor state.
     fn set_successor(&mut self, index: StateIndex);
@@ -55,11 +54,11 @@ impl Transition for RegularTransition {
     }
 
     #[inline]
-    fn costless_transition(index: StateIndex, p: Probability) -> Self {
+    fn time1_transition(index: StateIndex, cost: Cost, p: Probability) -> Self {
         Self {
             successor: index,
             p,
-            cost: 0 as Cost,
+            cost,
         }
     }
 
@@ -164,12 +163,11 @@ impl Transition for TimedTransition {
     }
 
     #[inline]
-    fn costless_transition(index: StateIndex, p: Probability) -> Self {
+    fn time1_transition(index: StateIndex, cost: Cost, p: Probability) -> Self {
         Self {
             successor: index,
             p,
-            cost: 0 as Cost,
-            // NOTE: This should be 1 in order to mimic RegularTransition.
+            cost,
             time: 1,
         }
     }
@@ -485,8 +483,8 @@ mod tests {
                 assert_eq!(transition.cost, 6 as Cost);
                 assert_eq!(transition.p, 1.0);
                 assert_eq!(transition.successor, 2);
-                let mut transition = <$a>::costless_transition(2, 0.5);
-                assert_eq!(transition.cost, 0 as Cost);
+                let mut transition = <$a>::time1_transition(2, 6 as Cost, 0.5);
+                assert_eq!(transition.cost, 6 as Cost);
                 assert_eq!(transition.p, 0.5);
                 assert_eq!(transition.successor, 2);
                 transition.set_successor(20);

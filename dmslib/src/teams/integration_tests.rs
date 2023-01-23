@@ -19,7 +19,7 @@ fn pe0_1_team() {
             Some(30),
         )
         .unwrap();
-    const OPTIMAL_VALUE: Value = 129.283203125;
+    const OPTIMAL_VALUE: Value = 137.283203125;
 
     let solution = solve_generic::<
         RegularTransition,
