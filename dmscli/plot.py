@@ -76,7 +76,10 @@ def plot(benchmark_data, options):
         field = options["side_field"]
         # Set the right-hand Y-axis ticks and labels
         ax2 = ax1.twinx()
-        right_labels = [b[field] if field in b else "-" for b in benchmark_data]
+        if type(field) == list:
+            right_labels = field
+        else:
+            right_labels = [b[field] if field in b else "-" for b in benchmark_data]
         # set the tick locations
         ax2.set_yticks(pos)
         # make sure that the limits are set equally on both yaxis so the
@@ -188,15 +191,30 @@ def plot_value(benchmark_data, options={}):
         "side_label": "Number of States",
         })
 
+def plot_ac(benchmark_data, options={}):
+    avg_cost, horizon = compute_avg_cost(benchmark_data)
+    plot(benchmark_data, {
+        **options,
+        "title": "Average Expected Cost Per Bus (Horizon = %d)" % horizon,
+        "fields": [
+            avg_cost,
+        ],
+        "xlabel": "Average Expected Cost Per Bus",
+        "side_field": ["{:.3}".format(np.mean(b["energizationP"])) for b in benchmark_data],
+        "side_label": "Energization Probability",
+        })
+
 def plot_avg(benchmark_data, options={}):
     plot(benchmark_data, {
         **options,
         "title": "Average Time Until Energization",
         "fields": [
-            [b["avgTime"] if "avgTime" in b else 0 for b in benchmark_data],
+            # Avg time is multiplied by energizationP, so you need to divide it by energizationP if you
+            # want the avg time given that Energization happens
+            [np.mean([t/p for t, p in zip(b["avgTime"], b["energizationP"])]) for b in benchmark_data],
         ],
         "xlabel": "Average Time Until Energization",
-        "side_field": "energizationP",
+        "side_field": ["{:.3}".format(np.mean(b["energizationP"])) for b in benchmark_data],
         "side_label": "Energization Probability",
         })
 
@@ -256,6 +274,21 @@ def process_datum(d, name):
         o.update(d["simulation"])
     return o
 
+def compute_avg_cost(data):
+    """
+    Compute average cost per bus.
+    """
+    horizon = max([b["horizon"] for b in data])
+    avg_cost = []
+    for b in data:
+        costs = sum([t + (1-p)*horizon for t, p in zip(b["avgTime"], b["energizationP"])])
+        bus_count = len(b["energizationP"])
+        avg_cost.append(costs / bus_count)
+        # Quick sanity check
+        computed = sum([t + (1-p)*(b["horizon"]) for t, p in zip(b["avgTime"], b["energizationP"])])
+        print("value:", b["value"], "computed:", computed, "diff:", b["value"] - computed)
+    return avg_cost, horizon
+
 
 with open(args.filename) as f:
     data = json.load(f)
@@ -280,6 +313,9 @@ elif plot_type.startswith("v"):
 elif plot_type.startswith("e"):
     plot_ep(data[::-1], {})
     filename += ".ep"
+elif plot_type.startswith("ac"):
+    plot_ac(data[::-1], {})
+    filename += ".ac"
 elif plot_type.startswith("a"):
     plot_avg(data[::-1], {})
     filename += ".avg"
