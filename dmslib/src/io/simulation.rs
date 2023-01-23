@@ -9,13 +9,9 @@ use super::*;
 #[serde(rename_all = "camelCase")]
 pub struct RestorationSimulationResult {
     /// For each bus, energization probability.
-    pub bus_energization_p: Vec<f64>,
+    pub energization_p: Vec<f64>,
     /// For each bus, average time until energization (in all paths that energize it).
-    pub bus_avg_time: Vec<f64>,
-    /// For all buses, energization probability
-    pub energization_p: f64,
-    /// For all buses, average time until energization (in all paths that energize it).
-    pub avg_time: f64,
+    pub avg_time: Vec<f64>,
     /// Number of transitions simulated.
     pub simulated_transitions: usize,
     /// Execution time in seconds.
@@ -30,10 +26,8 @@ impl<T: Transition> TeamSolution<T> {
         let bus_count: usize = self.states.shape()[1];
 
         let mut result = RestorationSimulationResult {
-            bus_energization_p: vec![0.0; bus_count],
-            bus_avg_time: vec![0.0; bus_count],
-            energization_p: 0.0,
-            avg_time: 0.0,
+            energization_p: vec![0.0; bus_count],
+            avg_time: vec![0.0; bus_count],
             simulated_transitions: 0,
             runtime: 0.0,
         };
@@ -70,8 +64,8 @@ impl<T: Transition> TeamSolution<T> {
                     .enumerate()
                 {
                     if a != b && b == BusState::Energized {
-                        result.bus_energization_p[i] += p;
-                        result.bus_avg_time[i] += p * (time as f64);
+                        result.energization_p[i] += p;
+                        result.avg_time[i] += p * (time as f64);
                     }
                 }
 
@@ -81,9 +75,6 @@ impl<T: Transition> TeamSolution<T> {
         }
 
         visit(self.get_state(0), 0, 1.0, 0, self, &mut result);
-
-        result.energization_p = result.bus_energization_p.iter().sum::<f64>() / (bus_count as f64);
-        result.avg_time = result.bus_avg_time.iter().sum::<f64>() / (bus_count as f64);
 
         result.runtime = start_time.elapsed().as_secs_f64();
 

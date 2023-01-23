@@ -503,9 +503,12 @@ fn simulation_test_pf0_pe0_1_team() {
 
     dbg!(&simulation_result);
 
-    assert_eq!(simulation_result.energization_p, 1.0);
+    let energization_p = simulation_result.energization_p.iter().sum::<f64>() / (bus_count as f64);
+    let avg_time = simulation_result.avg_time.iter().sum::<f64>() / (bus_count as f64);
+
+    assert_eq!(energization_p, 1.0);
     assert_eq!(
-        simulation_result.avg_time as Value,
+        avg_time as Value,
         get_min_value(&solution.values) / (bus_count as Value),
     );
 }
