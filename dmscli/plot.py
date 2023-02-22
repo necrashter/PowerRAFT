@@ -289,6 +289,23 @@ def compute_avg_cost(data):
         print("value:", b["value"], "computed:", computed, "diff:", b["value"] - computed)
     return avg_cost, horizon
 
+def right_align(l):
+    maxl = max([len(i) for i in l])
+    return [(" "*maxl + i)[-maxl:] for i in l]
+
+def text_table_column(benchmark_data, field):
+    return right_align([str(b[field]) for b in benchmark_data])
+
+def numeric_table_column(benchmark_data, field, format_string):
+    min_i = min(enumerate(benchmark_data), key= lambda x: x[1][field] if field in x[1] else float('inf'))[0]
+    strs = [format_string % (b[field], ) if field in b else "-" for b in benchmark_data]
+    strs = right_align(strs)
+    strs = ["\\textbf{" + b + "}" if i == min_i else b + " " for i, b in enumerate(strs)]
+    strs = right_align(strs)
+    return strs
+
+def table_with(*columns):
+    return "\n".join([" & ".join(row) for row in zip(*columns)])
 
 with open(args.filename) as f:
     data = json.load(f)
@@ -304,29 +321,45 @@ plot_type = args.plot if args.plot else "t"
 if plot_type.startswith("t"):
     plot_time(data[::-1], {})
     filename += ".exec"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("m"):
     plot_memory(data[::-1], {})
     filename += ".mem"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("v"):
     plot_value(data[::-1], {})
     filename += ".val"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("e"):
     plot_ep(data[::-1], {})
     filename += ".ep"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("ac"):
     plot_ac(data[::-1], {})
     filename += ".ac"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("a"):
     plot_avg(data[::-1], {})
     filename += ".avg"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("st"):
     plot_st(data[::-1], {})
     filename += ".st"
+    plt.savefig(filename + ".png", bbox_inches='tight')
 elif plot_type.startswith("s"):
     plot_states(data[::-1], {})
     filename += ".states"
+    plt.savefig(filename + ".png", bbox_inches='tight')
+elif plot_type.startswith("T"):
+    benchmark_data = data#[::-1]
+    table = table_with(
+            text_table_column(benchmark_data, "name"),
+            numeric_table_column(benchmark_data, "generationTime", "%.2f"),
+            numeric_table_column(benchmark_data, "totalTime", "%.2f"),
+            numeric_table_column(benchmark_data, "states", "%d"),
+    )
+    print(args.filename)
+    print(table)
 else:
     print("Unknown plot type:", plot_type)
 
-plt.savefig(filename + ".png", bbox_inches='tight')
-# plt.show()
