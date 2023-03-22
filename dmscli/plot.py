@@ -118,7 +118,9 @@ def plot(benchmark_data, options):
                             ha=align, va='center',
                             color=clr, weight='bold', clip_on=True)
 
-    for data, rects in zip(datas[1:], data_rects[1:]):
+    for i, (data, rects) in enumerate(zip(datas[1:], data_rects[1:])):
+        if "disable_annotate_" + str(i+1) in options:
+            continue
         for datum, rect, error in zip(data, rects, errors):
             # Rectangle widths are already integer-valued but are floating
             # type, so it helps to remove the trailing decimal point and 0 by
@@ -237,8 +239,11 @@ def plot_st(benchmark_data, options={}):
             [b["transitions"] if "transitions" in b else 0 for b in benchmark_data],
             [b["states"] if "states" in b else 0 for b in benchmark_data],
         ],
+        "disable_annotate_1": True,
         "xlabel": "Number of States/Transitions",
         "field_format": "%d",
+        "side_field": "states",
+        "side_label": "Number of States",
         })
 
 
