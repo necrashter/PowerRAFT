@@ -3,6 +3,12 @@
 PowerRAFT is a program for computing the optimal power restoration strategy in a post-disaster scenario.
 It features a web-based interface as well as a command line interface for running the experiments.
 
+## Demonstration Video
+
+Click [this link](https://youtu.be/rr4daz0UgrY) or the image below to watch:
+
+[![Watch the video](https://img.youtube.com/vi/rr4daz0UgrY/maxresdefault.jpg)](https://youtu.be/rr4daz0UgrY)
+
 
 ## Cloning the repository
 
