@@ -212,8 +212,8 @@ impl Serialize for TimedTransition {
     }
 }
 
-/// Determine the optimization horizon from transition space.
-pub fn determine_horizon<T: Transition>(transitions: &[Vec<Vec<T>>]) -> usize {
+/// Run depth-first search on the transition space.
+fn dfs<T: Transition>(transitions: &[Vec<Vec<T>>]) -> Vec<DfsState<usize>> {
     let mut memoization = vec![DfsState::<usize>::New; transitions.len()];
 
     fn visit<T: Transition>(
@@ -244,7 +244,34 @@ pub fn determine_horizon<T: Transition>(transitions: &[Vec<Vec<T>>]) -> usize {
         memoization[index as usize] = DfsState::Done(max_depth);
         max_depth
     }
-    visit(0, transitions, &mut memoization)
+    visit(0, transitions, &mut memoization);
+
+    memoization
+}
+
+/// Returns 1 plus the length of the longest path starting from each state to a
+/// terminal state via depth-first search.
+/// For terminal states, the returned value is 1.
+///
+/// Panics in case of unreachable states.
+pub fn longest_path_lengths<T: Transition>(transitions: &[Vec<Vec<T>>]) -> Vec<usize> {
+    dfs(transitions)
+        .into_iter()
+        .map(|dfs_state| {
+            if let DfsState::Done(depth) = dfs_state {
+                depth
+            } else {
+                panic!("DFS failed to reach all states.");
+            }
+        })
+        .collect()
+}
+
+/// Determine the optimization horizon from transition space.
+pub fn determine_horizon<T: Transition>(transitions: &[Vec<Vec<T>>]) -> usize {
+    let memoization = dfs(transitions);
+    let DfsState::Done(depth) = memoization[0] else { unreachable!() };
+    depth
 }
 
 /// Generic policy synthesizer for the given transition type.
@@ -653,5 +680,70 @@ mod tests {
             vec![vec![15 as Value], vec![10 as Value], vec![20 as Value]]
         );
         assert_eq!(actions, vec![0, 0, 0]);
+    }
+
+    #[test]
+    fn longest_path_lengths_simple_test() {
+        let transitions: Vec<Vec<Vec<RegularTransition>>> = vec![
+            vec![vec![
+                RegularTransition {
+                    successor: 1,
+                    cost: 0 as Cost,
+                    p: 0.5,
+                },
+                RegularTransition {
+                    successor: 2,
+                    cost: 0 as Cost,
+                    p: 0.5,
+                },
+            ]],
+            vec![vec![RegularTransition {
+                successor: 1,
+                cost: 1 as Cost,
+                p: 1.0,
+            }]],
+            vec![vec![RegularTransition {
+                successor: 2,
+                cost: 2 as Cost,
+                p: 1.0,
+            }]],
+        ];
+        let depths = longest_path_lengths(&transitions);
+        assert_eq!(depths, vec![2, 1, 1]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn longest_path_lengths_unreachable_test() {
+        let transitions: Vec<Vec<Vec<RegularTransition>>> = vec![
+            vec![vec![
+                RegularTransition {
+                    successor: 1,
+                    cost: 0 as Cost,
+                    p: 0.5,
+                },
+                RegularTransition {
+                    successor: 2,
+                    cost: 0 as Cost,
+                    p: 0.5,
+                },
+            ]],
+            vec![vec![RegularTransition {
+                successor: 1,
+                cost: 1 as Cost,
+                p: 1.0,
+            }]],
+            vec![vec![RegularTransition {
+                successor: 2,
+                cost: 2 as Cost,
+                p: 1.0,
+            }]],
+            vec![vec![RegularTransition {
+                successor: 3,
+                cost: 2 as Cost,
+                p: 1.0,
+            }]],
+        ];
+        longest_path_lengths(&transitions);
     }
 }
