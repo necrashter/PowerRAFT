@@ -512,3 +512,64 @@ fn simulation_test_pf0_pe0_1_team() {
         get_min_value(&solution.values) / (bus_count as Value),
     );
 }
+
+/// Test whether the policy from our MDP is actually stationary.
+#[test]
+fn stationary_policy_test() {
+    let input_graph: io::Graph = serde_json::from_str(SYSTEM_PAPER_EXAMPLE_0).unwrap();
+    let (problem, config) = input_graph
+        .to_teams_problem(
+            vec![
+                io::Team {
+                    index: Some(1),
+                    latlng: None,
+                },
+                io::Team {
+                    index: Some(6),
+                    latlng: None,
+                },
+            ],
+            Some(30),
+        )
+        .unwrap();
+
+    let ExploreResult {
+        bus_states: _,
+        team_states: _,
+        transitions,
+        max_memory: _,
+    } = NaiveExplorer::<
+        RegularTransition,
+        FilterOnWay<PermutationalActions>,
+        SortedStateIndexer<NaiveStateIndexer>,
+    >::memory_limited_explore::<NaiveActionApplier>(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        config.max_memory,
+    )
+    .unwrap();
+    assert_eq!(transitions.len(), 3489);
+
+    let lengths = longest_path_lengths(&transitions);
+    let max_horizon = lengths[0];
+    assert_eq!(max_horizon, 14);
+
+    let (_, mut prev_policy) = NaivePolicySynthesizer::synthesize_policy(&transitions, 1);
+    let mut checks: usize = 0;
+    for horizon in 1..max_horizon {
+        let (_, new_policy) = NaivePolicySynthesizer::synthesize_policy(&transitions, horizon + 1);
+        for (length, old_action, new_action) in itertools::izip!(
+            lengths.iter().cloned(),
+            prev_policy.iter().cloned(),
+            new_policy.iter().cloned(),
+        ) {
+            if length <= horizon {
+                assert_eq!(old_action, new_action);
+                checks += 1;
+            }
+        }
+        prev_policy = new_policy;
+    }
+    let predicted_checks: usize = lengths.into_iter().map(|length| max_horizon - length).sum();
+    assert_eq!(checks, predicted_checks);
+}
