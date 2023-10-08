@@ -21,3 +21,10 @@ bincode = "1.3.3"
 default = ["hashbrown", "minmem"]
 hashbrown = ["dep:hashbrown"]
 minmem = []
+
+[dev-dependencies]
+iai-callgrind = "0.7.1"
+
+[[bench]]
+name = "pe0_demo_iai"
+harness = false

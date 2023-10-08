@@ -5,8 +5,8 @@ mod solve_variations;
 pub mod state;
 pub mod transitions;
 
-use actions::*;
-use exploration::*;
+pub use actions::*;
+pub use exploration::*;
 pub use solve_variations::*;
 use state::*;
 use transitions::*;
@@ -134,7 +134,7 @@ impl Default for Config {
     }
 }
 
-fn solve_generic<'a, TT, E, AA, PS>(
+pub fn solve_generic<'a, TT, E, AA, PS>(
     graph: &'a Graph,
     initial_teams: Vec<TeamState>,
     config: &Config,

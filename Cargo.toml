@@ -1,7 +1,11 @@
 [workspace]
-
+resolver = "2"
 members = [
   "server",
   "dmslib",
   "dmscli",
 ]
+
+[profile.bench]
+# Include debug symbols in benchmarks
+debug = 2
