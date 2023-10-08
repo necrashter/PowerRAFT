@@ -66,18 +66,8 @@ impl StateCompressor {
             }
         }
         for team in teams.iter() {
-            match *team {
-                TeamState::OnBus(i) => {
-                    out.push(false);
-                    push_bits(&mut out, i, self.bus_bits);
-                }
-                TeamState::EnRoute(i, j, k) => {
-                    out.push(true);
-                    push_bits(&mut out, i, self.bus_bits);
-                    push_bits(&mut out, j, self.bus_bits);
-                    push_bits(&mut out, k, self.time_bits);
-                }
-            }
+            push_bits(&mut out, team.time, self.time_bits);
+            push_bits(&mut out, team.index, self.bus_bits);
         }
         out
     }
@@ -99,21 +89,14 @@ impl StateCompressor {
             index += 2;
         }
         for _ in 0..self.team_count {
-            if bits[index] {
-                index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<BusIndex>();
-                index += self.bus_bits;
-                let j = bits[index..(index + self.bus_bits)].load::<BusIndex>();
-                index += self.bus_bits;
-                let k = bits[index..(index + self.time_bits)].load::<Time>();
-                index += self.time_bits;
-                teams.push(TeamState::EnRoute(i, j, k));
-            } else {
-                index += 1;
-                let i = bits[index..(index + self.bus_bits)].load::<BusIndex>();
-                index += self.bus_bits;
-                teams.push(TeamState::OnBus(i));
-            }
+            let time = bits[index..(index + self.time_bits)].load::<Time>();
+            index += self.time_bits;
+            let bus_index = bits[index..(index + self.bus_bits)].load::<BusIndex>();
+            index += self.bus_bits;
+            teams.push(TeamState {
+                time,
+                index: bus_index,
+            });
         }
         State { buses, teams }
     }
@@ -543,49 +526,88 @@ mod tests {
     use super::*;
     use ndarray::array;
     use BusState::*;
-    use TeamState::*;
 
     fn get_states() -> Vec<State> {
         vec![
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![EnRoute(2, 2, 3), OnBus(1), OnBus(1)],
+                teams: vec![
+                    TeamState { index: 2, time: 3 },
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Damaged],
-                teams: vec![OnBus(0), EnRoute(1, 2, 2), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 2, time: 2 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Damaged, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), EnRoute(2, 1, 3)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 1, time: 3 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Damaged, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Energized, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
         ]
     }
@@ -626,12 +648,36 @@ mod tests {
         ];
 
         let team_states: Array2<TeamState> = array![
-            [OnBus(2), OnBus(0), EnRoute(2, 1, 3)],
-            [OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
-            [EnRoute(2, 2, 3), OnBus(1), OnBus(1)],
-            [OnBus(0), OnBus(0), OnBus(0)],
-            [OnBus(0), EnRoute(0, 2, 1), EnRoute(2, 2, 3)],
-            [EnRoute(2, 2, 3), EnRoute(0, 2, 1), OnBus(1)],
+            [
+                TeamState { time: 0, index: 2 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 1, time: 3 }
+            ],
+            [
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 2, time: 1 },
+                TeamState { time: 0, index: 0 }
+            ],
+            [
+                TeamState { index: 2, time: 3 },
+                TeamState { time: 0, index: 1 },
+                TeamState { time: 0, index: 1 }
+            ],
+            [
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
+            ],
+            [
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 2, time: 1 },
+                TeamState { index: 2, time: 3 }
+            ],
+            [
+                TeamState { index: 2, time: 3 },
+                TeamState { index: 2, time: 1 },
+                TeamState { time: 0, index: 1 }
+            ],
         ];
 
         let bitvecs = comp.compress(bus_states.clone(), team_states.clone());

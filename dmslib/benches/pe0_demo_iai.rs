@@ -1,8 +1,8 @@
-use iai_callgrind::{black_box, main, library_benchmark_group, library_benchmark};
-use dmslib::teams::*;
-use dmslib::teams::transitions::*;
-use dmslib::teams::state::*;
 use dmslib::policy::*;
+use dmslib::teams::state::*;
+use dmslib::teams::transitions::*;
+use dmslib::teams::*;
+use iai_callgrind::{black_box, library_benchmark, library_benchmark_group, main};
 
 const SYSTEM_PAPER_EXAMPLE_0: &str = include_str!("../../graphs/FieldTeams/paperE0.json");
 
@@ -78,7 +78,11 @@ fn solve_opt(input: (Problem, Config)) {
     let (problem, config) = input;
     let solution = solve_generic::<
         TimedTransition,
-        NaiveExplorer<TimedTransition, FilterEnergizedOnWay<PermutationalActions>, SortedStateIndexer<BitStackStateIndexer>>,
+        NaiveExplorer<
+            TimedTransition,
+            FilterEnergizedOnWay<PermutationalActions>,
+            SortedStateIndexer<BitStackStateIndexer>,
+        >,
         TimedActionApplier<TimeUntilEnergization>,
         NaiveTimedPolicySynthesizer,
     >(&problem.graph, problem.initial_teams.clone(), &config)
