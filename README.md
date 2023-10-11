@@ -134,7 +134,7 @@ Besides, the Python script `dmscli/plot.py` is provided for creating plots from 
 `numpy` and `matplotlib` libraries must be installed in order to use this script.
 
 `plot.py` receives one positional argument containing the result JSON file.
-In addition to this, `-t` argument must be provided to specify the plot type. Available plot types;
+In addition to this, `-p` argument must be provided to specify the plot type. Available plot types:
 - `t`: Execution time
 - `m`: Memory
 - `v`: Value function
@@ -144,18 +144,18 @@ In addition to this, `-t` argument must be provided to specify the plot type. Av
 - `st`: Number of transitions and states
 - `s`: Number of states
 
-The optional `-name` argument determines the name of each run in experiment.
+The optional `-n` argument determines the name of each run in experiment.
 By default, the name given in the experiment file is used, but for optimization experiments, it's more convenient to use the optimization name instead.
-When `-name opt` is provided, each run is named according to the optimizations used.
+When `-n opt` is provided, each run is named according to the optimizations used.
 The naming convention for optimizations is explained in the paper.
 
 Example usage:
 ```sh
-python3 plot.py -t t -name opt results/opt.wscc.t-9-9-9.json
+python3 plot.py -p t -n opt results/opt.wscc.t-9-9-9.json
 # Figure 13
-python3 plot.py -t ac results/tg.12-bus.json 
+python3 plot.py -p ac results/tg.12-bus.json 
 # Figure 14
-python3 plot.py -t st results/tg.12-bus.json 
+python3 plot.py -p st results/tg.12-bus.json 
 ```
 
 The created plots are saved in the results directory.
