@@ -6,7 +6,7 @@
       "problems": [
         {
           "name": "Mid17 (0, 0)",
-          "graph": "../graphs/midsize-17-grid.json",
+          "graph": "../graphs/midsize-17/default.json",
           "teams": [
             { "index": 0 },
             { "index": 0 }
