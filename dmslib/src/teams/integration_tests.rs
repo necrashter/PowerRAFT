@@ -463,6 +463,7 @@ fn save_test_pe0_1_team() {
         horizon: Some(10),
         pfo: None,
         time_func: Default::default(),
+        partitions: None,
     };
 
     let solution = problem.clone().solve_naive().unwrap();
@@ -499,6 +500,7 @@ fn simulation_test_pf0_pe0_1_team() {
         horizon: Some(10),
         pfo: Some(0.0),
         time_func: Default::default(),
+        partitions: None,
     };
 
     let solution = problem.solve_naive().unwrap();

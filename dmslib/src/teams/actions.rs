@@ -648,3 +648,125 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterOnWay<'a, T> {
             .into_iter()
     }
 }
+
+pub struct SPartIterator {
+    /// Target options for each team.
+    options: Vec<Vec<BusIndex>>,
+    /// Next action
+    next: Option<Vec<TeamAction>>,
+}
+
+impl SPartIterator {
+    /// Updates the `current` action field with the next actions, not necessarily feasible.
+    /// Returns True if actions wrapped around.
+    fn next_action(&self, mut action: Vec<TeamAction>) -> Option<Vec<TeamAction>> {
+        for i in 0..action.len() {
+            action[i] += 1;
+            if (action[i] as usize) < self.options[i].len() {
+                return Some(action);
+            } else {
+                action[i] = 0;
+            }
+        }
+        // If we reach this point, then we wrapped around; no more actions
+        None
+    }
+}
+
+impl Iterator for SPartIterator {
+    type Item = Vec<TeamAction>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = self.next.take();
+        if let Some(action) = current {
+            let current: Vec<TeamAction> = action
+                .iter()
+                .zip(self.options.iter())
+                .map(|(&action_i, options)| options[action_i as usize])
+                .collect_vec();
+            self.next = self.next_action(action);
+            Some(current)
+        } else {
+            None
+        }
+    }
+}
+
+/// Generates partitioned actions. Requirements:
+/// - No intersections between partitions.
+/// - Union of partitions contains all buses.
+pub struct SPartActions<'a> {
+    partitions: &'a Vec<Vec<BusIndex>>,
+    /// For each partition: list of buses that have a connection to outside.
+    partition_edges: Vec<Vec<BusIndex>>,
+}
+
+impl<'a> ActionSet<'a> for SPartActions<'a> {
+    fn setup(graph: &'a Graph) -> Self {
+        let partitions = graph.partitions.as_ref().unwrap();
+        let partition_edges = partitions
+            .iter()
+            .map(|partition| {
+                partition
+                    .iter()
+                    .cloned()
+                    .filter(|i| {
+                        for other in &graph.branches[*i as usize] {
+                            if partition.binary_search(other).is_err() {
+                                return true;
+                            }
+                        }
+                        false
+                    })
+                    .collect_vec()
+            })
+            .collect_vec();
+        Self {
+            partitions,
+            partition_edges,
+        }
+    }
+
+    type IT<'b> = SPartIterator where Self: 'b;
+
+    fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
+        let team_count = action_state.team_nodes.len();
+        let options = self
+            .partitions
+            .iter()
+            .enumerate()
+            .map(|(team_i, partition)| {
+                // Check en-route.
+                let team = &action_state.state.teams[team_i];
+                if team.time > 0 {
+                    return vec![team.index];
+                }
+                // Check energizable.
+                let energizable = action_state
+                    .energizable_buses
+                    .iter()
+                    .cloned()
+                    .filter(|i| partition.binary_search(i).is_ok())
+                    .collect_vec();
+                if !energizable.is_empty() {
+                    return energizable;
+                }
+                // No energizable buses in this partition, we need to wait on edge.
+                let edge = self.partition_edges[team_i]
+                    .iter()
+                    .cloned()
+                    .filter(|i| action_state.minbeta[*i as usize] != BusIndex::MAX)
+                    .collect_vec();
+                if !edge.is_empty() {
+                    return edge;
+                }
+                // Nothing to do
+                vec![team.index]
+            })
+            .collect_vec();
+        SPartIterator {
+            options,
+            next: Some(vec![0; team_count]),
+        }
+    }
+}

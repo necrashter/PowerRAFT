@@ -200,6 +200,8 @@ pub struct TeamProblem {
     /// Travel time function.
     #[serde(default, rename = "timeFunction")]
     pub time_func: TimeFunc,
+    /// Partition for each team.
+    pub partitions: Option<Vec<Vec<BusIndex>>>,
 }
 
 impl TeamProblem {
@@ -247,6 +249,7 @@ impl TeamProblem {
             horizon,
             pfo,
             time_func,
+            partitions,
         } = self;
 
         let mut locations: Vec<LatLng> =
@@ -317,12 +320,20 @@ impl TeamProblem {
             team_nodes[(i, 1)] = location.1;
         }
 
+        let partitions = partitions.map(|mut partitions| {
+            for partition in &mut partitions {
+                partition.sort_unstable()
+            }
+            partitions
+        });
+
         let graph = teams::Graph {
             travel_times,
             branches,
             connected,
             pfs,
             team_nodes,
+            partitions,
         };
 
         Ok((

@@ -1,6 +1,6 @@
 use super::*;
 
-fn get_paper_example_graph() -> Graph {
+fn get_paper_example_graph(partitions: Option<Vec<Vec<BusIndex>>>) -> Graph {
     Graph {
         travel_times: ndarray::arr2(&[
             [0, 1, 2, 1, 2, 2],
@@ -14,6 +14,7 @@ fn get_paper_example_graph() -> Graph {
         connected: vec![true, false, false, true, false, false],
         pfs: ndarray::arr1(&[0.5, 0.5, 0.25, 0.25, 0.25, 0.25]),
         team_nodes: Array2::default((0, 0)),
+        partitions,
     }
 }
 
@@ -26,7 +27,7 @@ fn check_sets<T: PartialEq>(output: &Vec<T>, expected: &Vec<T>) {
 
 #[test]
 fn paper_example_4_1_1() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
         BusState::Unknown,
@@ -110,7 +111,7 @@ fn paper_example_4_1_1() {
 
 #[test]
 fn test_timed_action_applier() {
-    let mut graph = get_paper_example_graph();
+    let mut graph = get_paper_example_graph(None);
     graph.travel_times.mapv_inplace(|x| 2 * x);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
@@ -223,7 +224,7 @@ fn test_timed_action_applier() {
 
 #[test]
 fn on_energized_bus_actions() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
         BusState::Unknown,
@@ -313,7 +314,7 @@ fn on_energized_bus_actions() {
 
 #[test]
 fn wait_moving_elimination() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Unknown,
         BusState::Unknown,
@@ -351,7 +352,7 @@ fn wait_moving_elimination() {
 
 #[test]
 fn beta_values_on_paper_example() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let dummy_teams = vec![TeamState { time: 0, index: 0 }];
 
     let state = State {
@@ -408,6 +409,7 @@ fn minimal_nonopt_permutations() {
         connected: vec![true, true],
         pfs: ndarray::arr1(&[0.5, 0.5]),
         team_nodes: Array2::default((0, 0)),
+        partitions: None,
     };
 
     let state = State {
@@ -460,7 +462,7 @@ fn minimal_nonopt_permutations() {
 
 #[test]
 fn eliminating_cycle_permutations() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
         BusState::Unknown,
@@ -493,7 +495,7 @@ fn eliminating_cycle_permutations() {
 /// beta set.
 #[test]
 fn cannot_wait_if_no_path() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
         BusState::Energized,
@@ -522,7 +524,7 @@ fn cannot_wait_if_no_path() {
 /// Checks the action set when all teams are en-route.
 #[test]
 fn all_enroute_actions() {
-    let graph = get_paper_example_graph();
+    let graph = get_paper_example_graph(None);
     let buses: Vec<BusState> = vec![
         BusState::Energized,
         BusState::Energized,
@@ -546,4 +548,64 @@ fn all_enroute_actions() {
     let iter = PermutationalActions::setup(&graph);
     let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
     assert_eq!(actions, expected_actions);
+}
+
+#[test]
+fn partition_test() {
+    let graph = get_paper_example_graph(Some(vec![vec![0, 1, 2], vec![3, 4, 5]]));
+    let iter = SPartActions::setup(&graph);
+
+    let state = State {
+        buses: vec![
+            BusState::Energized,
+            BusState::Unknown,
+            BusState::Unknown,
+            BusState::Energized,
+            BusState::Unknown,
+            BusState::Unknown,
+        ],
+        teams: vec![
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 3 },
+        ],
+    };
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![1, 4]];
+    check_sets(&actions, &expected_actions);
+
+    let state = State {
+        buses: vec![
+            BusState::Damaged,
+            BusState::Unknown,
+            BusState::Unknown,
+            BusState::Energized,
+            BusState::Unknown,
+            BusState::Unknown,
+        ],
+        teams: vec![
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 3 },
+        ],
+    };
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 4]];
+    check_sets(&actions, &expected_actions);
+
+    let state = State {
+        buses: vec![
+            BusState::Damaged,
+            BusState::Unknown,
+            BusState::Unknown,
+            BusState::Damaged,
+            BusState::Unknown,
+            BusState::Unknown,
+        ],
+        teams: vec![
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 3 },
+        ],
+    };
+    let actions: Vec<_> = iter.all_actions_in_state(&state, &graph);
+    let expected_actions: Vec<Vec<TeamAction>> = vec![vec![0, 3]];
+    check_sets(&actions, &expected_actions);
 }

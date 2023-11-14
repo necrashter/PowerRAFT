@@ -16,6 +16,7 @@ fn test_min_time_until_arrival() {
         connected: vec![],
         pfs: ndarray::arr1(&[]),
         team_nodes: Array2::default((0, 0)),
+        partitions: None,
     };
 
     assert_eq!(
@@ -342,6 +343,7 @@ fn ten_bus_linear_system() -> (Graph, Vec<BusState>) {
         ],
         pfs: ndarray::arr1(&[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]),
         team_nodes: Array2::default((0, 0)),
+        partitions: None,
     };
 
     let bus_state = vec![

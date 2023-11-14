@@ -49,6 +49,8 @@ pub struct Graph {
     pub pfs: Array1<Probability>,
     /// The latitude and longtitude for each vertex in team graph.
     pub team_nodes: Array2<f64>,
+    /// Partition for each team. Each partition is sorted.
+    pub partitions: Option<Vec<Vec<BusIndex>>>,
 }
 
 impl Graph {
@@ -99,6 +101,7 @@ impl io::Graph {
             pfo: None,
             horizon,
             time_func: io::TimeFunc::default(),
+            partitions: None,
         };
 
         team_problem.prepare()

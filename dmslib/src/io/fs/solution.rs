@@ -187,6 +187,7 @@ mod saveable {
         pub horizon: Option<usize>,
         pub pfo: Option<f64>,
         pub time_func: TimeFunc,
+        pub partitions: Option<Vec<Vec<BusIndex>>>,
     }
 
     impl From<TeamProblem> for super::TeamProblem {

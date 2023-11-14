@@ -242,6 +242,7 @@ pub fn solve_custom_timed(
             FilterOnWay<PermutationalActions>,
             FilterEnergizedOnWay<NaiveActions>,
             FilterEnergizedOnWay<PermutationalActions>,
+            SPartActions,
         ],
         solve(graph, initial_teams, config)
     }
