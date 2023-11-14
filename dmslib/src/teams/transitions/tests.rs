@@ -22,9 +22,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[1, 2, 3],
         ),
@@ -34,17 +34,17 @@ fn test_min_time_until_arrival() {
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[1, 2, 3],
             1,
         ),
         vec![
-            TeamState::OnBus(1),
-            TeamState::EnRoute(0, 2, 1),
-            TeamState::EnRoute(0, 3, 1)
+            TeamState { time: 0, index: 1 },
+            TeamState { index: 2, time: 1 },
+            TeamState { index: 3, time: 2 }
         ],
     );
 
@@ -52,9 +52,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[5, 8, 4],
         ),
@@ -64,68 +64,68 @@ fn test_min_time_until_arrival() {
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[5, 8, 4],
             1,
         ),
         vec![
-            TeamState::EnRoute(0, 5, 1),
-            TeamState::EnRoute(0, 8, 1),
-            TeamState::EnRoute(0, 4, 1)
+            TeamState { index: 5, time: 4 },
+            TeamState { index: 8, time: 7 },
+            TeamState { index: 4, time: 3 }
         ],
     );
     assert_eq!(
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[5, 8, 4],
             4,
         ),
         vec![
-            TeamState::EnRoute(0, 5, 4),
-            TeamState::EnRoute(0, 8, 4),
-            TeamState::OnBus(4)
+            TeamState { index: 5, time: 1 },
+            TeamState { index: 8, time: 4 },
+            TeamState { time: 0, index: 4 }
         ],
     );
     assert_eq!(
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[5, 8, 4],
             5,
         ),
         vec![
-            TeamState::OnBus(5),
-            TeamState::EnRoute(0, 8, 5),
-            TeamState::OnBus(4)
+            TeamState { time: 0, index: 5 },
+            TeamState { index: 8, time: 3 },
+            TeamState { time: 0, index: 4 }
         ],
     );
     assert_eq!(
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[5, 8, 4],
             30,
         ),
         vec![
-            TeamState::OnBus(5),
-            TeamState::OnBus(8),
-            TeamState::OnBus(4)
+            TeamState { time: 0, index: 5 },
+            TeamState { time: 0, index: 8 },
+            TeamState { time: 0, index: 4 }
         ],
     );
 
@@ -133,9 +133,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(0)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 }
             ],
             &[0, 19, 0],
         ),
@@ -146,9 +146,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(1)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 1 }
             ],
             &[5, 0, 4],
         ),
@@ -159,9 +159,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 }
             ],
             &[5, 8, 4],
         ),
@@ -172,9 +172,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 }
             ],
             &[0, 8, 4],
         ),
@@ -184,58 +184,47 @@ fn test_min_time_until_arrival() {
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 }
             ],
             &[0, 8, 4],
             1
         ),
         vec![
-            TeamState::OnBus(0),
-            TeamState::EnRoute(0, 8, 1),
-            TeamState::OnBus(4)
+            TeamState { time: 0, index: 0 },
+            TeamState { index: 8, time: 7 },
+            TeamState { time: 0, index: 4 }
         ],
     );
     assert_eq!(
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 }
             ],
             &[0, 8, 4],
             3
         ),
         vec![
-            TeamState::OnBus(0),
-            TeamState::EnRoute(0, 8, 3),
-            TeamState::OnBus(4)
-        ],
-    );
-    assert_eq!(
-        advance_time_for_teams(
-            &graph,
-            &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2)
-            ],
-            &[0, 8, 4],
-            8
-        ),
-        vec![
-            TeamState::OnBus(0),
-            TeamState::OnBus(8),
-            TeamState::OnBus(4)
+            TeamState { time: 0, index: 0 },
+            TeamState { index: 8, time: 5 },
+            TeamState { time: 0, index: 4 }
         ],
     );
 
     assert_eq!(
         min_time_until_arrival(
             &graph,
-            &[TeamState::EnRoute(1, 4, 2), TeamState::EnRoute(1, 15, 2)],
+            &[
+                TeamState { index: 4, time: 1 },
+                TeamState {
+                    index: 15,
+                    time: 12
+                }
+            ],
             &[4, 15],
         ),
         Some(1)
@@ -245,9 +234,12 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2),
-                TeamState::EnRoute(1, 15, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 },
+                TeamState {
+                    index: 15,
+                    time: 12
+                },
             ],
             &[0, 4, 15],
         ),
@@ -257,34 +249,43 @@ fn test_min_time_until_arrival() {
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2),
-                TeamState::EnRoute(1, 15, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 },
+                TeamState {
+                    index: 15,
+                    time: 12
+                },
             ],
             &[0, 4, 15],
             1
         ),
         vec![
-            TeamState::OnBus(0),
-            TeamState::OnBus(4),
-            TeamState::EnRoute(1, 15, 3)
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 4 },
+            TeamState {
+                index: 15,
+                time: 11
+            },
         ],
     );
     assert_eq!(
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::EnRoute(1, 4, 2),
-                TeamState::EnRoute(1, 15, 2)
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 4, time: 1 },
+                TeamState {
+                    index: 15,
+                    time: 12
+                },
             ],
             &[0, 4, 15],
             12
         ),
         vec![
-            TeamState::OnBus(0),
-            TeamState::OnBus(4),
-            TeamState::OnBus(15)
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 4 },
+            TeamState { time: 0, index: 15 },
         ],
     );
 
@@ -293,9 +294,9 @@ fn test_min_time_until_arrival() {
         min_time_until_arrival(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(1)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 1 }
             ],
             &[0, 0, 1],
         ),
@@ -305,17 +306,17 @@ fn test_min_time_until_arrival() {
         advance_time_for_teams(
             &graph,
             &[
-                TeamState::OnBus(0),
-                TeamState::OnBus(0),
-                TeamState::OnBus(1)
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 0 },
+                TeamState { time: 0, index: 1 }
             ],
             &[0, 0, 1],
             20
         ),
         vec![
-            TeamState::OnBus(0),
-            TeamState::OnBus(0),
-            TeamState::OnBus(1)
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 0 },
+            TeamState { time: 0, index: 1 }
         ],
     );
 }
@@ -369,9 +370,9 @@ fn test_time_until_energization() {
             State {
                 buses: bus_state.clone(),
                 teams: vec![
-                    TeamState::OnBus(3),
-                    TeamState::EnRoute(4, 2, 1),
-                    TeamState::EnRoute(5, 0, 1),
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { index: 0, time: 4 },
                 ],
             },
             &[0, 2, 0]
@@ -385,9 +386,9 @@ fn test_time_until_energization() {
             State {
                 buses: bus_state.clone(),
                 teams: vec![
-                    TeamState::OnBus(3),
-                    TeamState::EnRoute(4, 2, 1),
-                    TeamState::EnRoute(5, 0, 1),
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { index: 0, time: 4 },
                 ],
             },
             &[0, 2, 0]
@@ -401,9 +402,9 @@ fn test_time_until_energization() {
             State {
                 buses: bus_state.clone(),
                 teams: vec![
-                    TeamState::OnBus(3),
-                    TeamState::EnRoute(4, 2, 1),
-                    TeamState::EnRoute(3, 0, 1),
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { index: 0, time: 2 },
                 ],
             },
             &[0, 2, 0]
@@ -416,7 +417,10 @@ fn test_time_until_energization() {
             &graph,
             State {
                 buses: bus_state.clone(),
-                teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
+                teams: vec![
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 0, time: 2 },
+                ],
             },
             &[0, 0]
         ),
@@ -428,7 +432,10 @@ fn test_time_until_energization() {
             &graph,
             State {
                 buses: bus_state,
-                teams: vec![TeamState::OnBus(3), TeamState::EnRoute(3, 0, 1),],
+                teams: vec![
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 0, time: 2 },
+                ],
             },
             &[0, 0]
         ),
@@ -445,9 +452,9 @@ fn test_time_until_arrival_progress() {
             State {
                 buses: bus_state,
                 teams: vec![
-                    TeamState::OnBus(3),
-                    TeamState::EnRoute(4, 2, 1),
-                    TeamState::EnRoute(3, 6, 1),
+                    TeamState { time: 0, index: 3 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { index: 6, time: 2 },
                 ],
             },
             &[1, 2, 6]
@@ -465,9 +472,9 @@ fn test_time_until_energization_progress() {
         State {
             buses: bus_state,
             teams: vec![
-                TeamState::OnBus(3),
-                TeamState::EnRoute(4, 2, 1),
-                TeamState::EnRoute(3, 6, 1),
+                TeamState { time: 0, index: 3 },
+                TeamState { index: 2, time: 1 },
+                TeamState { index: 6, time: 2 },
             ],
         },
         &[1, 2, 6],

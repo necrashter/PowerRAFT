@@ -13,9 +13,9 @@ mod saveable {
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize)]
-    pub enum TeamState {
-        OnBus(BusIndex),
-        EnRoute(BusIndex, BusIndex, Time),
+    pub struct TeamState {
+        pub time: Time,
+        pub index: BusIndex,
     }
 
     #[derive(Serialize, Deserialize)]

@@ -420,9 +420,9 @@ impl ArrayStateIndexer {
     fn reverse_index(&mut self, state: State, index: usize, reverse_index: usize) {
         let State { buses, teams } = state;
         let i = index * self.bus_count;
-        self.reverse_buses.splice(i..i, buses.into_iter());
+        self.reverse_buses.splice(i..i, buses);
         let i = index * self.team_count;
-        self.reverse_teams.splice(i..i, teams.into_iter());
+        self.reverse_teams.splice(i..i, teams);
         self.reverse_indices.insert(index, reverse_index);
     }
 }
@@ -484,14 +484,13 @@ impl StateIndexer for ArrayStateIndexer {
 mod tests {
     use super::*;
     use BusState::*;
-    use TeamState::*;
 
     fn generic_indexer_test<T: StateIndexer>(mut indexer: T, stack_based: bool) {
         assert_eq!(indexer.get_state_count(), 0);
 
         let state0 = State {
             buses: vec![Unknown, Unknown, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         };
 
         assert_eq!(indexer.index_state(state0.clone()), 0);
@@ -507,11 +506,11 @@ mod tests {
 
         let state1 = State {
             buses: vec![Unknown, Unknown, Damaged],
-            teams: vec![OnBus(1)],
+            teams: vec![TeamState { time: 0, index: 1 }],
         };
         let state2 = State {
             buses: vec![Energized, Energized, Unknown],
-            teams: vec![EnRoute(1, 2, 3)],
+            teams: vec![TeamState { index: 2, time: 3 }],
         };
 
         assert_eq!(indexer.index_state(state1.clone()), 1);
@@ -562,7 +561,11 @@ mod tests {
         );
         assert_eq!(
             team_states,
-            ndarray::array![[OnBus(0)], [OnBus(1)], [EnRoute(1, 2, 3)],]
+            ndarray::array![
+                [TeamState { time: 0, index: 0 }],
+                [TeamState { time: 0, index: 1 }],
+                [TeamState { index: 2, time: 3 }],
+            ]
         );
     }
 
@@ -603,7 +606,7 @@ mod tests {
         let mut indexer = MinifyingStateIndexer::new(2, 1);
         indexer.index_state(State {
             buses: vec![Unknown, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.minify();
         assert_eq!(indexer.state_to_index.len(), 1);
@@ -614,11 +617,11 @@ mod tests {
 
         indexer.index_state(State {
             buses: vec![Damaged, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 2);
         indexer.minify();
@@ -638,7 +641,7 @@ mod tests {
         let mut indexer = MinifyingStateIndexer::new(2, 1);
         indexer.index_state(State {
             buses: vec![Unknown, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.minify();
         assert_eq!(indexer.state_to_index.len(), 1);
@@ -649,19 +652,19 @@ mod tests {
 
         indexer.index_state(State {
             buses: vec![Damaged, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Unknown, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Unknown, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 4);
         assert_eq!(indexer.stack.len(), 4);
@@ -677,19 +680,19 @@ mod tests {
 
         indexer.index_state(State {
             buses: vec![Damaged, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Damaged, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 6);
         assert_eq!(indexer.stack.len(), 6);
@@ -720,7 +723,7 @@ mod tests {
         let mut indexer = MinifyingStateIndexer::new(2, 1);
         indexer.index_state(State {
             buses: vec![Unknown, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 1);
 
@@ -728,19 +731,19 @@ mod tests {
 
         indexer.index_state(State {
             buses: vec![Damaged, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Unknown],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Unknown, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Unknown, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 5);
         assert_eq!(indexer.stack.len(), 4);
@@ -752,19 +755,19 @@ mod tests {
 
         indexer.index_state(State {
             buses: vec![Damaged, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Damaged],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Damaged, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         indexer.index_state(State {
             buses: vec![Energized, Energized],
-            teams: vec![OnBus(0)],
+            teams: vec![TeamState { time: 0, index: 0 }],
         });
         assert_eq!(indexer.state_to_index.len(), 9);
         assert_eq!(indexer.stack.len(), 6);

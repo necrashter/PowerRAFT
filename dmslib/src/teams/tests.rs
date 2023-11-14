@@ -35,7 +35,10 @@ fn paper_example_4_1_1() {
         BusState::Damaged,
         BusState::Unknown,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::EnRoute(4, 2, 1)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 0 },
+        TeamState { index: 2, time: 1 },
+    ];
     let state = State { buses, teams };
 
     let cost = state.get_cost();
@@ -46,7 +49,10 @@ fn paper_example_4_1_1() {
 
     assert_eq!(actions, vec![vec![1, 2]]);
 
-    let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
+    let expected_team_outcome: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 1 },
+        TeamState { time: 0, index: 2 },
+    ];
     let expected_outcomes: Vec<(Probability, State)> = vec![
         (
             0.5,
@@ -114,7 +120,10 @@ fn test_timed_action_applier() {
         BusState::Damaged,
         BusState::Unknown,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::EnRoute(4, 2, 2)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 0 },
+        TeamState { index: 2, time: 2 },
+    ];
     let state = State { buses, teams };
 
     let cost = state.get_cost();
@@ -123,8 +132,10 @@ fn test_timed_action_applier() {
     let action: Vec<TeamAction> = vec![1, 2];
 
     // Naive action
-    let expected_team_outcome: Vec<TeamState> =
-        vec![TeamState::EnRoute(0, 1, 1), TeamState::EnRoute(4, 2, 3)];
+    let expected_team_outcome: Vec<TeamState> = vec![
+        TeamState { index: 1, time: 1 },
+        TeamState { index: 2, time: 1 },
+    ];
     let expected_outcomes: Vec<(Probability, State)> = vec![(
         1.0,
         State {
@@ -150,7 +161,10 @@ fn test_timed_action_applier() {
     check_sets(&outcomes, &expected_outcomes);
 
     // Timed action
-    let expected_team_outcome: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(2)];
+    let expected_team_outcome: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 1 },
+        TeamState { time: 0, index: 2 },
+    ];
     let expected_outcomes: Vec<(Probability, State)> = vec![
         (
             0.5,
@@ -218,7 +232,10 @@ fn on_energized_bus_actions() {
         BusState::Unknown,
         BusState::Unknown,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::OnBus(0), TeamState::OnBus(3)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 0 },
+        TeamState { time: 0, index: 3 },
+    ];
     let state = State { buses, teams };
 
     assert_eq!(state.get_cost(), 4 as Cost);
@@ -305,7 +322,10 @@ fn wait_moving_elimination() {
         BusState::Energized,
         BusState::Energized,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::OnBus(2), TeamState::EnRoute(5, 0, 1)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 2 },
+        TeamState { index: 0, time: 1 },
+    ];
     let state = State { buses, teams };
 
     assert_eq!(state.get_cost(), 3 as Cost);
@@ -332,7 +352,7 @@ fn wait_moving_elimination() {
 #[test]
 fn beta_values_on_paper_example() {
     let graph = get_paper_example_graph();
-    let dummy_teams = vec![TeamState::OnBus(0)];
+    let dummy_teams = vec![TeamState { time: 0, index: 0 }];
 
     let state = State {
         buses: vec![
@@ -392,7 +412,10 @@ fn minimal_nonopt_permutations() {
 
     let state = State {
         buses: vec![BusState::Unknown, BusState::Unknown],
-        teams: vec![TeamState::OnBus(2), TeamState::OnBus(3)],
+        teams: vec![
+            TeamState { time: 0, index: 2 },
+            TeamState { time: 0, index: 3 },
+        ],
     };
 
     assert_eq!(state.compute_minbeta(&graph), vec![1, 1]);
@@ -449,9 +472,9 @@ fn eliminating_cycle_permutations() {
     // Note that this is not reachable during normal operation except for the initial state (a team
     // positioned on energizable bus), but it is enough for a quick test.
     let teams: Vec<TeamState> = vec![
-        TeamState::OnBus(0),
-        TeamState::OnBus(2),
-        TeamState::OnBus(5),
+        TeamState { time: 0, index: 0 },
+        TeamState { time: 0, index: 2 },
+        TeamState { time: 0, index: 5 },
     ];
     let state = State { buses, teams };
 
@@ -479,7 +502,10 @@ fn cannot_wait_if_no_path() {
         BusState::Damaged,
         BusState::Unknown,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::OnBus(1), TeamState::OnBus(5)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { time: 0, index: 1 },
+        TeamState { time: 0, index: 5 },
+    ];
     let state = State { buses, teams };
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 2]];
@@ -505,7 +531,10 @@ fn all_enroute_actions() {
         BusState::Damaged,
         BusState::Unknown,
     ];
-    let teams: Vec<TeamState> = vec![TeamState::EnRoute(0, 2, 1), TeamState::EnRoute(3, 2, 1)];
+    let teams: Vec<TeamState> = vec![
+        TeamState { index: 2, time: 1 },
+        TeamState { index: 2, time: 1 },
+    ];
     let state = State { buses, teams };
 
     let expected_actions: Vec<Vec<TeamAction>> = vec![vec![2, 2]];

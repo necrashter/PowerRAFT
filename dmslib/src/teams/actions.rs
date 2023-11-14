@@ -44,9 +44,12 @@ impl State {
         let team_nodes = self
             .teams
             .iter()
-            .map(|team| match team {
-                TeamState::OnBus(i) => *i,
-                TeamState::EnRoute(_, _, _) => BusIndex::MAX,
+            .map(|team| {
+                if team.time == 0 {
+                    team.index
+                } else {
+                    BusIndex::MAX
+                }
             })
             .collect();
         let energizable_buses: Vec<BusIndex> = target_buses
@@ -55,8 +58,8 @@ impl State {
             .filter_map(|(&i, &beta)| if beta == 1 { Some(i as BusIndex) } else { None })
             .collect();
         let progress_satisfied = self.teams.iter().any(|team| {
-            if let TeamState::EnRoute(_, b, _) = team {
-                energizable_buses.binary_search(b).is_ok()
+            if team.time > 0 {
+                energizable_buses.binary_search(&team.index).is_ok()
             } else {
                 false
             }
@@ -112,9 +115,12 @@ impl<'a> NaiveIterator<'a> {
                 .state
                 .teams
                 .iter()
-                .map(|team_state| match team_state {
-                    TeamState::OnBus(_) => 0,
-                    TeamState::EnRoute(_, _, _) => BusIndex::MAX,
+                .map(|team_state| {
+                    if team_state.time == 0 {
+                        0
+                    } else {
+                        BusIndex::MAX
+                    }
                 })
                 .collect(),
         );
@@ -129,7 +135,8 @@ impl<'a> NaiveIterator<'a> {
     /// Returns True if actions wrapped around.
     fn next_action(&self, mut action: Vec<TeamAction>) -> Option<Vec<TeamAction>> {
         for i in 0..action.len() {
-            if let TeamState::EnRoute(_, _, _) = self.action_state.state.teams[i] {
+            if self.action_state.state.teams[i].time > 0 {
+                // En-route
                 continue;
             }
             action[i] += 1;
@@ -166,8 +173,8 @@ impl Iterator for NaiveIterator<'_> {
                 .iter()
                 .zip(action.iter())
                 .map(|(team, &target)| {
-                    if let TeamState::EnRoute(_, destination, _) = team {
-                        *destination
+                    if team.time > 0 {
+                        team.index
                     } else {
                         self.action_state.target_buses[target as usize]
                     }
@@ -306,10 +313,7 @@ impl<'a> PermutationalIterator<'a> {
                 .state
                 .teams
                 .iter()
-                .map(|s| match s {
-                    TeamState::OnBus(_) => BusIndex::MAX,
-                    TeamState::EnRoute(_, destination, _) => *destination,
-                })
+                .map(|s| if s.time == 0 { BusIndex::MAX } else { s.index })
                 .collect_vec();
             self.next_actions = eliminated
                 .into_iter()
@@ -376,9 +380,12 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
             .teams
             .iter()
             .enumerate()
-            .filter_map(|(i, t)| match t {
-                TeamState::OnBus(b) => Some((i, b)),
-                TeamState::EnRoute(_, _, _) => None,
+            .filter_map(|(i, t)| {
+                if t.time == 0 {
+                    Some((i, t.index))
+                } else {
+                    None
+                }
             })
             .unzip();
         let bus_combination_iter = action_state
@@ -451,17 +458,18 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
             .state
             .teams
             .iter()
-            .filter_map(|t| match t {
-                TeamState::OnBus(b) => {
-                    if (*b as usize) >= action_state.state.buses.len()
-                        || action_state.state.buses[*b as usize] != BusState::Unknown
+            .filter_map(|t| {
+                if t.time == 0 {
+                    if (t.index as usize) >= action_state.state.buses.len()
+                        || action_state.state.buses[t.index as usize] != BusState::Unknown
                     {
                         None
                     } else {
-                        Some(*b)
+                        Some(t.index)
                     }
+                } else {
+                    Some(t.index)
                 }
-                TeamState::EnRoute(_, destination, _) => Some(*destination),
             })
             .collect_vec();
         let waiting_state =
@@ -634,7 +642,7 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterOnWay<'a, T> {
 
         actions
             .into_iter()
-            .zip(eliminated.into_iter())
+            .zip(eliminated)
             .filter_map(|(action, e)| if e { None } else { Some(action) })
             .collect_vec()
             .into_iter()

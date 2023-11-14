@@ -270,7 +270,9 @@ pub fn longest_path_lengths<T: Transition>(transitions: &[Vec<Vec<T>>]) -> Vec<u
 /// Determine the optimization horizon from transition space.
 pub fn determine_horizon<T: Transition>(transitions: &[Vec<Vec<T>>]) -> usize {
     let memoization = dfs(transitions);
-    let DfsState::Done(depth) = memoization[0] else { unreachable!() };
+    let DfsState::Done(depth) = memoization[0] else {
+        unreachable!()
+    };
     depth
 }
 

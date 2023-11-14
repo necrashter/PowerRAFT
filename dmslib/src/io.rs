@@ -281,14 +281,15 @@ impl TeamProblem {
         let initial_teams: Vec<TeamState> = teams
             .into_iter()
             .map(|t| {
-                if let Some(i) = t.index {
-                    TeamState::OnBus(i.try_into().expect("Bus index overflow"))
+                let index = if let Some(i) = t.index {
+                    i.try_into().expect("Bus index overflow")
                 } else {
                     let i = locations.len();
                     // We did error checking above
                     locations.push(t.latlng.as_ref().unwrap().clone());
-                    TeamState::OnBus(i.try_into().expect("Bus index overflow"))
-                }
+                    i.try_into().expect("Bus index overflow")
+                };
+                TeamState { time: 0, index }
             })
             .collect();
 

@@ -29,7 +29,8 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 645);
+    // After team representations were updated, this reduced from 645 to 593
+    assert_eq!(solution.transitions.len(), 593);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -39,7 +40,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 645);
+    assert_eq!(solution.transitions.len(), 593);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -49,7 +50,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 645);
+    assert_eq!(solution.transitions.len(), 593);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -59,7 +60,8 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    // After team representations were updated, this reduced from 544 to 499
+    assert_eq!(solution.transitions.len(), 499);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -73,7 +75,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    assert_eq!(solution.transitions.len(), 499);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -83,7 +85,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    assert_eq!(solution.transitions.len(), 499);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -93,7 +95,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    assert_eq!(solution.transitions.len(), 499);
 
     // TimedTransition equivalence with time = 1
 
@@ -105,7 +107,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 645);
+    assert_eq!(solution.transitions.len(), 593);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -119,7 +121,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    assert_eq!(solution.transitions.len(), 499);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -129,7 +131,7 @@ fn pe0_1_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 544);
+    assert_eq!(solution.transitions.len(), 499);
 
     // Timed
 
@@ -225,7 +227,8 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 11545);
+    // After team representations were updated, this reduced from 11545 to 6577
+    assert_eq!(solution.transitions.len(), 6577);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -235,7 +238,8 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 6161);
+    // After team representations were updated, this reduced from 6161 to 3604
+    assert_eq!(solution.transitions.len(), 3604);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -245,7 +249,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 9039);
+    assert_eq!(solution.transitions.len(), 5751);
     let solution = solve_generic::<
         RegularTransition,
         NaiveExplorer<
@@ -258,7 +262,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 5190);
+    assert_eq!(solution.transitions.len(), 3347);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -268,7 +272,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 8234);
+    assert_eq!(solution.transitions.len(), 5407);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -282,7 +286,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 6551);
+    assert_eq!(solution.transitions.len(), 4565);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -292,7 +296,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 7161);
+    assert_eq!(solution.transitions.len(), 5071);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -306,7 +310,8 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 3912);
+    // After team representations were updated, this reduced from 3912 to 2845
+    assert_eq!(solution.transitions.len(), 2845);
 
     let solution = solve_generic::<
         RegularTransition,
@@ -316,7 +321,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 5847);
+    assert_eq!(solution.transitions.len(), 4366);
 
     // TimedTransition equivalence with time = 1
 
@@ -328,7 +333,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 11545);
+    assert_eq!(solution.transitions.len(), 6577);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -342,7 +347,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 6551);
+    assert_eq!(solution.transitions.len(), 4565);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -352,7 +357,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 5847);
+    assert_eq!(solution.transitions.len(), 4366);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -366,7 +371,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 3489);
+    assert_eq!(solution.transitions.len(), 2662);
 
     // Timed
 
@@ -378,7 +383,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 9089);
+    assert_eq!(solution.transitions.len(), 5797);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -392,7 +397,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 5762);
+    assert_eq!(solution.transitions.len(), 4311);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -406,7 +411,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 4751);
+    assert_eq!(solution.transitions.len(), 3985);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -416,7 +421,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 5216);
+    assert_eq!(solution.transitions.len(), 4118);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -426,7 +431,7 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 4217);
+    assert_eq!(solution.transitions.len(), 3705);
 
     let solution = solve_generic::<
         TimedTransition,
@@ -440,7 +445,8 @@ fn pe0_2_team() {
     >(&problem.graph, problem.initial_teams.clone(), &config)
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
-    assert_eq!(solution.transitions.len(), 2478);
+    // After team representations were updated, this reduced from 2478 to 2202
+    assert_eq!(solution.transitions.len(), 2202);
 }
 
 #[test]
@@ -548,7 +554,8 @@ fn stationary_policy_test() {
         config.max_memory,
     )
     .unwrap();
-    assert_eq!(transitions.len(), 3489);
+    // After team representations were updated, this reduced from 3489 to 2662
+    assert_eq!(transitions.len(), 2662);
 
     let lengths = longest_path_lengths(&transitions);
     let max_horizon = lengths[0];

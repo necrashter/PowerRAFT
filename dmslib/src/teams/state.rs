@@ -1,18 +1,22 @@
 use super::*;
 use num_derive::FromPrimitive;
-use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 
 /// State of a single team. Use a `Vec` to represent multiple teams.
-#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
-pub enum TeamState {
-    OnBus(BusIndex),
-    EnRoute(BusIndex, BusIndex, Time),
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize)]
+pub struct TeamState {
+    /// Remaining time
+    pub time: Time,
+    /// Bus index
+    pub index: BusIndex,
 }
 
 impl Default for TeamState {
     fn default() -> Self {
-        TeamState::OnBus(BusIndex::MAX)
+        TeamState {
+            time: 0,
+            index: BusIndex::MAX,
+        }
     }
 }
 
@@ -233,43 +237,8 @@ impl std::hash::Hash for State {
             i.hash(hash_state);
         }
         for t in self.teams.iter() {
-            match t {
-                TeamState::OnBus(i) => {
-                    0.hash(hash_state);
-                    i.hash(hash_state);
-                }
-                TeamState::EnRoute(i, j, k) => {
-                    1.hash(hash_state);
-                    i.hash(hash_state);
-                    j.hash(hash_state);
-                    k.hash(hash_state);
-                }
-            }
-        }
-    }
-}
-
-impl Serialize for TeamState {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            TeamState::OnBus(a) => {
-                let mut map = serializer.serialize_map(Some(1))?;
-                map.serialize_entry("node", a)?;
-                map.end()
-            }
-            TeamState::EnRoute(a, b, t) => {
-                let mut map = serializer.serialize_map(Some(4))?;
-                map.serialize_entry("node", a)?;
-                map.serialize_entry("target", b)?;
-                map.serialize_entry("time", t)?;
-                // NOTE: An older version put travel time here.
-                // Now we put it in a separate field in output.
-                // See travel_times matrix in io::TeamSolution.
-                map.end()
-            }
+            t.time.hash(hash_state);
+            t.index.hash(hash_state);
         }
     }
 }
@@ -297,29 +266,29 @@ mod tests {
     #[test]
     fn team_state_ord_test() {
         let ordered_teams = vec![
-            TeamState::OnBus(1),
-            TeamState::OnBus(2),
-            TeamState::OnBus(3),
-            TeamState::EnRoute(1, 10, 1),
-            TeamState::EnRoute(1, 10, 2),
-            TeamState::EnRoute(2, 10, 1),
-            TeamState::EnRoute(2, 11, 1),
-            TeamState::EnRoute(3, 10, 1),
-            TeamState::EnRoute(3, 11, 1),
-            TeamState::EnRoute(3, 11, 2),
+            TeamState { time: 0, index: 1 },
+            TeamState { time: 0, index: 2 },
+            TeamState { time: 0, index: 3 },
+            TeamState { index: 10, time: 1 },
+            TeamState { index: 10, time: 1 },
+            TeamState { index: 10, time: 1 },
+            TeamState { index: 11, time: 1 },
+            TeamState { index: 11, time: 1 },
+            TeamState { index: 10, time: 2 },
+            TeamState { index: 11, time: 2 },
         ];
 
         let mut teams = vec![
-            TeamState::EnRoute(1, 10, 2),
-            TeamState::OnBus(3),
-            TeamState::EnRoute(3, 11, 2),
-            TeamState::EnRoute(1, 10, 1),
-            TeamState::EnRoute(3, 11, 1),
-            TeamState::OnBus(1),
-            TeamState::EnRoute(2, 11, 1),
-            TeamState::EnRoute(2, 10, 1),
-            TeamState::OnBus(2),
-            TeamState::EnRoute(3, 10, 1),
+            TeamState { index: 10, time: 2 },
+            TeamState { time: 0, index: 3 },
+            TeamState { index: 11, time: 2 },
+            TeamState { index: 10, time: 1 },
+            TeamState { index: 11, time: 1 },
+            TeamState { time: 0, index: 1 },
+            TeamState { index: 11, time: 1 },
+            TeamState { index: 10, time: 1 },
+            TeamState { time: 0, index: 2 },
+            TeamState { index: 10, time: 1 },
         ];
         teams.sort_unstable();
 
@@ -329,91 +298,170 @@ mod tests {
     #[test]
     fn state_ord_test() {
         use BusState::*;
-        use TeamState::*;
 
         let ordered_states = vec![
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Damaged],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Damaged, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Damaged, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Energized, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
         ];
 
         let mut shuffled = vec![
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Energized, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Damaged, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Damaged],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Damaged, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
         ];
         shuffled.sort_unstable();
@@ -422,43 +470,83 @@ mod tests {
         let mut shuffled = vec![
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Energized, Unknown, Energized],
-                teams: vec![OnBus(0), EnRoute(0, 2, 1), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { index: 2, time: 1 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Energized, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Damaged, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Damaged],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Energized],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Damaged, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(0), OnBus(0), OnBus(0)],
+                teams: vec![
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                    TeamState { time: 0, index: 0 },
+                ],
             },
             State {
                 buses: vec![Unknown, Unknown, Unknown, Unknown],
-                teams: vec![OnBus(1), OnBus(1), OnBus(1)],
+                teams: vec![
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                    TeamState { time: 0, index: 1 },
+                ],
             },
         ];
         shuffled.sort();

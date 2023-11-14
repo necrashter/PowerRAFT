@@ -14,20 +14,16 @@ fn min_time_until_arrival(
     teams
         .iter()
         .zip(actions.iter())
-        .filter_map(|(team, &action)| match team {
-            TeamState::OnBus(source) => {
-                if action == *source {
+        .filter_map(|(team, &action)| {
+            if team.time == 0 {
+                if action == team.index {
                     None
                 } else {
-                    let dest = action as usize;
-                    let travel_time = graph.travel_times[(*source as usize, dest)];
-                    Some(travel_time)
+                    Some(graph.travel_times[(team.index as usize, action as usize)])
                 }
-            }
-            TeamState::EnRoute(source, dest, t) => {
-                debug_assert_eq!(action, *dest);
-                let travel_time = graph.travel_times[(*source as usize, *dest as usize)];
-                Some(travel_time - t)
+            } else {
+                debug_assert_eq!(action, team.index);
+                Some(team.time)
             }
         })
         .min()
@@ -89,20 +85,16 @@ impl DetermineActionTime for TimeUntilEnergization {
                 if beta != 1 {
                     return None;
                 }
-                match team {
-                    TeamState::OnBus(source) => {
-                        debug_assert_ne!(
-                            action, *source,
-                            "A team cannot reach & wait on a bus without energizing it."
-                        );
-                        let travel_time = graph.travel_times[(*source as usize, action as usize)];
-                        Some(travel_time)
-                    }
-                    TeamState::EnRoute(source, dest, t) => {
-                        debug_assert_eq!(action, *dest);
-                        let travel_time = graph.travel_times[(*source as usize, *dest as usize)];
-                        Some(travel_time - t)
-                    }
+                if team.time == 0 {
+                    debug_assert_ne!(
+                        action, team.index,
+                        "A team cannot reach & wait on a bus without energizing it."
+                    );
+                    let travel_time = graph.travel_times[(team.index as usize, action as usize)];
+                    Some(travel_time)
+                } else {
+                    debug_assert_eq!(action, team.index);
+                    Some(team.time)
                 }
             })
             .min()
@@ -122,26 +114,19 @@ fn advance_time_for_teams(
         .iter()
         .zip(actions.iter())
         .map(|(team, &action)| {
-            let team = team.clone();
-            match team {
-                TeamState::OnBus(source) => {
-                    let dest = action;
-                    let travel_time = graph.travel_times[(source as usize, dest as usize)];
-                    if time >= travel_time {
-                        TeamState::OnBus(dest)
-                    } else {
-                        TeamState::EnRoute(source, dest, time)
-                    }
-                }
-                TeamState::EnRoute(source, dest, t) => {
-                    debug_assert!(action == dest);
-                    let travel_time = graph.travel_times[(source as usize, dest as usize)];
-                    if time + t >= travel_time {
-                        TeamState::OnBus(dest)
-                    } else {
-                        TeamState::EnRoute(source, dest, t + time)
-                    }
-                }
+            let travel_time = if team.time == 0 {
+                graph.travel_times[(team.index as usize, action as usize)]
+            } else {
+                debug_assert_eq!(action, team.index);
+                team.time
+            };
+            TeamState {
+                time: if time >= travel_time {
+                    0
+                } else {
+                    travel_time - time
+                },
+                index: action,
             }
         })
         .collect()
@@ -159,16 +144,12 @@ fn recursive_energization(
     // Buses on which a team is present
     let team_buses: Vec<BusIndex> = teams
         .iter()
-        .filter_map(|team| match team {
-            TeamState::OnBus(i) => {
-                let i = *i;
-                if (i as usize) < buses.len() {
-                    Some(i)
-                } else {
-                    None
-                }
+        .filter_map(|team| {
+            if team.time == 0 && (team.index as usize) < buses.len() {
+                Some(team.index)
+            } else {
+                None
             }
-            TeamState::EnRoute(_, _, _) => None,
         })
         .unique()
         .collect();
