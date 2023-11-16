@@ -65,7 +65,17 @@ impl State {
     /// Creates the starting state from given team configuration.
     pub fn start_state(graph: &Graph, teams: Vec<TeamState>) -> State {
         State {
-            buses: vec![BusState::Unknown; graph.connected.len()],
+            buses: graph
+                .pfs
+                .iter()
+                .map(|&pf| {
+                    if pf == 1.0 {
+                        BusState::Damaged
+                    } else {
+                        BusState::Unknown
+                    }
+                })
+                .collect_vec(),
             teams,
         }
     }
@@ -551,5 +561,53 @@ mod tests {
         ];
         shuffled.sort();
         assert_eq!(shuffled, ordered_states);
+    }
+
+    #[test]
+    fn start_state_test() {
+        let mut graph = Graph {
+            travel_times: ndarray::arr2(&[
+                [0, 1, 2, 1, 2, 2],
+                [1, 0, 1, 2, 2, 2],
+                [2, 1, 0, 2, 2, 1],
+                [1, 2, 2, 0, 1, 2],
+                [2, 2, 2, 1, 0, 1],
+                [2, 2, 1, 2, 1, 0],
+            ]),
+            branches: vec![vec![1], vec![0, 2], vec![1], vec![4], vec![3, 5], vec![4]],
+            connected: vec![true, false, false, true, false, false],
+            pfs: ndarray::arr1(&[0.5, 0.5, 0.25, 0.25, 0.25, 0.25]),
+            team_nodes: Array2::default((0, 0)),
+        };
+        assert_eq!(
+            State::start_state(&graph, vec![]),
+            State {
+                buses: vec![
+                    BusState::Unknown,
+                    BusState::Unknown,
+                    BusState::Unknown,
+                    BusState::Unknown,
+                    BusState::Unknown,
+                    BusState::Unknown,
+                ],
+                teams: vec![],
+            },
+        );
+        // If pf is 1, it should start as damaged
+        graph.pfs = ndarray::arr1(&[0.5, 0.5, 1.0, 0.25, 1.0, 0.25]);
+        assert_eq!(
+            State::start_state(&graph, vec![]),
+            State {
+                buses: vec![
+                    BusState::Unknown,
+                    BusState::Unknown,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                ],
+                teams: vec![],
+            },
+        );
     }
 }
