@@ -1,0 +1,66 @@
+{
+  "name": "IEEE-123 Partitioned",
+  "description": "IEEE-123",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "Part A",
+          "graph": "../graphs/IEEE-123/part-a.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "Part B",
+          "graph": "../graphs/IEEE-123/part-b.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "Part C",
+          "graph": "../graphs/IEEE-123/part-c.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "Part D",
+          "graph": "../graphs/IEEE-123/part-d.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "Part E",
+          "graph": "../graphs/IEEE-123/part-e.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        }
+      ],
+      "optimizations": "optimizations/ov.json"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "IEEE-37 Partitioned",
+  "description": "IEEE-37",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "Top Part",
+          "graph": "../graphs/IEEE-37/round200top.json",
+          "teams": [
+            { "index": 14 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        },
+        {
+          "name": "Bottom Part",
+          "graph": "../graphs/IEEE-37/round200bottom.json",
+          "teams": [
+            { "index": 0 }
+          ],
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.34
+          }
+        }
+      ],
+      "optimizations": "optimizations/ov.json"
+    }
+  ]
+}
