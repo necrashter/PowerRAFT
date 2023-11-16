@@ -21,6 +21,8 @@ use ndarray::{Array1, Array2};
 use std::collections::VecDeque;
 use std::time::Instant;
 
+use sysinfo::{System, SystemExt};
+
 #[cfg(not(feature = "hashbrown"))]
 use std::collections::HashMap;
 
@@ -119,10 +121,12 @@ pub struct Config {
 
 impl Config {
     /// Build a new config struct with default settings.
-    pub const fn new() -> Config {
+    pub fn new() -> Config {
+        let system = System::new_all();
+        let max_memory = system.available_memory();
+        log::info!("Max memory is set to available RAM ({} bytes)", max_memory);
         Config {
-            // TODO: Make this adjustable without recompiling
-            max_memory: 14_400_000_000,
+            max_memory: max_memory as usize,
             horizon: None,
         }
     }
