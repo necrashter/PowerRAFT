@@ -50,19 +50,12 @@ impl StateCompressor {
     /// Convert a single state from its slices to BitVec representation.
     pub fn slice_to_bits(&self, buses: &[BusState], teams: &[TeamState]) -> BitVec {
         let mut out: BitVec = BitVec::new();
+        out.resize(buses.len() * 2, false);
         {
-            let mut i = 0;
-            let mut current: usize = 0;
+            let mut i: usize = 0;
             for &bus in buses.iter() {
-                let position = (i % 32) * 2;
-                current |= (bus as usize) << position;
-                if i != 0 && i % 32 == 0 {
-                    push_bits(&mut out, current, 64);
-                }
-                i += 1;
-            }
-            if i % 32 != 0 {
-                push_bits(&mut out, current, i * 2);
+                out[i..(i + 2)].store::<usize>(bus as usize);
+                i += 2;
             }
         }
         for team in teams.iter() {
