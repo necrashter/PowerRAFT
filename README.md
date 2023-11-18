@@ -37,6 +37,9 @@ cargo run --release
 
 If no errors occur, you should be able to access the web interface at `http://127.0.0.1:8000`.
 
+**NOTE: The web interface is currently unable to display the policy (the solution)** because the team representation is changed on the server side.
+But it can still be used for viewing and editing the power systems.
+
 
 ## Command line interface
 
@@ -67,10 +70,13 @@ Short aliases for subcommands are also accepted for convenience, e.g., `r` inste
 In this section, the commands for running the experiments conducted in the paper are provided.
 The section numbers are given in each subheading.
 
-### 5.2. Performance Evaluation for the Optimizations
+All experiments must be run in `dmscli` directory:
 ```sh
 cd dmscli
+```
 
+### 5.2. Performance Evaluation for the Optimizations
+```sh
 # WSCC 9-bus with starting teams (9, 9, 9)
 cargo run --release -- r --no-save ../experiments/opt.wscc.t-9-9-9.json
 # WSCC 9-bus with starting teams (9, 9)
@@ -90,17 +96,15 @@ cargo run --release -- r --no-save ../experiments/opt.midsize00.spow.json
 
 Note that the last experiment (the one with the 17-bus system) is composed of 4 separate experiment files.
 The resulting `.json` files must be merged manually in order to reproduce Figure 6.
-To merge `.json` files, concatenate them in a text editor and replace `] [` part in between with `,` so that it becomes one JSON array.
+To merge `.json` files, concatenate them in a text editor and replace `] [` parts between them with `,` so that it becomes one JSON array.
 
-### 5.3.1. The Number of Buses
+### 5.3.1. The Number of Teams
 ```sh
-cd dmscli
 cargo run --release -- r --no-save ../experiments/team.wscc.json 
 ```
 
 ### 5.3.2. The Number of Buses
 ```sh
-cd dmscli
 cargo run --release -- r --no-save ../experiments/bus.midsize.base.json
 cargo run --release -- r --no-save ../experiments/bus.midsize.d1.json
 cargo run --release -- r --no-save ../experiments/bus.midsize.d2.json
@@ -111,17 +115,25 @@ To reproduce the exact graphs from the paper, the additional results from `bus.m
 
 ### 5.3.3. The Number of Branches
 ```sh
-cd dmscli
 cargo run --release -- r --no-save ../experiments/branch.midsize.json 
 ```
 
 ### 5.3.4. The Number of Transmission Grid Connections
 ```sh
-cd dmscli
 cargo run --release -- r --no-save ../experiments/tg.12-bus.json 
 # The following is an omitted experiment where the failure probabilities of
 # all buses are set to 0.25 in the previous experiment.
 cargo run --release -- r --no-save ../experiments/tg.12-bus.pf25.json 
+```
+
+### 5.4. Evaluation of Scalability with Partitioning
+
+Please bear in mind that you will need more than 16 GB of RAM (approximately 24 GB) for IEEE-37 Full and IEEE-123 Part B.
+
+```sh
+cargo run --release -- r --no-save ../experiments/ieee37.full.json 
+cargo run --release -- r --no-save ../experiments/ieee37.parted.json 
+cargo run --release -- r --no-save ../experiments/ieee123.parted.json
 ```
 
 
