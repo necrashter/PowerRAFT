@@ -52,12 +52,16 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
             .map(|req: dmslib::io::TeamProblem| {
-                // TODO: Make this configurable from UI
-                let solution = req.solve_naive();
-                // let solution = req.solve_custom_timed(
-                //     "FilterOnWay<PermutationalActions>",
-                //     "TimedActionApplier<TimeUntilEnergization>",
-                // );
+                // TODO: Make optimization selection configurable from UI
+                // Use optimizations by default
+                let solution = req.solve_custom_timed(
+                    // NOTE: The client cannot handle sorted teams yet.
+                    "BitStackStateIndexer",
+                    "FilterEnergizedOnWay<PermutationalActions>",
+                    "TimedActionApplier<TimeUntilEnergization>",
+                );
+                // Naive solution:
+                // let solution = req.solve_naive();
                 let solution = match solution {
                     Ok(x) => x,
                     Err(e) => {
