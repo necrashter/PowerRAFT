@@ -37,9 +37,6 @@ cargo run --release
 
 If no errors occur, you should be able to access the web interface at `http://127.0.0.1:8000`.
 
-**NOTE: The web interface is currently unable to display the policy (the solution)** because the team representation is changed on the server side.
-But it can still be used for viewing and editing the power systems.
-
 
 ## Command line interface
 
