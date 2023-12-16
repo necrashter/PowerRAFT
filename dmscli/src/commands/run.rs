@@ -116,6 +116,7 @@ fn print_benchmark_result(
 }
 
 /// Run a single task in experiment.
+#[allow(clippy::too_many_arguments)]
 fn run_experiment_task(
     stderr: &mut StandardStream,
     team_problem: &TeamProblem,

@@ -328,8 +328,7 @@ impl PolicySynthesizer<RegularTransition> for NaivePolicySynthesizer {
             }
         }
 
-        let mut state_action_values: Vec<Vec<Value>> = Vec::new();
-        state_action_values.reserve(transitions.len());
+        let mut state_action_values: Vec<Vec<Value>> = Vec::with_capacity(transitions.len());
         let mut policy: Vec<ActionIndex> = vec![0; transitions.len()];
 
         let prev_val = values;
