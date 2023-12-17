@@ -59,6 +59,7 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                     "BitStackStateIndexer",
                     "FilterEnergizedOnWay<PermutationalActions>",
                     "TimedActionApplier<TimeUntilEnergization>",
+                    "NaiveExplorer",
                 );
                 // Naive solution:
                 // let solution = req.solve_naive();

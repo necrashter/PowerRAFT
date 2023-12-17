@@ -60,6 +60,9 @@ pub struct Solve {
     /// Action applier class.
     #[arg(short, long, default_value = "NaiveActionApplier")]
     transition: String,
+    /// Explorer class.
+    #[arg(short, long, default_value = "NaiveExplorer")]
+    explorer: String,
     /// Print the results as JSON (Hint: redirect stdout)
     #[arg(short, long, default_value_t = false)]
     json: bool,

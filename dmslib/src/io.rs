@@ -353,6 +353,7 @@ impl TeamProblem {
         self,
         indexer: &str,
         action_set: &str,
+        explorer: &str,
     ) -> Result<TeamSolution<RegularTransition>, SolveFailure> {
         let (problem, config) = self.prepare()?;
         let solution = teams::solve_custom_regular(
@@ -361,6 +362,7 @@ impl TeamProblem {
             &config,
             indexer,
             action_set,
+            explorer,
         )?;
         Ok(solution.into_io(problem.graph))
     }
@@ -375,6 +377,7 @@ impl TeamProblem {
         indexer: &str,
         action_set: &str,
         action_applier: &str,
+        explorer: &str,
     ) -> Result<TeamSolution<TimedTransition>, SolveFailure> {
         let (problem, config) = self.prepare()?;
         let solution = teams::solve_custom_timed(
@@ -384,6 +387,7 @@ impl TeamProblem {
             indexer,
             action_set,
             action_applier,
+            explorer,
         )?;
         Ok(solution.into_io(problem.graph))
     }
@@ -398,6 +402,7 @@ impl TeamProblem {
         indexer: &str,
         action_set: &str,
         action_applier: &str,
+        explorer: &str,
     ) -> Result<BenchmarkResult, SolveFailure> {
         let (problem, config) = self.prepare()?;
         let solution = teams::benchmark_custom(
@@ -407,6 +412,7 @@ impl TeamProblem {
             indexer,
             action_set,
             action_applier,
+            explorer,
         )?;
         Ok(solution)
     }

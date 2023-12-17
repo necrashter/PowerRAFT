@@ -10,6 +10,13 @@ pub struct OptimizationInfo {
     pub actions: String,
     /// Action applier
     pub transitions: String,
+    /// Explorer class
+    #[serde(default = "default_explorer")]
+    pub explorer: String,
+}
+
+fn default_explorer() -> String {
+    "NaiveExplorer".to_string()
 }
 
 pub fn serialize_benchmark_result<S>(

@@ -31,6 +31,7 @@ fn solve(
         &optimization.indexer,
         &optimization.actions,
         &optimization.transitions,
+        &optimization.explorer,
     )
 }
 
@@ -327,6 +328,7 @@ impl Solve {
             indexer,
             action,
             transition,
+            explorer,
             json,
         } = self;
 
@@ -341,6 +343,7 @@ impl Solve {
             indexer,
             actions: action,
             transitions: transition,
+            explorer,
         };
 
         print_optimizations(&mut stderr, &optimizations).unwrap();

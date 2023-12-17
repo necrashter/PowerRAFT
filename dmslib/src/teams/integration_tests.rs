@@ -27,6 +27,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "NaiveActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -39,6 +40,7 @@ fn pe0_1_team() {
         &config,
         "SortedStateIndexer<NaiveStateIndexer>",
         "NaiveActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -50,6 +52,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "PermutationalActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -61,6 +64,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<NaiveActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -73,6 +77,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -84,6 +89,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "FilterOnWay<NaiveActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -95,6 +101,7 @@ fn pe0_1_team() {
         &config,
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -109,6 +116,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "NaiveActions",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -121,6 +129,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -133,6 +142,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -147,6 +157,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "NaiveActions",
         "TimedActionApplier<TimeUntilArrival>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -159,6 +170,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilArrival>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -171,6 +183,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -183,6 +196,7 @@ fn pe0_1_team() {
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -195,6 +209,7 @@ fn pe0_1_team() {
         "SortedStateIndexer<NaiveStateIndexer>",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -228,6 +243,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "NaiveActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -240,6 +256,7 @@ fn pe0_2_team() {
         &config,
         "SortedStateIndexer<NaiveStateIndexer>",
         "NaiveActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -252,6 +269,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "PermutationalActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -262,6 +280,7 @@ fn pe0_2_team() {
         &config,
         "SortedStateIndexer<NaiveStateIndexer>",
         "PermutationalActions",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -273,6 +292,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<NaiveActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -284,6 +304,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -295,6 +316,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "FilterOnWay<NaiveActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -306,6 +328,7 @@ fn pe0_2_team() {
         &config,
         "SortedStateIndexer<NaiveStateIndexer>",
         "FilterOnWay<NaiveActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -318,6 +341,7 @@ fn pe0_2_team() {
         &config,
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -332,6 +356,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "NaiveActions",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -344,6 +369,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -356,6 +382,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -368,6 +395,7 @@ fn pe0_2_team() {
         "SortedStateIndexer<NaiveStateIndexer>",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<ConstantTime>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -382,6 +410,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "NaiveActions",
         "TimedActionApplier<TimeUntilArrival>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -394,6 +423,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilArrival>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -406,6 +436,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterEnergizedOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -418,6 +449,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilArrival>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -430,6 +462,7 @@ fn pe0_2_team() {
         "NaiveStateIndexer",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
@@ -442,6 +475,7 @@ fn pe0_2_team() {
         "SortedStateIndexer<NaiveStateIndexer>",
         "FilterOnWay<PermutationalActions>",
         "TimedActionApplier<TimeUntilEnergization>",
+        "NaiveExplorer",
     )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);

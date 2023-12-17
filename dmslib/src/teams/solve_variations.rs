@@ -21,25 +21,26 @@ pub fn solve_naive(
 /// Macro for generating solve code that reads class names from variables and constructs a code
 /// that calls the appropriate solve function variation.
 macro_rules! generate_solve_code {
-    ($tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr, $oh:expr) => {
+    ($expl:ident; $tt:ty; $ps:ty; $si:ty; $aa:ty; $act:ty; $g:expr, $it:expr, $oh:expr) => {
         solve_generic::<
             $tt,
-            NaiveExplorer<$tt, $act, $si>,
+            $expl<$tt, $act, $si>,
             $aa,
             $ps,
         >($g, $it, $oh)
     };
-    // Iterate through action set
+    // Iterate through action sets
     (
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier = $aa:ty,
+        explorer = $expl:ident,
         indexer = $si:ty,
         action_set($actstr:ident) = [$act1:ty],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it, $oh)
+            generate_solve_code!($expl; $tt; $ps; $si; $aa; $act1; $g, $it, $oh)
         } else {
             Err(SolveFailure::BadInput(format!("Undefined action set: {}", $actstr)))
         }
@@ -48,28 +49,31 @@ macro_rules! generate_solve_code {
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier = $aa:ty,
+        explorer = $expl:ident,
         indexer = $si:ty,
         action_set($actstr:ident) = [$act1:ty, $($rem:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
     ) => {
         if $actstr == stringify!($act1) {
-            generate_solve_code!($tt; $ps; $si; $aa; $act1; $g, $it, $oh)
+            generate_solve_code!($expl; $tt; $ps; $si; $aa; $act1; $g, $it, $oh)
         } else {
             generate_solve_code!(
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer = $expl,
                 indexer = $si,
                 action_set($actstr) = [$($rem),+],
                 solve($g, $it, $oh)
             )
         }
     };
-    // Iterate through State Indexer
+    // Iterate through State Indexers
     (
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier = $aa:ty,
+        explorer = $expl:ident,
         indexer($sistr:ident) = [$si:ty],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
@@ -79,6 +83,7 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer = $expl,
                 indexer = $si,
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
@@ -91,6 +96,7 @@ macro_rules! generate_solve_code {
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier = $aa:ty,
+        explorer = $expl:ident,
         indexer($sistr:ident) = [$si:ty, $($sis:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
@@ -100,6 +106,7 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer = $expl,
                 indexer = $si,
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
@@ -109,17 +116,74 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer = $expl,
                 indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
             )
         }
     };
-    // Iterate through action applier
+    // Iterate through explorers
+    (
+        transition = $tt:ty,
+        policy = $ps:ty,
+        action_applier = $aa:ty,
+        explorer($explstr:ident) = [$expl:ident $(,)?],
+        indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
+        action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
+        solve($g:expr, $it:expr, $oh:expr)
+    ) => {
+        if $explstr == stringify!($expl) {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                explorer = $expl,
+                indexer($sistr) = [$($sis),+],
+                action_set($actstr) = [$($acts),+],
+                solve($g, $it, $oh)
+            )
+        } else {
+            Err(SolveFailure::BadInput(format!("Undefined action applier: {}", $actstr)))
+        }
+    };
+    (
+        transition = $tt:ty,
+        policy = $ps:ty,
+        action_applier = $aa:ty,
+        explorer($explstr:ident) = [$expl:ident, $($explrem:ident),+ $(,)?],
+        indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
+        action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
+        solve($g:expr, $it:expr, $oh:expr)
+    ) => {
+        if $explstr == stringify!($expl) {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                explorer = $expl,
+                indexer($sistr) = [$($sis),+],
+                action_set($actstr) = [$($acts),+],
+                solve($g, $it, $oh)
+            )
+        } else {
+            generate_solve_code!(
+                transition = $tt,
+                policy = $ps,
+                action_applier = $aa,
+                explorer($explstr) = [$($explrem),+],
+                indexer($sistr) = [$($sis),+],
+                action_set($actstr) = [$($acts),+],
+                solve($g, $it, $oh)
+            )
+        }
+    };
+    // Iterate through action appliers
     (
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier($appstr:ident) = [$aa:ty],
+        explorer($explstr:ident) = [$($explrem:ident),+ $(,)?],
         indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
@@ -129,6 +193,7 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer($explstr) = [$($explrem),+],
                 indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
@@ -141,6 +206,7 @@ macro_rules! generate_solve_code {
         transition = $tt:ty,
         policy = $ps:ty,
         action_applier($appstr:ident) = [$aa:ty, $($aarem:ty),+ $(,)?],
+        explorer($explstr:ident) = [$($explrem:ident),+ $(,)?],
         indexer($sistr:ident) = [$($sis:ty),+ $(,)?],
         action_set($actstr:ident) = [$($acts:ty),+ $(,)?],
         solve($g:expr, $it:expr, $oh:expr)
@@ -150,6 +216,7 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier = $aa,
+                explorer($explstr) = [$($explrem),+],
                 indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
@@ -159,6 +226,7 @@ macro_rules! generate_solve_code {
                 transition = $tt,
                 policy = $ps,
                 action_applier($appstr) = [$($aarem),+],
+                explorer($explstr) = [$($explrem),+],
                 indexer($sistr) = [$($sis),+],
                 action_set($actstr) = [$($acts),+],
                 solve($g, $it, $oh)
@@ -175,11 +243,15 @@ pub fn solve_custom_regular(
     config: &Config,
     indexer: &str,
     action_set: &str,
+    explorer: &str,
 ) -> Result<Solution<RegularTransition>, SolveFailure> {
     generate_solve_code! {
         transition = RegularTransition,
         policy = NaivePolicySynthesizer,
         action_applier = NaiveActionApplier,
+        explorer(explorer) = [
+            NaiveExplorer,
+        ],
         indexer(indexer) = [
             NaiveStateIndexer,
             BitStackStateIndexer,
@@ -208,6 +280,7 @@ pub fn solve_custom_timed(
     indexer: &str,
     action_set: &str,
     action_applier: &str,
+    explorer: &str,
 ) -> Result<Solution<TimedTransition>, SolveFailure> {
     generate_solve_code! {
         transition = TimedTransition,
@@ -216,6 +289,9 @@ pub fn solve_custom_timed(
             TimedActionApplier<ConstantTime>,
             TimedActionApplier<TimeUntilArrival>,
             TimedActionApplier<TimeUntilEnergization>,
+        ],
+        explorer(explorer) = [
+            NaiveExplorer,
         ],
         indexer(indexer) = [
             NaiveStateIndexer,
@@ -247,9 +323,11 @@ pub fn solve_custom(
     indexer: &str,
     action_set: &str,
     action_applier: &str,
+    explorer: &str,
 ) -> Result<io::GenericTeamSolution, SolveFailure> {
     if action_applier == stringify!(NaiveActionApplier) {
-        let solution = solve_custom_regular(graph, initial_teams, config, indexer, action_set)?;
+        let solution =
+            solve_custom_regular(graph, initial_teams, config, indexer, action_set, explorer)?;
         Ok(io::GenericTeamSolution::Regular(solution.into_io(graph)))
     } else {
         let solution = solve_custom_timed(
@@ -259,6 +337,7 @@ pub fn solve_custom(
             indexer,
             action_set,
             action_applier,
+            explorer,
         )?;
         Ok(io::GenericTeamSolution::Timed(solution.into_io(graph)))
     }
@@ -276,10 +355,11 @@ pub fn benchmark_custom(
     indexer: &str,
     action_set: &str,
     action_applier: &str,
+    explorer: &str,
 ) -> Result<io::BenchmarkResult, SolveFailure> {
     if action_applier == stringify!(NaiveActionApplier) {
         Ok(
-            solve_custom_regular(graph, initial_teams, config, indexer, action_set)?
+            solve_custom_regular(graph, initial_teams, config, indexer, action_set, explorer)?
                 .to_benchmark_result(),
         )
     } else {
@@ -290,6 +370,7 @@ pub fn benchmark_custom(
             indexer,
             action_set,
             action_applier,
+            explorer,
         )?
         .to_benchmark_result())
     }
@@ -327,6 +408,7 @@ pub fn all_optimizations() -> Vec<OptimizationInfo> {
         indexer: indexer.to_string(),
         actions: actions.to_string(),
         transitions: transitions.to_string(),
+        explorer: "NaiveExplorer".to_string(),
     })
     .collect()
 }
@@ -350,11 +432,13 @@ pub fn benchmark_all(
             indexer,
             action_set,
             action_applier,
+            "NaiveExplorer",
         );
         let optimizations = io::OptimizationInfo {
             indexer: indexer.to_string(),
             actions: action_set.to_string(),
             transitions: action_applier.to_string(),
+            explorer: "NaiveExplorer".to_string(),
         };
         io::OptimizationBenchmarkResult {
             optimizations,
