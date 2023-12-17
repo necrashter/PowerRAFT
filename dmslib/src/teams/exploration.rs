@@ -32,3 +32,6 @@ pub trait Explorer<'a, TT: Transition> {
 
 mod naive;
 pub use naive::NaiveExplorer;
+
+mod random;
+pub use random::RandomExplorer;

@@ -251,6 +251,7 @@ pub fn solve_custom_regular(
         action_applier = NaiveActionApplier,
         explorer(explorer) = [
             NaiveExplorer,
+            RandomExplorer,
         ],
         indexer(indexer) = [
             NaiveStateIndexer,
@@ -292,6 +293,7 @@ pub fn solve_custom_timed(
         ],
         explorer(explorer) = [
             NaiveExplorer,
+            RandomExplorer,
         ],
         indexer(indexer) = [
             NaiveStateIndexer,
