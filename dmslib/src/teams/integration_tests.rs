@@ -21,178 +21,181 @@ fn pe0_1_team() {
         .unwrap();
     const OPTIMAL_VALUE: Value = 137.283203125;
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 645 to 593
     assert_eq!(solution.transitions.len(), 593);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions, SortedStateIndexer<NaiveStateIndexer>>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "NaiveActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 593);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, PermutationalActions, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "PermutationalActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 593);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<NaiveActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 544 to 499
     assert_eq!(solution.transitions.len(), 499);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<
-            RegularTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 499);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<NaiveActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 499);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 499);
 
     // TimedTransition equivalence with time = 1
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 593);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 499);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 499);
 
     // Timed
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
-        TimedActionApplier<TimeUntilArrival>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+        "TimedActionApplier<TimeUntilArrival>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 433);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<TimeUntilArrival>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilArrival>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterOnWay<PermutationalActions>,
-            SortedStateIndexer<NaiveStateIndexer>,
-        >,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 367);
@@ -219,230 +222,227 @@ fn pe0_2_team() {
         .unwrap();
     const OPTIMAL_VALUE: Value = 132.0810546875;
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 11545 to 6577
     assert_eq!(solution.transitions.len(), 6577);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, NaiveActions, SortedStateIndexer<NaiveStateIndexer>>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "NaiveActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 6161 to 3604
     assert_eq!(solution.transitions.len(), 3604);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, PermutationalActions, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "PermutationalActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5751);
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<
-            RegularTransition,
-            PermutationalActions,
-            SortedStateIndexer<NaiveStateIndexer>,
-        >,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "PermutationalActions",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 3347);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterEnergizedOnWay<NaiveActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<NaiveActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5407);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<
-            RegularTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4565);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<NaiveActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<NaiveActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5071);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<
-            RegularTransition,
-            FilterOnWay<NaiveActions>,
-            SortedStateIndexer<NaiveStateIndexer>,
-        >,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "FilterOnWay<NaiveActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 3912 to 2845
     assert_eq!(solution.transitions.len(), 2845);
 
-    let solution = solve_generic::<
-        RegularTransition,
-        NaiveExplorer<RegularTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        NaiveActionApplier,
-        NaivePolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_regular(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4366);
 
     // TimedTransition equivalence with time = 1
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 6577);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4565);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4366);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterOnWay<PermutationalActions>,
-            SortedStateIndexer<NaiveStateIndexer>,
-        >,
-        TimedActionApplier<ConstantTime>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<ConstantTime>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 2662);
 
     // Timed
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, NaiveActions, NaiveStateIndexer>,
-        TimedActionApplier<TimeUntilArrival>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "NaiveActions",
+        "TimedActionApplier<TimeUntilArrival>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 5797);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<TimeUntilArrival>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilArrival>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4311);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterEnergizedOnWay<PermutationalActions>,
-            NaiveStateIndexer,
-        >,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterEnergizedOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 3985);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        TimedActionApplier<TimeUntilArrival>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilArrival>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 4118);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<TimedTransition, FilterOnWay<PermutationalActions>, NaiveStateIndexer>,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "NaiveStateIndexer",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     assert_eq!(solution.transitions.len(), 3705);
 
-    let solution = solve_generic::<
-        TimedTransition,
-        NaiveExplorer<
-            TimedTransition,
-            FilterOnWay<PermutationalActions>,
-            SortedStateIndexer<NaiveStateIndexer>,
-        >,
-        TimedActionApplier<TimeUntilEnergization>,
-        NaiveTimedPolicySynthesizer,
-    >(&problem.graph, problem.initial_teams.clone(), &config)
+    let solution = solve_custom_timed(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        &config,
+        "SortedStateIndexer<NaiveStateIndexer>",
+        "FilterOnWay<PermutationalActions>",
+        "TimedActionApplier<TimeUntilEnergization>",
+    )
     .unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
     // After team representations were updated, this reduced from 2478 to 2202
