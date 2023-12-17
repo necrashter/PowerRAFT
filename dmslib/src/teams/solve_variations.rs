@@ -252,6 +252,7 @@ pub fn solve_custom_regular(
         explorer(explorer) = [
             NaiveExplorer,
             RandomExplorer,
+            GreedyExplorer,
         ],
         indexer(indexer) = [
             NaiveStateIndexer,
@@ -294,6 +295,7 @@ pub fn solve_custom_timed(
         explorer(explorer) = [
             NaiveExplorer,
             RandomExplorer,
+            GreedyExplorer,
         ],
         indexer(indexer) = [
             NaiveStateIndexer,

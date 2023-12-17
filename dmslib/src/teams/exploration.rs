@@ -35,3 +35,6 @@ pub use naive::NaiveExplorer;
 
 mod random;
 pub use random::RandomExplorer;
+
+mod greedy;
+pub use greedy::GreedyExplorer;
