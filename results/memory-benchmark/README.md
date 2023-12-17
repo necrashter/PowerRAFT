@@ -6,6 +6,8 @@ Results of the benchmarks that measure the memory and storage usage of the progr
 
 Benchmarking the memory usage of different state indexer implementations.
 
+**NOTE:** All state indexers except for the best one (`BitStackStateIndexer`) have been removed to keep the codebase simple. You can checkout the commit mentioned below if you want to see all state indexer implementations.
+
 All indexers that are present in git commit `58e50ecaf353f79442426d3ee1875b12d4a7bf12`:
 - `Naive`: Using `std::collections::HashMap` and storing new states in `Array2`s.
 - `Stack HashMap`: Same as naive, but instead of storing new states in `Array2`s, only unexplored states are added to stack and removed. When MDP is built, `Array2`s are built from HashMap.

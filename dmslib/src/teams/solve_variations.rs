@@ -182,15 +182,9 @@ pub fn solve_custom_regular(
         action_applier = NaiveActionApplier,
         indexer(indexer) = [
             NaiveStateIndexer,
-            StackStateIndexer,
             BitStackStateIndexer,
-            TrieStateIndexer,
-            MinifyingStateIndexer,
             SortedStateIndexer<NaiveStateIndexer>,
-            SortedStateIndexer<StackStateIndexer>,
             SortedStateIndexer<BitStackStateIndexer>,
-            SortedStateIndexer<TrieStateIndexer>,
-            SortedStateIndexer<MinifyingStateIndexer>,
         ],
         action_set(action_set) = [
             NaiveActions,
@@ -225,15 +219,9 @@ pub fn solve_custom_timed(
         ],
         indexer(indexer) = [
             NaiveStateIndexer,
-            StackStateIndexer,
             BitStackStateIndexer,
-            TrieStateIndexer,
-            MinifyingStateIndexer,
             SortedStateIndexer<NaiveStateIndexer>,
-            SortedStateIndexer<StackStateIndexer>,
             SortedStateIndexer<BitStackStateIndexer>,
-            SortedStateIndexer<TrieStateIndexer>,
-            SortedStateIndexer<MinifyingStateIndexer>,
         ],
         action_set(action_set) = [
             NaiveActions,
@@ -309,15 +297,9 @@ pub fn benchmark_custom(
 
 const BENCHMARK_STATE_INDEXERS: &[&str] = &[
     stringify!(NaiveStateIndexer),
-    stringify!(StackStateIndexer),
     stringify!(BitStackStateIndexer),
-    stringify!(TrieStateIndexer),
-    stringify!(MinifyingStateIndexer),
     stringify!(SortedStateIndexer<NaiveStateIndexer>),
-    stringify!(SortedStateIndexer<StackStateIndexer>),
     stringify!(SortedStateIndexer<BitStackStateIndexer>),
-    stringify!(SortedStateIndexer<TrieStateIndexer>),
-    stringify!(SortedStateIndexer<MinifyingStateIndexer>),
 ];
 
 const BENCHMARK_ACTION_APPLIERS: &[&str] = &[
