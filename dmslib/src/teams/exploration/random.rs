@@ -1,10 +1,14 @@
+use crate::RANDOM_SEED;
+
 use super::*;
 
-use rand::seq::IteratorRandom;
+use rand::{rngs::StdRng, seq::IteratorRandom, SeedableRng};
 
 /// Random action explorer.
 ///
 /// Only one random action is selected in each state. Remaining actions are discarded.
+///
+/// This class will use the thread local RANDOM_SEED variable if it's not None.
 pub struct RandomExplorer<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> {
     /// Action iterator.
     iterator: AI,
@@ -16,6 +20,8 @@ pub struct RandomExplorer<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexe
     /// - `transitions[i]`: Actions of state i
     /// - `transitions[i][j]`: Transitions of action j in state i
     transitions: Vec<Vec<Vec<TT>>>,
+    /// Random number generator.
+    rng: StdRng,
 }
 
 impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> RandomExplorer<'a, TT, AI, SI> {
@@ -32,12 +38,11 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> RandomExplorer<'a,
         let action_transitions: Vec<Vec<TT>> = if state.is_terminal(self.graph) {
             vec![vec![TT::terminal_transition(index as StateIndex, cost)]]
         } else {
-            let mut rng = rand::thread_rng();
             let state = state.to_action_state(self.graph);
             let action = self
                 .iterator
                 .prepare(&state)
-                .choose(&mut rng)
+                .choose(&mut self.rng)
                 .expect("No actions in a non-terminal state");
             vec![AA::apply(&state, cost, self.graph, &action)
                 .into_iter()
@@ -79,12 +84,11 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> RandomExplorer<'a,
                 })
                 .collect()]
         } else {
-            let mut rng = rand::thread_rng();
             let state = state.to_action_state(self.graph);
             let action = self
                 .iterator
                 .prepare(&state)
-                .choose(&mut rng)
+                .choose(&mut self.rng)
                 .expect("No actions in a non-terminal state");
             vec![AA::apply(&state, cost, self.graph, &action)
                 .into_iter()
@@ -116,11 +120,20 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         // However, in some cases it caused underflow due to memory usage approximation errors.
         let mut max_memory: usize = 0;
 
+        let rng = RANDOM_SEED.with_borrow(|seed| {
+            if let Some(seed) = seed {
+                StdRng::seed_from_u64(*seed)
+            } else {
+                StdRng::from_entropy()
+            }
+        });
+
         let mut explorer = RandomExplorer {
             iterator: AI::setup(graph),
             graph,
             states: SI::new(graph, &teams),
             transitions: Vec::new(),
+            rng,
         };
         explorer
             .states

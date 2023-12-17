@@ -22,6 +22,10 @@ const RESULTS_DIR: &str = "results";
 struct Args {
     #[command(subcommand)]
     command: commands::Command,
+
+    /// Optional random seed used by some components.
+    #[arg(long, global = true)]
+    seed: Option<u64>,
 }
 
 #[macro_export]
@@ -39,7 +43,14 @@ macro_rules! fatal_error {
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    let args = Args::parse();
+    let Args { command, seed } = Args::parse();
 
-    args.command.run();
+    if let Some(seed) = seed {
+        log::info!("Setting random seed to {seed}");
+        dmslib::RANDOM_SEED.with_borrow_mut(|random_seed| {
+            *random_seed = Some(seed);
+        });
+    }
+
+    command.run();
 }

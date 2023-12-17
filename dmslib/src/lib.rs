@@ -2,6 +2,8 @@
 //!
 //! Common functionality for DMS server and command line interface.
 
+use std::cell::RefCell;
+
 use serde::{Deserialize, Serialize};
 
 pub mod io;
@@ -39,4 +41,10 @@ impl std::fmt::Display for SolveFailure {
             }
         }
     }
+}
+
+// Some settings are stored in thread local variables.
+thread_local! {
+    /// Optional random seed used by some components.
+    pub static RANDOM_SEED: RefCell<Option<u64>> = RefCell::new(None);
 }
