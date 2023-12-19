@@ -1,0 +1,44 @@
+{
+  "name": "WSCC-9 Exact",
+  "description": "Exact solution on WSCC-9 with all optimizations.",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "WSCC 9-Bus (9, 9)",
+          "graph": "../../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "WSCC 9-Bus (9, 9, 9)",
+          "graph": "../../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        }
+      ],
+      "optimizations": [
+        {
+          "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+          "actions": "FilterEnergizedOnWay<PermutationalActions>",
+          "transitions": "TimedActionApplier<TimeUntilEnergization>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[
+  {
+    "indexer": "BitStackStateIndexer",
+    "actions": "NaiveActions",
+    "transitions": "NaiveActionApplier",
+    "explorer": "GreedyExplorer"
+  }
+]

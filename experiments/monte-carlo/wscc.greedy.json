@@ -1,0 +1,37 @@
+{
+  "name": "WSCC-9 Greedy Monte Carlo",
+  "tasks": [
+    {
+      "problems": [
+        {
+          "name": "WSCC 9-Bus (9, 9)",
+          "graph": "../../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        },
+        {
+          "name": "WSCC 9-Bus (9, 9, 9)",
+          "graph": "../../graphs/wscc.json",
+          "teams": [
+            { "index": 8 },
+            { "index": 8 },
+            { "index": 8 }
+          ],
+          "horizon": 30,
+          "timeFunction": {
+            "type": "DirectDistance",
+            "divider": 0.43
+          }
+        }
+      ],
+      "optimizations": "optimizations/greedy.json"
+    }
+  ]
+}

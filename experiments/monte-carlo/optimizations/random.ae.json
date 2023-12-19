@@ -1,0 +1,8 @@
+[
+  {
+    "indexer": "SortedStateIndexer<BitStackStateIndexer>",
+    "actions": "FilterEnergizedOnWay<PermutationalActions>",
+    "transitions": "TimedActionApplier<TimeUntilEnergization>",
+    "explorer": "RandomExplorer"
+  }
+]
