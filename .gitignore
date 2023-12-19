@@ -2,3 +2,4 @@
 *.res.json
 /dmscli/results
 /experiments/tmp
+__pycache__
