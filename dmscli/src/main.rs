@@ -10,7 +10,7 @@ use dmslib::teams;
 use dmslib::SolveFailure;
 
 use clap::Parser;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use colored::*;
 
 mod commands;
 
@@ -31,11 +31,8 @@ struct Args {
 #[macro_export]
 macro_rules! fatal_error {
     ($ec:expr, $($arg:tt)*) => {{
-        let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-        stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true)).unwrap();
-        write!(&mut stderr, "FATAL ERROR: ").unwrap();
-        stderr.reset().unwrap();
-        writeln!(&mut stderr, $($arg)*).unwrap();
+        eprint!("{}", "FATAL ERROR: ".red().bold());
+        eprintln!($($arg)*);
         std::process::exit($ec);
     }};
 }

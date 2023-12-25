@@ -48,78 +48,32 @@ fn get_optimization_result(
     }
 }
 
-fn print_optimizations(
-    out: &mut StandardStream,
-    optimization: &OptimizationInfo,
-) -> std::io::Result<()> {
-    let mut bold = ColorSpec::new();
-    bold.set_bold(true);
-
-    out.set_color(&bold)?;
-    write!(out, "Indexer:          ")?;
-    out.reset()?;
-    writeln!(out, "{}", optimization.indexer)?;
-    out.set_color(&bold)?;
-    write!(out, "Action:           ")?;
-    out.reset()?;
-    writeln!(out, "{}", optimization.actions)?;
-    out.set_color(&bold)?;
-    write!(out, "Transition:       ")?;
-    out.reset()?;
-    writeln!(out, "{}", optimization.transitions)?;
-    Ok(())
+fn print_optimizations(optimization: &OptimizationInfo) {
+    eprintln!("{:18}{}", "Indexer:".bold(), optimization.indexer);
+    eprintln!("{:18}{}", "Actions:".bold(), optimization.actions);
+    eprintln!("{:18}{}", "Transitions:".bold(), optimization.transitions);
 }
 
-fn print_benchmark_result(
-    out: &mut StandardStream,
-    result: &Result<BenchmarkResult, SolveFailure>,
-) -> std::io::Result<()> {
-    let mut bold = ColorSpec::new();
-    bold.set_bold(true);
-
+fn print_benchmark_result(result: &Result<BenchmarkResult, SolveFailure>) {
     match result {
         Ok(result) => {
-            out.set_color(&bold)?;
-            write!(out, "Number of states: ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.states)?;
-            out.set_color(&bold)?;
-            write!(out, "Max memory usage: ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.max_memory)?;
-
-            out.set_color(&bold)?;
-            write!(out, "Generation time:  ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.generation_time)?;
-            out.set_color(&bold)?;
-            write!(out, "Total time:       ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.total_time)?;
-            out.set_color(&bold)?;
-            write!(out, "Min Value:        ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.value)?;
-            out.set_color(&bold)?;
-            write!(out, "Horizon:          ")?;
-            out.reset()?;
-            writeln!(out, "{}", result.horizon)?;
+            eprintln!("{:18}{}", "Number of states:".bold(), result.states);
+            eprintln!("{:18}{}", "Max memory usage:".bold(), result.max_memory);
+            eprintln!("{:18}{}", "Generation time:".bold(), result.generation_time);
+            eprintln!("{:18}{}", "Total time:".bold(), result.total_time);
+            eprintln!("{:18}{}", "Min Value:".bold(), result.value);
+            eprintln!("{:18}{}", "Horizon:".bold(), result.horizon);
         }
         Err(failure) => {
-            out.set_color(ColorSpec::new().set_bold(true).set_fg(Some(Color::Red)))?;
-            writeln!(out, "Benchmark failed!")?;
-            out.reset()?;
-            writeln!(out, "{}", failure)?;
+            eprintln!("{}", "Benchmark failed!".red().bold());
+            eprintln!("{}", failure);
         }
     }
-
-    Ok(())
 }
 
 /// Run a single task in experiment.
 #[allow(clippy::too_many_arguments)]
 fn run_experiment_task(
-    stderr: &mut StandardStream,
     team_problem: &TeamProblem,
     optimization: &OptimizationInfo,
     problem: &Problem,
@@ -128,14 +82,14 @@ fn run_experiment_task(
     simulate: bool,
     current: usize,
 ) -> serde_json::Value {
-    writeln!(stderr).unwrap();
-    print_optimizations(stderr, optimization).unwrap();
+    eprintln!();
+    print_optimizations(optimization);
 
     let solution = solve(problem, config, optimization);
     let result = get_optimization_result(&solution, optimization.clone());
 
-    print_benchmark_result(stderr, &result.result).unwrap();
-    writeln!(stderr).unwrap();
+    print_benchmark_result(&result.result);
+    eprintln!();
 
     let mut result = match serde_json::to_value(result) {
         Ok(s) => s,
@@ -181,17 +135,11 @@ fn run_experiment(
     solutions_dir: Option<PathBuf>,
     simulate: bool,
 ) -> Vec<serde_json::Value> {
-    let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-
-    stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-    write!(&mut stderr, "Experiment Name:  ").unwrap();
-    stderr.reset().unwrap();
-    writeln!(
-        &mut stderr,
-        "{}\n",
+    eprintln!(
+        "{:18}{}\n",
+        "Experiment Name:".bold(),
         experiment.name.as_ref().map(String::as_ref).unwrap_or("-")
-    )
-    .unwrap();
+    );
 
     let mut current: usize = 1;
     let total_benchmarks: usize = experiment
@@ -212,15 +160,11 @@ fn run_experiment(
 
             let name = problem.name.take();
 
-            stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-            write!(&mut stderr, "Problem Name:     ").unwrap();
-            stderr.reset().unwrap();
-            writeln!(
-                &mut stderr,
-                "{}",
+            eprintln!(
+                "{:18}{}",
+                "Problem Name:".bold(),
                 name.as_ref().map(String::as_ref).unwrap_or("-")
-            )
-            .unwrap();
+            );
 
             let (problem, config) = match problem.prepare() {
                 Ok(x) => x,
@@ -228,15 +172,14 @@ fn run_experiment(
             };
 
             for optimization in &optimizations {
-                stderr
-                    .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-                    .unwrap();
-                writeln!(&mut stderr, "Solving {}/{}...", current, total_benchmarks).unwrap();
-                stderr.reset().unwrap();
-                stderr.flush().unwrap();
+                eprintln!(
+                    "{}",
+                    format!("Solving {}/{}...", current, total_benchmarks)
+                        .green()
+                        .bold()
+                );
 
                 results.push(run_experiment_task(
-                    &mut stderr,
                     &team_problem,
                     optimization,
                     &problem,
@@ -256,7 +199,6 @@ fn run_experiment(
 
 impl Run {
     pub fn run(self) {
-        let mut stderr = StandardStream::stderr(ColorChoice::Auto);
         let Run {
             path,
             no_save,
@@ -312,17 +254,12 @@ impl Run {
         };
         writeln!(&mut results_file, "{}", serialized).unwrap();
 
-        stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-            .unwrap();
-        writeln!(&mut stderr, "Done!").unwrap();
-        stderr.reset().unwrap();
+        eprintln!("{}", "Done!".green().bold());
     }
 }
 
 impl Solve {
     pub fn run(self) {
-        let mut stderr = StandardStream::stderr(ColorChoice::Auto);
         let Solve {
             path,
             indexer,
@@ -334,10 +271,7 @@ impl Solve {
 
         let (name, problem, config) = read_and_parse_team_problem(path);
 
-        stderr.set_color(ColorSpec::new().set_bold(true)).unwrap();
-        write!(&mut stderr, "Problem Name:     ").unwrap();
-        stderr.reset().unwrap();
-        writeln!(&mut stderr, "{}", name).unwrap();
+        eprintln!("{:18}{}", "Problem Name:".bold(), name);
 
         let optimizations = OptimizationInfo {
             indexer,
@@ -346,21 +280,17 @@ impl Solve {
             explorer,
         };
 
-        print_optimizations(&mut stderr, &optimizations).unwrap();
+        print_optimizations(&optimizations);
 
-        stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))
-            .unwrap();
-        write!(&mut stderr, "Solving...\r").unwrap();
-        stderr.reset().unwrap();
-        stderr.flush().unwrap();
+        eprint!("{}\r", "Solving...".green().bold());
+        std::io::stderr().flush().unwrap();
 
         let solution = solve(&problem, &config, &optimizations);
         // TODO: save solution
 
         let result = get_optimization_result(&solution, optimizations);
 
-        print_benchmark_result(&mut stderr, &result.result).unwrap();
+        print_benchmark_result(&result.result);
 
         if json {
             let serialized = match serde_json::to_string_pretty(&result) {
