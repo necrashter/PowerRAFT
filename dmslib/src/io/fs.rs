@@ -168,11 +168,20 @@ pub fn read_field_from_file<P: AsRef<Path>>(
 }
 
 impl TeamProblem {
+    /// Process the paths in serde_json::Value.
+    pub fn process_serde_value<P: AsRef<Path>>(
+        value: &mut serde_json::Value,
+        path: P,
+    ) -> std::io::Result<()> {
+        read_field_from_file(value, "graph", path)?;
+        Ok(())
+    }
+
     pub fn read_from_value<P: AsRef<Path>>(
         mut value: serde_json::Value,
         path: P,
     ) -> std::io::Result<TeamProblem> {
-        read_field_from_file(&mut value, "graph", path)?;
+        Self::process_serde_value(&mut value, path)?;
         let team_problem: TeamProblem = serde_json::from_value(value)?;
         Ok(team_problem)
     }
@@ -181,6 +190,13 @@ impl TeamProblem {
         let content = std::fs::read_to_string(&path)?;
         let value: serde_json::Value = serde_json::from_str(&content)?;
         TeamProblem::read_from_value(value, path)
+    }
+
+    pub fn read_value_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<serde_json::Value> {
+        let content = std::fs::read_to_string(&path)?;
+        let mut value: serde_json::Value = serde_json::from_str(&content)?;
+        Self::process_serde_value(&mut value, path)?;
+        Ok(value)
     }
 }
 

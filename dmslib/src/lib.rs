@@ -4,8 +4,10 @@
 
 use std::cell::RefCell;
 
+use rand::{rngs::StdRng, SeedableRng};
 use serde::{Deserialize, Serialize};
 
+pub mod dqn;
 pub mod io;
 pub mod policy;
 pub mod teams;
@@ -47,4 +49,15 @@ impl std::fmt::Display for SolveFailure {
 thread_local! {
     /// Optional random seed used by some components.
     pub static RANDOM_SEED: RefCell<Option<u64>> = RefCell::new(None);
+}
+
+/// Create a new StdRng with the seed given in [`RANDOM_SEED`] thread-local variable.
+pub fn create_rng() -> StdRng {
+    RANDOM_SEED.with_borrow(|seed| {
+        if let Some(seed) = seed {
+            StdRng::seed_from_u64(*seed)
+        } else {
+            StdRng::from_entropy()
+        }
+    })
 }

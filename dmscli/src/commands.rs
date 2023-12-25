@@ -9,6 +9,9 @@ pub use list::*;
 mod simulation;
 pub use simulation::*;
 
+mod dqn;
+pub use dqn::DqnCommand;
+
 /// All CLI commands available in this binary.
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
@@ -33,6 +36,10 @@ pub enum Command {
 
     /// Load the solution and exit (check integrity).
     Load(Load),
+
+    /// Subcommand for Deep Q-Learning
+    #[command(subcommand)]
+    Dqn(DqnCommand),
 }
 
 #[derive(clap::Args, Debug)]
@@ -98,6 +105,7 @@ impl Command {
             Command::Distances(args) => args.run(),
             Command::ListAllOpt => list_all_opt(),
             Command::Load(args) => args.run(),
+            Command::Dqn(sub) => sub.run(),
         }
     }
 }

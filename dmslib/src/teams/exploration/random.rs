@@ -1,8 +1,8 @@
-use crate::RANDOM_SEED;
+use crate::create_rng;
 
 use super::*;
 
-use rand::{rngs::StdRng, seq::IteratorRandom, SeedableRng};
+use rand::{rngs::StdRng, seq::IteratorRandom};
 
 /// Random action explorer.
 ///
@@ -120,13 +120,7 @@ impl<'a, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> Explorer<'a, TT>
         // However, in some cases it caused underflow due to memory usage approximation errors.
         let mut max_memory: usize = 0;
 
-        let rng = RANDOM_SEED.with_borrow(|seed| {
-            if let Some(seed) = seed {
-                StdRng::seed_from_u64(*seed)
-            } else {
-                StdRng::from_entropy()
-            }
-        });
+        let rng = create_rng();
 
         let mut explorer = RandomExplorer {
             iterator: AI::setup(graph),

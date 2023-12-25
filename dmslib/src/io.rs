@@ -16,6 +16,8 @@ pub mod fs;
 pub use experiments::*;
 mod simulation;
 pub use simulation::*;
+mod dqn;
+pub use dqn::*;
 
 #[cfg(test)]
 mod tests;
