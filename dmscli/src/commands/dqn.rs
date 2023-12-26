@@ -13,13 +13,13 @@ pub enum DqnCommand {
 
 #[derive(clap::Args, Debug)]
 pub struct ModelArgs {
-    /// Path to the model JSON file.
+    /// Path to the model YAML file.
     path: PathBuf,
 }
 
 /// Load model and print name information.
 fn load_model(path: PathBuf) -> DqnModel {
-    match DqnModel::read_from_file(path) {
+    match DqnModel::read_yaml_file(path) {
         Ok(model) => {
             println!(
                 "{:14}{}",

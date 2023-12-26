@@ -5,8 +5,20 @@ use crate::dqn;
 
 use super::*;
 
-/// Contains all hyperparameter information about a DQN model.
+/// A YAML file that serializes DqnModel.
 #[derive(Serialize, Deserialize, Debug)]
+pub struct DqnModelYaml {
+    pub name: Option<String>,
+    /// The field teams problem on which the model will run.
+    pub problem: String,
+    /// Model settings.
+    pub model: dqn::ModelSettings,
+    /// Trainer settings.
+    pub trainer: dqn::TrainerSettings,
+}
+
+/// Contains all hyperparameter information about a DQN model.
+#[derive(Debug)]
 pub struct DqnModel {
     pub name: Option<String>,
     /// The field teams problem on which the model will run.
@@ -18,28 +30,51 @@ pub struct DqnModel {
 }
 
 impl DqnModel {
-    pub fn read_from_value<P: AsRef<Path>>(
-        mut value: serde_json::Value,
-        path: P,
-    ) -> std::io::Result<Self> {
-        if let Some(value) = value.get_mut("problem") {
-            if let serde_json::Value::String(s) = value {
-                let mut problem_path = PathBuf::new();
-                problem_path.push(path);
-                problem_path.pop();
-                problem_path.push(s);
-                *value = TeamProblem::read_value_from_file(problem_path)?;
-            } else {
-                TeamProblem::process_serde_value(value, path)?;
-            }
-        }
-        let out: Self = serde_json::from_value(value)?;
-        Ok(out)
-    }
+    /// Read the model information from a YAML file.
+    pub fn read_yaml_file<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+        use std::io::{Error, ErrorKind};
 
-    pub fn read_from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+        // Read model YAML
         let content = std::fs::read_to_string(&path)?;
-        let value: serde_json::Value = serde_json::from_str(&content)?;
-        Self::read_from_value(value, path)
+        let DqnModelYaml {
+            name,
+            problem: problem_relative_path,
+            model,
+            trainer,
+        } = match serde_yaml::from_str(&content) {
+            Ok(yaml) => yaml,
+            Err(error) => {
+                return Err(Error::new(
+                    ErrorKind::Other,
+                    format!("Failed to parse model YAML: {error}"),
+                ));
+            }
+        };
+
+        // Read the problem
+        let mut problem_path = PathBuf::new();
+        problem_path.push(path);
+        problem_path.pop();
+        problem_path.push(problem_relative_path);
+        let problem = match TeamProblem::read_from_file(&problem_path) {
+            Ok(value) => value,
+            Err(error) => {
+                return Err(Error::new(
+                    error.kind(),
+                    format!(
+                        "Failed to read the problem ({}): {}",
+                        problem_path.display(),
+                        error
+                    ),
+                ));
+            }
+        };
+
+        Ok(Self {
+            name,
+            problem,
+            model,
+            trainer,
+        })
     }
 }

@@ -1,0 +1,5 @@
+name: Overfitting Test
+problem: "problems/wscc-9-9.json"
+model: {}
+trainer: !NaiveOverfit
+  lr: 0.0001
