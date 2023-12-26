@@ -1,4 +1,4 @@
-use dmslib::io::DqnModel;
+use dmslib::{io::DqnModel, types::Value};
 
 use super::*;
 
@@ -62,7 +62,13 @@ impl DqnCommand {
                     "Evaluation before training".dimmed().bold(),
                     format!("{}", value).bold(),
                 );
-                for i in 1..=1000 {
+
+                let mut values = Vec::<Value>::new();
+
+                RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
+                let mut i = 0;
+                loop {
+                    i += 1;
                     let loss = trainer.train(500);
                     let value = trainer.evaluate();
                     println!(
@@ -71,7 +77,21 @@ impl DqnCommand {
                         format!("{}", loss).bold(),
                         format!("{}", value).bold(),
                     );
+                    values.push(value);
+                    // Check if an interrupt is received
+                    if RUNNING_STATE.load(atomic::Ordering::SeqCst) & 1 == 1 {
+                        break;
+                    }
                 }
+                RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
+
+                println!("\n{}", "Training finished.".green().bold());
+                println!("Trained for {i} epochs.");
+                println!(
+                    "{:18}{}",
+                    "Minimum Value:".bold(),
+                    values.into_iter().reduce(Value::min).unwrap()
+                );
             }
             DqnCommand::Run(args) => {
                 load_model(args.path);
