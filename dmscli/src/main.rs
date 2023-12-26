@@ -57,7 +57,7 @@ fn main() {
         } else if prev & 2 != 0 {
             println!(
                 "\n{}",
-                "Ctrl+C received, will exit after this epoch...".yellow()
+                "Ctrl+C received, will exit after the next checkpoint...".yellow()
             );
         }
     })

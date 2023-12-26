@@ -58,22 +58,25 @@ impl DqnCommand {
                     trainer.build(&problem.graph, problem.initial_teams.clone(), model, config);
                 let value = trainer.evaluate();
                 println!(
-                    "{:39} | Value: {:20}",
+                    "{:31} | Value: {:20}",
                     "Evaluation before training".dimmed().bold(),
                     format!("{}", value).bold(),
                 );
 
                 let mut values = Vec::<Value>::new();
+                let iterations = 500;
 
                 RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
                 let mut i = 0;
                 loop {
                     i += 1;
-                    let loss = trainer.train(500);
+                    let loss = trainer.train(iterations);
                     let value = trainer.evaluate();
                     println!(
-                        "{:10} | Loss: {:20} | Value: {:20}",
-                        format!("EPOCH {i}").green().bold(),
+                        // NOTE: .18 is the maximum width instead of precision
+                        // since the inputs are strings.
+                        "{} Loss: {:18.18} | Value: {:18.18}",
+                        format!("[{i:>4}]").green().bold(),
                         format!("{}", loss).bold(),
                         format!("{}", value).bold(),
                     );
@@ -86,7 +89,7 @@ impl DqnCommand {
                 RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
 
                 println!("\n{}", "Training finished.".green().bold());
-                println!("Trained for {i} epochs.");
+                println!("Trained for {i} x {iterations} iterations.");
                 println!(
                     "{:18}{}",
                     "Minimum Value:".bold(),
