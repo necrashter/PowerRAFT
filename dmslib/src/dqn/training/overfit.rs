@@ -218,7 +218,7 @@ where
     pub fn new(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-        _model_settings: ModelSettings,
+        model_settings: ModelSettings,
         settings: OverfitTrainerSettings,
         config: teams::Config,
     ) -> Self {
@@ -230,7 +230,12 @@ where
 
         let rng = create_rng();
 
-        let model = Model::new(device, tensorizer.input_size, tensorizer.output_size);
+        let model = Model::new(
+            device,
+            tensorizer.input_size,
+            tensorizer.output_size,
+            &model_settings,
+        );
         // Optimizer
         let opt = nn::Adam::default().build(&model.vs, settings.lr).unwrap();
 

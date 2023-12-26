@@ -1,9 +1,16 @@
 use super::*;
 
-/// Model architecture information.
-/// TODO
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ModelSettings {}
+pub enum ModelLayer {
+    Linear(i64),
+    Relu,
+}
+
+/// Model architecture information.
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ModelSettings {
+    Sequential(Vec<ModelLayer>),
+}
 
 type ModelFunc = Box<dyn Fn(&Tensor) -> Tensor>;
 
@@ -13,25 +20,46 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(device: tch::Device, input_size: i64, output_size: i64) -> Self {
+    pub fn new(
+        device: tch::Device,
+        input_size: i64,
+        output_size: i64,
+        model: &ModelSettings,
+    ) -> Self {
         let vs = nn::VarStore::new(device);
         let root = &vs.root();
-        let seq = nn::seq()
-            .add(nn::linear(
-                root / "l1",
-                input_size,
-                8096,
-                Default::default(),
-            ))
-            .add_fn(|xs| xs.relu())
-            .add(nn::linear(
-                root / "l3",
-                8096,
-                output_size,
-                Default::default(),
-            ));
-        let func = Box::new(move |xs: &Tensor| xs.apply(&seq));
-        Self { vs, func }
+        match model {
+            ModelSettings::Sequential(layers) => {
+                let mut last_size = input_size;
+                let mut seq = nn::seq();
+                for (i, layer) in layers.iter().enumerate() {
+                    match layer {
+                        ModelLayer::Linear(size) => {
+                            let size = *size;
+                            seq = seq.add(nn::linear(
+                                root / format!("layer{i}"),
+                                last_size,
+                                size,
+                                Default::default(),
+                            ));
+                            last_size = size;
+                        }
+                        ModelLayer::Relu => {
+                            seq = seq.add_fn(|xs| xs.relu());
+                        }
+                    }
+                }
+                // Add the final output layer
+                seq = seq.add(nn::linear(
+                    root / "output",
+                    last_size,
+                    output_size,
+                    Default::default(),
+                ));
+                let func = Box::new(move |xs: &Tensor| xs.apply(&seq));
+                Self { vs, func }
+            }
+        }
     }
 
     /// A forward pass on the network. Syntactic sugar for calling the `func` field.

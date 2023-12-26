@@ -57,7 +57,7 @@ where
     pub fn new(
         graph: &'a Graph,
         teams: Vec<TeamState>,
-        _model_settings: ModelSettings,
+        model_settings: ModelSettings,
         settings: ClassicTrainerSettings,
         config: teams::Config,
     ) -> Self {
@@ -78,12 +78,14 @@ where
             device,
             env.tensorizer.input_size,
             env.tensorizer.output_size,
+            &model_settings,
         );
         // The target model that will be updated occasionally from the primary model.
         let mut target_model = Model::new(
             device,
             env.tensorizer.input_size,
             env.tensorizer.output_size,
+            &model_settings,
         );
         target_model.copy_from(&model);
         // Optimizer
