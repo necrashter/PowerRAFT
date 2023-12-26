@@ -1,5 +1,6 @@
 use crate::teams;
 
+use super::exploration::EvaluationResult;
 use super::*;
 
 pub trait DqnTrainer {
@@ -9,7 +10,7 @@ pub trait DqnTrainer {
     /// Evaluate the model by generating a full policy and computing its value.
     ///
     /// Horizon should come from the teams::Config provided in `new` method.
-    fn evaluate(&mut self) -> Value;
+    fn evaluate(&mut self) -> EvaluationResult;
 }
 
 mod classic;

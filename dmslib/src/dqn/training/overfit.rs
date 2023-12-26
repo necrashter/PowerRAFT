@@ -2,7 +2,7 @@ use itertools::Itertools;
 use ndarray::Array2;
 
 use crate::{
-    dqn::environment::Tensorizer,
+    dqn::{environment::Tensorizer, exploration::dqn_evaluate},
     policy::determine_horizon,
     teams::{
         state::{BusState, State},
@@ -309,20 +309,14 @@ where
         average_loss
     }
 
-    fn evaluate(&mut self) -> Value {
-        let ExploreResult {
-            bus_states: _,
-            team_states: _,
-            transitions,
-            max_memory: _,
-        } = dqn_explore::<TT, AI, SI, AA>(
+    fn evaluate(&mut self) -> EvaluationResult {
+        dqn_evaluate::<TT, AI, SI, AA, PS>(
             self.graph,
             self.initial_state.clone(),
             &self.model,
             &mut self.tensorizer,
-        );
-        let (values, _policy) = PS::synthesize_policy(&transitions, self.solution.horizon);
-        get_min_value(&values)
+            self.solution.horizon,
+        )
     }
 }
 

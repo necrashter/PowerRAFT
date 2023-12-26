@@ -14,18 +14,19 @@ use crate::{
     teams::{
         state::{BitStackStateIndexer, StateIndexer, TeamState},
         transitions::{ActionApplier, NaiveActionApplier},
-        ActionSet, ExploreResult, Graph, NaiveActions,
+        ActionSet, Graph, NaiveActions,
     },
     types::Value,
 };
 
 mod environment;
-use self::{environment::Environment, exploration::dqn_explore, replay::ExperienceSample};
+use self::{environment::Environment, replay::ExperienceSample};
 
 mod replay;
 use self::replay::ReplayMemory;
 
 mod exploration;
+pub use self::exploration::EvaluationResult;
 
 mod training;
 pub use self::training::{DqnTrainer, NaiveClassicTrainer, TrainerSettings};

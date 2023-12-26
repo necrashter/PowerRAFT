@@ -1,8 +1,5 @@
 use crate::{
-    teams::{
-        state::{State, StateIndexer},
-        ExploreResult,
-    },
+    teams::state::{State, StateIndexer},
     types::StateIndex,
 };
 
@@ -101,19 +98,27 @@ impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a
     }
 }
 
-pub fn dqn_explore<
+pub struct EvaluationResult {
+    pub value: Value,
+    pub avg_q: f64,
+    pub states: usize,
+}
+
+pub fn dqn_evaluate<
     'a,
     'b,
     TT: Transition,
     AI: ActionSet<'a>,
     SI: StateIndexer,
     AA: ActionApplier<TT>,
+    PS: PolicySynthesizer<TT>,
 >(
     graph: &'a Graph,
     teams: Vec<TeamState>,
     model: &'b Model,
     tensorizer: &'b mut Tensorizer,
-) -> ExploreResult<TT> {
+    horizon: usize,
+) -> EvaluationResult {
     // Don't calculate gradients
     let _guard = tch::no_grad_guard();
 
@@ -134,18 +139,18 @@ pub fn dqn_explore<
         explorer.explore_state::<AA>(i);
     }
 
-    let qvalcount = explorer.qvals.len();
-    log::info!(
-        "Average q val: {}",
-        explorer.qvals.into_iter().sum::<f64>() / (qvalcount as f64)
-    );
+    let qvals_len = explorer.qvals.len();
+    let avg_q = explorer.qvals.into_iter().sum::<f64>() / (qvals_len as f64);
+    let states = explorer.states.get_state_count();
 
-    let (bus_states, team_states) = explorer.states.deconstruct();
     let transitions = explorer.transitions;
-    ExploreResult {
-        bus_states,
-        team_states,
-        transitions,
-        max_memory: 0,
+
+    let (values, _policy) = PS::synthesize_policy(&transitions, horizon);
+    let value = get_min_value(&values);
+
+    EvaluationResult {
+        value,
+        avg_q,
+        states,
     }
 }

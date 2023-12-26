@@ -1,5 +1,8 @@
 use super::*;
-use crate::dqn::replay::ReplayMemorySettings;
+use crate::dqn::{
+    exploration::{dqn_evaluate, EvaluationResult},
+    replay::ReplayMemorySettings,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClassicTrainerSettings {
@@ -192,20 +195,14 @@ where
         average_loss
     }
 
-    fn evaluate(&mut self) -> Value {
-        let ExploreResult {
-            bus_states: _,
-            team_states: _,
-            transitions,
-            max_memory: _,
-        } = dqn_explore::<TT, AI, SI, AA>(
+    fn evaluate(&mut self) -> EvaluationResult {
+        dqn_evaluate::<TT, AI, SI, AA, PS>(
             self.env.graph,
             self.env.initial_state.teams.clone(),
             &self.model,
             &mut self.env.tensorizer,
-        );
-        let (values, _policy) = PS::synthesize_policy(&transitions, self.horizon);
-        get_min_value(&values)
+            self.horizon,
+        )
     }
 }
 

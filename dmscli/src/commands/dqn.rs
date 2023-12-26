@@ -1,4 +1,4 @@
-use dmslib::{io::DqnModel, types::Value};
+use dmslib::{dqn::EvaluationResult, io::DqnModel, types::Value};
 
 use super::*;
 
@@ -48,7 +48,7 @@ impl DqnCommand {
                     trainer,
                 } = load_model(args.path);
 
-                println!("\n{}", "Starting training...".green().bold());
+                println!("\nInitializing...");
 
                 let (problem, config) = match problem.prepare() {
                     Ok(x) => x,
@@ -56,12 +56,20 @@ impl DqnCommand {
                 };
                 let mut trainer =
                     trainer.build(&problem.graph, problem.initial_teams.clone(), model, config);
-                let value = trainer.evaluate();
+                let EvaluationResult {
+                    value,
+                    avg_q,
+                    states,
+                } = trainer.evaluate();
                 println!(
-                    "{:31} | Value: {:20}",
-                    "Evaluation before training".dimmed().bold(),
-                    format!("{}", value).bold(),
+                    "\n{:23} || Value: {} | Avg. Q: {} | States: {}",
+                    "Pre-training Evaluation".dimmed().bold(),
+                    format!("{:>8.2}", value).bold(),
+                    format!("{:>8.2}", avg_q).bold(),
+                    format!("{:>8}", states).bold(),
                 );
+
+                println!("{}", "Starting training...".green());
 
                 let mut values = Vec::<Value>::new();
                 let iterations = 500;
@@ -71,14 +79,18 @@ impl DqnCommand {
                 loop {
                     i += 1;
                     let loss = trainer.train(iterations);
-                    let value = trainer.evaluate();
+                    let EvaluationResult {
+                        value,
+                        avg_q,
+                        states,
+                    } = trainer.evaluate();
                     println!(
-                        // NOTE: .18 is the maximum width instead of precision
-                        // since the inputs are strings.
-                        "{} Loss: {:18.18} | Value: {:18.18}",
+                        "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
                         format!("[{i:>4}]").green().bold(),
-                        format!("{}", loss).bold(),
-                        format!("{}", value).bold(),
+                        format!("{:>10.4}", loss).bold(),
+                        format!("{:>8.2}", value).bold(),
+                        format!("{:>8.2}", avg_q).bold(),
+                        format!("{:>8}", states).bold(),
                     );
                     values.push(value);
                     // Check if an interrupt is received
