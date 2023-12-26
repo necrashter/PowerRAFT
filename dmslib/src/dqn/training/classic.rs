@@ -5,6 +5,7 @@ use crate::dqn::replay::ReplayMemorySettings;
 pub struct ClassicTrainerSettings {
     pub replay: ReplayMemorySettings,
     pub lr: f64,
+    pub gradient_clip: Option<f64>,
     pub epsilon: f32,
     pub target_update_period: usize,
     /// Discount factor in the Q function.
@@ -166,8 +167,11 @@ where
 
             // Compute loss & backward step
             let loss = predicted_values.mse_loss(&expected_values, tch::Reduction::Mean);
-            // self.opt.backward_step_clip(&loss, 0.5);
-            self.opt.backward_step(&loss);
+            if let Some(clip) = self.settings.gradient_clip {
+                self.opt.backward_step_clip(&loss, clip);
+            } else {
+                self.opt.backward_step(&loss);
+            }
             losses.push(loss.double_value(&[]));
 
             // Update target_model periodically.

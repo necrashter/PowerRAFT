@@ -169,6 +169,7 @@ impl<TT: Transition> ExactSolution<TT> {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OverfitTrainerSettings {
     pub lr: f64,
+    pub gradient_clip: Option<f64>,
 }
 
 /// A "cheating" trainer that generates the exact solution first, and then tries to train the
@@ -198,6 +199,8 @@ where
     model: Model,
     /// Optimizer for the primary model.
     opt: nn::Optimizer,
+
+    gradient_clip: Option<f64>,
 
     output_vec: Vec<f32>,
 
@@ -242,6 +245,7 @@ where
             device,
             model,
             opt,
+            gradient_clip: settings.gradient_clip,
             output_vec,
             _phantom: std::marker::PhantomData,
         }
@@ -289,8 +293,11 @@ where
 
             // Compute loss & backward step
             let loss = predicted_values.mse_loss(&expected_values, tch::Reduction::Mean);
-            // self.opt.backward_step_clip(&loss, 0.5);
-            self.opt.backward_step(&loss);
+            if let Some(clip) = self.gradient_clip {
+                self.opt.backward_step_clip(&loss, clip);
+            } else {
+                self.opt.backward_step(&loss);
+            }
             losses.push(loss.double_value(&[]));
         }
         let average_loss: f64 = losses.into_iter().sum::<f64>() / (iterations as f64);
