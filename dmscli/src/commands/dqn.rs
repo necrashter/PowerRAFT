@@ -11,7 +11,7 @@ use super::*;
 #[derive(clap::Subcommand, Debug)]
 pub enum DqnCommand {
     /// Train a DQN.
-    Train(ModelArgs),
+    Train(TrainArgs),
     /// Run a DQN.
     Run(ModelArgs),
 }
@@ -20,6 +20,15 @@ pub enum DqnCommand {
 pub struct ModelArgs {
     /// Path to the model YAML file.
     path: PathBuf,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct TrainArgs {
+    #[command(flatten)]
+    model: ModelArgs,
+    /// Number of checkpoints to train.
+    #[arg(short, long)]
+    checkpoints: Option<usize>,
 }
 
 /// Load model and print name information.
@@ -51,7 +60,7 @@ impl DqnCommand {
                     problem,
                     model,
                     trainer,
-                } = load_model(args.path);
+                } = load_model(args.model.path);
 
                 println!("\nInitializing...");
 
@@ -99,6 +108,12 @@ impl DqnCommand {
                         format!("{:>8}", states).bold(),
                     );
                     values.push(value);
+                    // Check if we reached the checkpoint limit.
+                    if let Some(limit) = args.checkpoints {
+                        if i >= limit {
+                            break;
+                        }
+                    }
                     // Check if an interrupt is received
                     if RUNNING_STATE.load(atomic::Ordering::SeqCst) & 1 == 1 {
                         break;
