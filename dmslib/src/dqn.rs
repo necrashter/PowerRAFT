@@ -17,6 +17,7 @@ use crate::{
         ActionSet, Graph, NaiveActions,
     },
     types::Value,
+    RANDOM_SEED,
 };
 
 mod environment;
@@ -33,3 +34,12 @@ pub use self::training::{DqnTrainer, NaiveClassicTrainer, TrainerSettings};
 
 mod model;
 pub use self::model::*;
+
+/// Seed libtorch using the [`RANDOM_SEED`] variable if present.
+pub fn load_torch_seed() {
+    RANDOM_SEED.with_borrow(|seed| {
+        if let Some(seed) = seed {
+            tch::manual_seed(*seed as i64);
+        }
+    });
+}

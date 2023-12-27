@@ -3,7 +3,11 @@ use std::{
     time::Instant,
 };
 
-use dmslib::{dqn::EvaluationResult, io::DqnModel, types::Value};
+use dmslib::{
+    dqn::{load_torch_seed, EvaluationResult},
+    io::DqnModel,
+    types::Value,
+};
 
 use super::*;
 
@@ -63,6 +67,8 @@ impl DqnCommand {
                 } = load_model(args.model.path);
 
                 println!("\nInitializing...");
+
+                load_torch_seed();
 
                 let (problem, config) = match problem.prepare() {
                     Ok(x) => x,
