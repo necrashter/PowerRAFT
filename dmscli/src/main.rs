@@ -67,7 +67,7 @@ fn main() {
     let Args { command, seed } = Args::parse();
 
     if let Some(seed) = seed {
-        log::info!("Setting random seed to {seed}");
+        log::debug!("Setting random seed to {seed}");
         dmslib::RANDOM_SEED.with_borrow_mut(|random_seed| {
             *random_seed = Some(seed);
         });

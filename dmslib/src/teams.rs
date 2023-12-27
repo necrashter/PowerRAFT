@@ -124,7 +124,7 @@ impl Config {
     pub fn new() -> Config {
         let system = System::new_all();
         let max_memory = system.available_memory();
-        log::info!("Max memory is set to available RAM ({} bytes)", max_memory);
+        log::debug!("Max memory is set to available RAM ({} bytes)", max_memory);
         Config {
             max_memory: max_memory as usize,
             horizon: None,
