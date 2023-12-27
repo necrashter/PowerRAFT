@@ -1,5 +1,6 @@
 use std::path::Path;
 use std::sync::atomic::{self, AtomicUsize};
+use std::time::Duration;
 use std::{io::Write, path::PathBuf};
 
 use dmslib::io::fs::read_problems_from_file;
@@ -46,17 +47,17 @@ fn main() {
     ctrlc::set_handler(|| {
         let prev = RUNNING_STATE.fetch_add(1, atomic::Ordering::SeqCst);
         if prev == 0 {
-            println!("\n{}", "Ctrl+C received, exiting...".yellow());
+            println!("\r{}", "Ctrl+C received, exiting...".yellow());
             std::process::exit(130);
         } else if prev & 1 == 1 {
             println!(
-                "\n{}",
+                "\r{}",
                 "Second Ctrl+C received, exiting immediately...".yellow()
             );
             std::process::exit(130);
         } else if prev & 2 != 0 {
             println!(
-                "\n{}",
+                "\r{}",
                 "Ctrl+C received, will exit after the next checkpoint...".yellow()
             );
         }
@@ -73,4 +74,11 @@ fn main() {
     }
 
     command.run();
+}
+
+pub fn format_duration(duration: &Duration) -> String {
+    let seconds = duration.as_secs();
+    let millis = duration.subsec_millis();
+
+    format!("{seconds}.{millis} seconds")
 }

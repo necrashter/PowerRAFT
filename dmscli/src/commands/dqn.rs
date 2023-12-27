@@ -1,3 +1,8 @@
+use std::{
+    io::{stdout, Write},
+    time::Instant,
+};
+
 use dmslib::{dqn::EvaluationResult, io::DqnModel, types::Value};
 
 use super::*;
@@ -78,6 +83,7 @@ impl DqnCommand {
                 let mut i = 0;
                 loop {
                     i += 1;
+                    let start = Instant::now();
                     let loss = trainer.train(iterations);
                     let EvaluationResult {
                         value,
@@ -97,6 +103,8 @@ impl DqnCommand {
                     if RUNNING_STATE.load(atomic::Ordering::SeqCst) & 1 == 1 {
                         break;
                     }
+                    print!("  {}\r", format_duration(&start.elapsed()));
+                    stdout().flush().unwrap();
                 }
                 RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
 
