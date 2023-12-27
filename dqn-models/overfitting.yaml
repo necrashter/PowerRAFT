@@ -1,9 +1,6 @@
 name: Overfitting Test
 problem: "problems/wscc-9-9.json"
-model: !Sequential
-  # - !Linear 8096
-  # - !Relu
-  # There will be another linear layer that converts 8096 -> output_size
+model: !Dqn
 trainer: !NaiveOverfit
   lr: 0.01
   gradient_clip: 0.5

@@ -1,7 +1,7 @@
 name: Deep Q-Learning Test
 problem: "problems/wscc-9-9.json"
-model: !Sequential
-  # No layers; there will be only one linear layer from input to output
+model: !DuelingDqn
+  normalize_advantages: true
 trainer: !NaiveClassic
   replay:
     capacity: 2000
