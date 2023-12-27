@@ -32,6 +32,7 @@ impl TrainerSettings {
         teams: Vec<TeamState>,
         model_settings: ModelSettings,
         config: teams::Config,
+        device: tch::Device,
     ) -> Box<dyn DqnTrainer + 'a> {
         match self {
             TrainerSettings::NaiveClassic(settings) => Box::new(NaiveClassicTrainer::new(
@@ -40,6 +41,7 @@ impl TrainerSettings {
                 model_settings,
                 settings,
                 config,
+                device,
             )),
             TrainerSettings::NaiveOverfit(settings) => Box::new(NaiveOverfitTrainer::new(
                 graph,
@@ -47,6 +49,7 @@ impl TrainerSettings {
                 model_settings,
                 settings,
                 config,
+                device,
             )),
         }
     }

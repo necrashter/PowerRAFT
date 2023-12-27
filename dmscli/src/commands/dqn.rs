@@ -24,6 +24,9 @@ pub enum DqnCommand {
 pub struct ModelArgs {
     /// Path to the model YAML file.
     path: PathBuf,
+    /// Force Torch to use CPU. By default, CUDA will be used if available.
+    #[arg(long, default_value_t = false)]
+    cpu: bool,
 }
 
 #[derive(clap::Args, Debug)]
@@ -55,6 +58,19 @@ fn load_model(path: PathBuf) -> DqnModel {
     }
 }
 
+fn get_device(cpu_flag: bool) -> tch::Device {
+    let device = if cpu_flag {
+        tch::Device::Cpu
+    } else {
+        tch::Device::cuda_if_available()
+    };
+    println!(
+        "Selected Torch device: {}",
+        format!("{device:?}").bold().blue(),
+    );
+    device
+}
+
 impl DqnCommand {
     pub fn run(self) {
         match self {
@@ -74,8 +90,16 @@ impl DqnCommand {
                     Ok(x) => x,
                     Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
                 };
-                let mut trainer =
-                    trainer.build(&problem.graph, problem.initial_teams.clone(), model, config);
+
+                let device = get_device(args.model.cpu);
+
+                let mut trainer = trainer.build(
+                    &problem.graph,
+                    problem.initial_teams.clone(),
+                    model,
+                    config,
+                    device,
+                );
                 let EvaluationResult {
                     value,
                     avg_q,

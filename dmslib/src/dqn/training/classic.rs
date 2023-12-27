@@ -63,13 +63,13 @@ where
         model_settings: ModelSettings,
         settings: ClassicTrainerSettings,
         config: teams::Config,
+        device: tch::Device,
     ) -> Self {
         let horizon = if let Some(value) = config.horizon {
             value
         } else {
             panic!("Optimization horizon must be specified in the configuration.");
         };
-        let device = tch::Device::cuda_if_available();
 
         let mut mem = ReplayMemory::new(settings.replay.capacity, device);
         let mut env = Environment::<AI>::new::<TT, AA>(graph, teams);

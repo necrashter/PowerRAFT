@@ -424,6 +424,7 @@ dependencies = [
  "env_logger",
  "log",
  "serde_json",
+ "tch",
 ]
 
 [[package]]

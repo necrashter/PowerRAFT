@@ -221,9 +221,8 @@ where
         model_settings: ModelSettings,
         settings: OverfitTrainerSettings,
         config: teams::Config,
+        device: tch::Device,
     ) -> Self {
-        let device = tch::Device::cuda_if_available();
-
         let solution =
             CustomSolver::<TT, AI, SI>::solve::<AA, PS>(graph, teams.clone(), config.horizon);
         let tensorizer = Tensorizer::new(graph, teams.len());
