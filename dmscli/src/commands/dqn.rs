@@ -114,6 +114,7 @@ impl DqnCommand {
                 );
 
                 println!("{}", "Starting training...".green());
+                let training_start = Instant::now();
 
                 let mut values = Vec::<Value>::new();
                 let iterations = 500;
@@ -153,8 +154,9 @@ impl DqnCommand {
                 }
                 RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
 
+                let duration = format_duration(&training_start.elapsed());
                 println!("\n{}", "Training finished.".green().bold());
-                println!("Trained for {i} x {iterations} iterations.");
+                println!("Trained for {i} x {iterations} iterations in {duration}.");
                 println!(
                     "{:18}{}",
                     "Minimum Value:".bold(),

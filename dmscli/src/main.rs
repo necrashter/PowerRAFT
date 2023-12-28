@@ -80,5 +80,17 @@ pub fn format_duration(duration: &Duration) -> String {
     let seconds = duration.as_secs();
     let millis = duration.subsec_millis();
 
-    format!("{seconds}.{millis} seconds")
+    let hours = seconds / 3600;
+    let mut remainder = seconds % 3600;
+    let minutes = remainder / 60;
+    remainder %= 60;
+    let seconds = remainder;
+
+    if hours > 0 {
+        format!("{hours}:{minutes}:{seconds}.{millis}")
+    } else if minutes > 0 {
+        format!("{minutes}:{seconds}.{millis}")
+    } else {
+        format!("{seconds}.{millis}")
+    }
 }
