@@ -16,13 +16,9 @@ pub trait DqnTrainer {
 mod classic;
 pub use self::classic::*;
 
-mod overfit;
-pub use self::overfit::*;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub enum TrainerSettings {
     NaiveClassic(ClassicTrainerSettings),
-    NaiveOverfit(OverfitTrainerSettings),
 }
 
 impl TrainerSettings {
@@ -36,14 +32,6 @@ impl TrainerSettings {
     ) -> Box<dyn DqnTrainer + 'a> {
         match self {
             TrainerSettings::NaiveClassic(settings) => Box::new(NaiveClassicTrainer::new(
-                graph,
-                teams,
-                model_settings,
-                settings,
-                config,
-                device,
-            )),
-            TrainerSettings::NaiveOverfit(settings) => Box::new(NaiveOverfitTrainer::new(
                 graph,
                 teams,
                 model_settings,
