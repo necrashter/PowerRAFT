@@ -1,7 +1,9 @@
+use tch::IndexOp;
+
 use super::*;
 use crate::dqn::{
     exploration::{dqn_evaluate, EvaluationResult},
-    replay::ReplayMemorySettings,
+    replay::{Experience, ReplayMemorySettings},
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -142,36 +144,36 @@ where
             // Record the experience.
             self.mem.add(experience);
 
-            // Sample a minibatch
-            let ExperienceSample {
-                states,
-                actions,
-                costs,
+            // Sample an experience
+            let Experience {
+                state,
+                action,
+                cost,
                 successors,
                 action_filters,
                 probabilities,
-            } = self.mem.sample_batch(self.settings.replay.minibatch);
-            let predicted_values = self.model.forward(&states).gather(1, &actions, false);
+            } = self.mem.sample_experience();
+            let predicted_value = self.model.forward(&state).i(action);
 
-            let expected_values = tch::no_grad(|| {
-                // For batch size B, successor count S, and input size N,
-                // successors: [B, S, N]
+            let expected_value = tch::no_grad(|| {
+                // For successor count S, and input size N,
+                // successors: [S, N]
                 let mut x = self.target_model.forward(&successors);
-                // x: [B, S, M]
+                // x: [S, M]
                 // Apply the action filter, eliminate invalid actions.
                 x += action_filters;
                 // Get the value of the best action in each successor.
-                let mut x = x.min_dim(2, false).0;
-                // x: [B, S]
+                let mut x = x.min_dim(1, false).0;
+                // x: [S]
                 x *= probabilities;
-                let x = x.sum_dim_intlist(1, true, None);
-                // x: [B, 1]
+                let x = x.sum(None);
                 // TODO: Discount should change due to modified value function
-                costs + (&x * self.settings.discount)
+                // Modified value function is not used for now because of this
+                (&x * self.settings.discount) + (cost as f64)
             });
 
             // Compute loss & backward step
-            let loss = predicted_values.mse_loss(&expected_values, tch::Reduction::Mean);
+            let loss = predicted_value.mse_loss(&expected_value, tch::Reduction::Mean);
             if let Some(clip) = self.settings.gradient_clip {
                 self.opt.backward_step_clip(&loss, clip);
             } else {

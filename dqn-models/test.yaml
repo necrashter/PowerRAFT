@@ -6,7 +6,6 @@ trainer: !NaiveClassic
   replay:
     capacity: 2000
     init: 200
-    minibatch: 1
   lr: 0.01
   gradient_clip: 0.5
   epsilon: 0.25

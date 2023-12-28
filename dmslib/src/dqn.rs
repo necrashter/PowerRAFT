@@ -21,7 +21,7 @@ use crate::{
 };
 
 mod environment;
-use self::{environment::Environment, replay::ExperienceSample};
+use self::environment::Environment;
 
 mod replay;
 use self::replay::ReplayMemory;

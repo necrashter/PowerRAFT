@@ -1,7 +1,7 @@
 //! Experience Replay Memory module for Deep Q-Learning.
 use std::collections::VecDeque;
 
-use rand::rngs::StdRng;
+use rand::{rngs::StdRng, Rng};
 use serde::{Deserialize, Serialize};
 use tch::Tensor;
 
@@ -35,12 +35,24 @@ pub struct Experience {
     pub probabilities: Tensor,
 }
 
+impl Experience {
+    pub fn shallow_clone(&self) -> Experience {
+        Experience {
+            state: self.state.shallow_clone(),
+            action: self.action,
+            cost: self.cost,
+            successors: self.successors.shallow_clone(),
+            action_filters: self.action_filters.shallow_clone(),
+            probabilities: self.probabilities.shallow_clone(),
+        }
+    }
+}
+
 /// Settings struct for ReplayMemory.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReplayMemorySettings {
     pub capacity: usize,
     pub init: usize,
-    pub minibatch: usize,
 }
 
 /// Experience Replay Memory for Deep Q-Learning.
@@ -51,29 +63,6 @@ pub struct ReplayMemory {
     rng: StdRng,
     /// Device.
     device: tch::Device,
-}
-
-/// Represents a minibatch sample from [`ReplayMemory`].
-pub struct ExperienceSample {
-    /// Current states.
-    /// [B, N] where B is the minibatch size and N is the input size.
-    pub states: Tensor,
-    /// Represents index of the taken action for each state.
-    /// Datatype is i64 unlike other fields.
-    /// [B, 1] where B is the minibatch size.
-    pub actions: Tensor,
-    /// Cost of the taken action for each state.
-    /// [B, 1] where B is the minibatch size.
-    pub costs: Tensor,
-    /// Successor states for each taken action.
-    /// [B, S, N] where S is the number of successors and N is the input size.
-    pub successors: Tensor,
-    /// Action filters for each successor state.
-    /// [B, S, M] where S is the number of successors and M is the output size.
-    pub action_filters: Tensor,
-    /// Probability of each successor state.
-    /// [B, S] where B is the minibatch size and S is the number of successors.
-    pub probabilities: Tensor,
 }
 
 impl ReplayMemory {
@@ -99,38 +88,10 @@ impl ReplayMemory {
         self.experiences.push_back(experience);
     }
 
-    /// Sample a batch from the ReplayMemory.
-    pub fn sample_batch(&mut self, size: usize) -> ExperienceSample {
-        let mut states: Vec<Tensor> = Vec::with_capacity(size);
-        let mut actions: Vec<i64> = Vec::with_capacity(size);
-        let mut costs: Vec<f32> = Vec::with_capacity(size);
-        // TODO: Not all successors have the same size
-        let mut successors: Vec<Tensor> = Vec::with_capacity(size);
-        let mut action_filters: Vec<Tensor> = Vec::with_capacity(size);
-        let mut probabilities: Vec<Tensor> = Vec::with_capacity(size);
-
-        for i in rand::seq::index::sample(&mut self.rng, self.experiences.len(), size) {
-            let experience = &self.experiences[i];
-            states.push(experience.state.shallow_clone());
-            actions.push(experience.action);
-            costs.push(experience.cost as f32);
-            successors.push(experience.successors.shallow_clone());
-            action_filters.push(experience.action_filters.shallow_clone());
-            probabilities.push(experience.probabilities.shallow_clone());
-        }
-
-        ExperienceSample {
-            states: Tensor::stack(&states, 0),
-            actions: Tensor::from_slice(&actions)
-                .unsqueeze(1)
-                .to_device(self.device),
-            costs: Tensor::from_slice(&costs)
-                .unsqueeze(1)
-                .to_device(self.device),
-            successors: Tensor::stack(&successors, 0),
-            action_filters: Tensor::stack(&action_filters, 0),
-            probabilities: Tensor::stack(&probabilities, 0),
-        }
+    /// Sample an experience from the ReplayMemory.
+    pub fn sample_experience(&mut self) -> Experience {
+        let i = self.rng.gen_range(0..self.experiences.len());
+        self.experiences[i].shallow_clone()
     }
 
     /// Generate experiences from the environment by taking random actions.
