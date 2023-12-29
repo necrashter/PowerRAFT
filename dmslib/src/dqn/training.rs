@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::teams;
 
 use super::exploration::EvaluationResult;
@@ -11,6 +13,11 @@ pub trait DqnTrainer {
     ///
     /// Horizon should come from the teams::Config provided in `new` method.
     fn evaluate(&mut self) -> EvaluationResult;
+
+    /// Load the model from the given checkpoint.
+    fn load_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError>;
+    /// Save the model into the given checkpoint file.
+    fn save_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError>;
 }
 
 mod classic;

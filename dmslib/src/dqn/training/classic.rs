@@ -206,6 +206,16 @@ where
             self.horizon,
         )
     }
+
+    fn load_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError> {
+        self.model.vs.load(path)?;
+        self.target_model.copy_from(&self.model);
+        Ok(())
+    }
+
+    fn save_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError> {
+        self.model.vs.save(path)
+    }
 }
 
 pub type NaiveClassicTrainer<'a> = ClassicTrainer<

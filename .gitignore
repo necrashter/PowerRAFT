@@ -3,3 +3,4 @@
 /dmscli/results
 /experiments/tmp
 __pycache__
+/dqn-models/*.d

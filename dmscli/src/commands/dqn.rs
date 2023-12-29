@@ -70,10 +70,44 @@ fn get_device(cpu_flag: bool) -> tch::Device {
     device
 }
 
+fn get_latest_checkpoint<P: AsRef<Path>>(model_dir: P) -> Option<(usize, PathBuf)> {
+    if let Err(e) = std::fs::create_dir_all(&model_dir) {
+        fatal_error!(1, "Cannot create model directory: {e}");
+    }
+
+    // Read the directory and filter files with the ".safetensors" extension
+    let safetensor_files = match std::fs::read_dir(model_dir) {
+        Ok(entries) => entries,
+        Err(e) => fatal_error!(1, "Cannot read model directory: {e}"),
+    };
+    let safetensor_files: Vec<_> = safetensor_files
+        .filter_map(|entry| {
+            entry.ok().and_then(|e| {
+                let path = e.path();
+                if path.is_file()
+                    && path.extension().and_then(|ext| ext.to_str()) == Some("safetensors")
+                {
+                    path.file_stem()
+                        .and_then(|stem| stem.to_str())
+                        .and_then(|name| name.parse::<usize>().ok())
+                        .map(|number| (number, path))
+                } else {
+                    None
+                }
+            })
+        })
+        .collect();
+
+    // Find the file with the largest number in the name
+    safetensor_files.into_iter().max_by_key(|e| e.0)
+}
+
 impl DqnCommand {
     pub fn run(self) {
         match self {
             DqnCommand::Train(args) => {
+                let mut model_dir = args.model.path.with_extension("d");
+
                 let DqnModel {
                     name: _,
                     problem,
@@ -99,13 +133,27 @@ impl DqnCommand {
                     config,
                     device,
                 );
+
+                // Load checkpoint if present
+                let mut checkpoint: usize =
+                    if let Some((i, path)) = get_latest_checkpoint(&model_dir) {
+                        println!("Loading checkpoint: {}", format!("{i}").bold());
+                        if let Err(e) = trainer.load_checkpoint(&path) {
+                            fatal_error!(1, "Error while loading the checkpoint: {}", e);
+                        }
+                        i
+                    } else {
+                        println!("No checkpoint found, starting over.");
+                        0
+                    };
+
                 let EvaluationResult {
                     value,
                     avg_q,
                     states,
                 } = trainer.evaluate();
                 println!(
-                    "\n{:23} || Value: {} | Avg. Q: {} | States: {}",
+                    "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
                     "Pre-training Evaluation".dimmed().bold(),
                     format!("{:>8.2}", value).bold(),
                     format!("{:>8.2}", avg_q).bold(),
@@ -122,18 +170,27 @@ impl DqnCommand {
                 let mut i = 0;
                 loop {
                     i += 1;
+                    checkpoint += 1;
+
                     let start = Instant::now();
                     let loss = trainer.train(iterations);
                     let evaluation_result = trainer.evaluate();
                     println!(
                         "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
-                        format!("[{i:>4}]").green().bold(),
+                        format!("[{:>5}]", checkpoint).green().bold(),
                         format!("{:>10.4}", loss).bold(),
                         format!("{:>8.2}", evaluation_result.value).bold(),
                         format!("{:>8.2}", evaluation_result.avg_q).bold(),
                         format!("{:>8}", evaluation_result.states).bold(),
                     );
-                    results.push((i, evaluation_result));
+                    results.push((checkpoint, evaluation_result));
+
+                    model_dir.push(format!("{checkpoint}.safetensors"));
+                    if let Err(e) = trainer.save_checkpoint(&model_dir) {
+                        eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold(),);
+                    }
+                    model_dir.pop();
+
                     // Check if we reached the checkpoint limit.
                     if let Some(limit) = args.checkpoints {
                         if i >= limit {
@@ -154,12 +211,12 @@ impl DqnCommand {
                 println!("\n{}", "Training finished.".green().bold());
                 println!("Trained for {i} x {iterations} iterations in {duration}.");
 
-                let (best_i, best_result) = results
+                let (best_checkpoint, best_result) = results
                     .into_iter()
                     .reduce(|acc, e| if e.1.value < acc.1.value { e } else { acc })
                     .unwrap();
                 println!("\n{}", "Best Evaluation:".bold().underline());
-                println!("    {:13}{}", "Checkpoint:".bold(), best_i);
+                println!("    {:13}{}", "Checkpoint:".bold(), best_checkpoint);
                 println!("    {:13}{}", "Value:".bold(), best_result.value);
                 println!("    {:13}{}", "States:".bold(), best_result.states);
                 println!("    {:13}{}", "Avg. Q:".bold(), best_result.avg_q);
