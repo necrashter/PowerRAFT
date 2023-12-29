@@ -1,7 +1,6 @@
-name: Deep Q-Learning Test
+name: Basic DQN
 problem: "problems/wscc-9-9.json"
-model: !DuelingDqn
-  normalize_advantages: true
+model: !Dqn
 trainer: !NaiveClassic
   replay:
     capacity: 2000
