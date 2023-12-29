@@ -11,3 +11,4 @@ trainer: !NaiveClassic
   epsilon: 0.25
   discount: 0.9
   target_update_period: 50
+checkpoint_iterations: 500

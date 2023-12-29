@@ -124,6 +124,7 @@ fn train(args: TrainArgs) {
         model,
         trainer,
         evaluation,
+        checkpoint_iterations,
     } = load_model(&args.model.path);
     let evaluation = update_evaluation_settings(evaluation, &args.model);
 
@@ -175,7 +176,6 @@ fn train(args: TrainArgs) {
     let training_start = Instant::now();
 
     let mut results = Vec::<(usize, EvaluationResult)>::new();
-    let iterations = 500;
 
     RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
     let mut i = 0;
@@ -184,7 +184,7 @@ fn train(args: TrainArgs) {
         checkpoint += 1;
 
         let start = Instant::now();
-        let loss = trainer.train(iterations);
+        let loss = trainer.train(checkpoint_iterations);
         let evaluation_result = trainer.evaluate(evaluation);
         println!(
             "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
@@ -220,7 +220,7 @@ fn train(args: TrainArgs) {
     let duration = format_duration(&training_start.elapsed());
 
     println!("\n{}", "Training finished.".green().bold());
-    println!("Trained for {i} x {iterations} iterations in {duration}.");
+    println!("Trained for {i} x {checkpoint_iterations} iterations in {duration}.");
 
     let (best_checkpoint, best_result) = results
         .into_iter()

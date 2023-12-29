@@ -18,6 +18,8 @@ pub struct DqnModelYaml {
     /// Evaluation settings.
     #[serde(default)]
     pub evaluation: dqn::EvaluationSettings,
+    /// Number of iterations to reach a checkpoint.
+    pub checkpoint_iterations: usize,
 }
 
 /// Contains all hyperparameter information about a DQN model.
@@ -32,6 +34,8 @@ pub struct DqnModel {
     pub trainer: dqn::TrainerSettings,
     /// Evaluation settings.
     pub evaluation: dqn::EvaluationSettings,
+    /// Number of iterations to reach a checkpoint.
+    pub checkpoint_iterations: usize,
 }
 
 impl DqnModel {
@@ -47,6 +51,7 @@ impl DqnModel {
             model,
             trainer,
             evaluation,
+            checkpoint_iterations,
         } = match serde_yaml::from_str(&content) {
             Ok(yaml) => yaml,
             Err(error) => {
@@ -82,6 +87,7 @@ impl DqnModel {
             model,
             trainer,
             evaluation,
+            checkpoint_iterations,
         })
     }
 }
