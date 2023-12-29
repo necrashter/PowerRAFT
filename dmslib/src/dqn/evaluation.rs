@@ -106,13 +106,25 @@ impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+pub struct EvaluationSettings {
+    /// How many actions to select from the network in each state.
+    pub top_k: usize,
+}
+
+impl Default for EvaluationSettings {
+    fn default() -> Self {
+        EvaluationSettings { top_k: 1 }
+    }
+}
+
 pub struct EvaluationResult {
     pub value: Value,
     pub avg_q: f64,
     pub states: usize,
 }
 
-pub fn dqn_evaluate<
+pub fn dqn_evaluate_custom<
     'a,
     'b,
     TT: Transition,
@@ -126,8 +138,10 @@ pub fn dqn_evaluate<
     model: &'b Model,
     tensorizer: &'b mut Tensorizer,
     horizon: usize,
-    top_k: usize,
+    settings: EvaluationSettings,
 ) -> EvaluationResult {
+    let EvaluationSettings { top_k } = settings;
+
     // Don't calculate gradients
     let _guard = tch::no_grad_guard();
 

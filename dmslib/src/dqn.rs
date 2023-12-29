@@ -26,8 +26,8 @@ use self::environment::Environment;
 mod replay;
 use self::replay::ReplayMemory;
 
-mod exploration;
-pub use self::exploration::EvaluationResult;
+mod evaluation;
+pub use self::evaluation::{EvaluationResult, EvaluationSettings};
 
 mod training;
 pub use self::training::{DqnTrainer, NaiveClassicTrainer, TrainerSettings};

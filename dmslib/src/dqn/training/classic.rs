@@ -2,7 +2,7 @@ use tch::IndexOp;
 
 use super::*;
 use crate::dqn::{
-    exploration::{dqn_evaluate, EvaluationResult},
+    evaluation::{dqn_evaluate_custom, EvaluationResult},
     replay::{Experience, ReplayMemorySettings},
 };
 
@@ -197,14 +197,14 @@ where
         average_loss
     }
 
-    fn evaluate(&mut self, top_k: usize) -> EvaluationResult {
-        dqn_evaluate::<TT, AI, SI, AA, PS>(
+    fn evaluate(&mut self, settings: EvaluationSettings) -> EvaluationResult {
+        dqn_evaluate_custom::<TT, AI, SI, AA, PS>(
             self.env.graph,
             self.env.initial_state.teams.clone(),
             &self.model,
             &mut self.env.tensorizer,
             self.horizon,
-            top_k,
+            settings,
         )
     }
 

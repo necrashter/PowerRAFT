@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::teams;
 
-use super::exploration::EvaluationResult;
+use super::evaluation::EvaluationResult;
 use super::*;
 
 pub trait DqnTrainer {
@@ -14,7 +14,7 @@ pub trait DqnTrainer {
     /// Horizon should come from the teams::Config provided in `new` method.
     ///
     /// `top_k` defines how many actions to select from the network in each state.
-    fn evaluate(&mut self, top_k: usize) -> EvaluationResult;
+    fn evaluate(&mut self, settings: EvaluationSettings) -> EvaluationResult;
 
     /// Load the model from the given checkpoint.
     fn load_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError>;

@@ -4,7 +4,7 @@ use std::{
 };
 
 use dmslib::{
-    dqn::{load_torch_seed, EvaluationResult},
+    dqn::{load_torch_seed, EvaluationResult, EvaluationSettings},
     io::DqnModel,
 };
 
@@ -27,8 +27,8 @@ pub struct ModelArgs {
     #[arg(long, default_value_t = false)]
     cpu: bool,
     /// How many actions to select from the network in each state.
-    #[arg(long, default_value_t = 1)]
-    top_k: usize,
+    #[arg(long)]
+    top_k: Option<usize>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -41,7 +41,7 @@ pub struct TrainArgs {
 }
 
 /// Load model and print name information.
-fn load_model(path: PathBuf) -> DqnModel {
+fn load_model(path: &Path) -> DqnModel {
     match DqnModel::read_yaml_file(path) {
         Ok(model) => {
             println!(
@@ -105,19 +105,27 @@ fn get_latest_checkpoint<P: AsRef<Path>>(model_dir: P) -> Option<(usize, PathBuf
     safetensor_files.into_iter().max_by_key(|e| e.0)
 }
 
+fn update_evaluation_settings(
+    mut settings: EvaluationSettings,
+    args: &ModelArgs,
+) -> EvaluationSettings {
+    if let Some(top_k) = args.top_k {
+        settings.top_k = top_k
+    }
+    settings
+}
+
 fn train(args: TrainArgs) {
     let mut model_dir = args.model.path.with_extension("d");
-    let top_k = args.model.top_k;
-    if top_k == 0 {
-        fatal_error!(1, "Top-k parameter cannot be 0.");
-    }
 
     let DqnModel {
         name: _,
         problem,
         model,
         trainer,
-    } = load_model(args.model.path);
+        evaluation,
+    } = load_model(&args.model.path);
+    let evaluation = update_evaluation_settings(evaluation, &args.model);
 
     println!("\nInitializing...");
 
@@ -154,7 +162,7 @@ fn train(args: TrainArgs) {
         value,
         avg_q,
         states,
-    } = trainer.evaluate(top_k);
+    } = trainer.evaluate(evaluation);
     println!(
         "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
         "Pre-training Evaluation".dimmed().bold(),
@@ -177,7 +185,7 @@ fn train(args: TrainArgs) {
 
         let start = Instant::now();
         let loss = trainer.train(iterations);
-        let evaluation_result = trainer.evaluate(top_k);
+        let evaluation_result = trainer.evaluate(evaluation);
         println!(
             "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
             format!("[{:>5}]", checkpoint).green().bold(),
@@ -226,7 +234,7 @@ fn train(args: TrainArgs) {
 }
 
 fn run(args: ModelArgs) {
-    load_model(args.path);
+    load_model(&args.path);
     todo!()
 }
 

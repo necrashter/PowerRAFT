@@ -15,6 +15,9 @@ pub struct DqnModelYaml {
     pub model: dqn::ModelSettings,
     /// Trainer settings.
     pub trainer: dqn::TrainerSettings,
+    /// Evaluation settings.
+    #[serde(default)]
+    pub evaluation: dqn::EvaluationSettings,
 }
 
 /// Contains all hyperparameter information about a DQN model.
@@ -27,6 +30,8 @@ pub struct DqnModel {
     pub model: dqn::ModelSettings,
     /// Trainer settings.
     pub trainer: dqn::TrainerSettings,
+    /// Evaluation settings.
+    pub evaluation: dqn::EvaluationSettings,
 }
 
 impl DqnModel {
@@ -41,6 +46,7 @@ impl DqnModel {
             problem: problem_relative_path,
             model,
             trainer,
+            evaluation,
         } = match serde_yaml::from_str(&content) {
             Ok(yaml) => yaml,
             Err(error) => {
@@ -75,6 +81,7 @@ impl DqnModel {
             problem,
             model,
             trainer,
+            evaluation,
         })
     }
 }
