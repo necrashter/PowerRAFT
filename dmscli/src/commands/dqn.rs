@@ -105,133 +105,136 @@ fn get_latest_checkpoint<P: AsRef<Path>>(model_dir: P) -> Option<(usize, PathBuf
     safetensor_files.into_iter().max_by_key(|e| e.0)
 }
 
+fn train(args: TrainArgs) {
+    let mut model_dir = args.model.path.with_extension("d");
+    let top_k = args.model.top_k;
+    if top_k == 0 {
+        fatal_error!(1, "Top-k parameter cannot be 0.");
+    }
+
+    let DqnModel {
+        name: _,
+        problem,
+        model,
+        trainer,
+    } = load_model(args.model.path);
+
+    println!("\nInitializing...");
+
+    load_torch_seed();
+
+    let (problem, config) = match problem.prepare() {
+        Ok(x) => x,
+        Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
+    };
+
+    let device = get_device(args.model.cpu);
+
+    let mut trainer = trainer.build(
+        &problem.graph,
+        problem.initial_teams.clone(),
+        model,
+        config,
+        device,
+    );
+
+    // Load checkpoint if present
+    let mut checkpoint: usize = if let Some((i, path)) = get_latest_checkpoint(&model_dir) {
+        println!("Loading checkpoint: {}", format!("{i}").bold());
+        if let Err(e) = trainer.load_checkpoint(&path) {
+            fatal_error!(1, "Error while loading the checkpoint: {}", e);
+        }
+        i
+    } else {
+        println!("No checkpoint found, starting over.");
+        0
+    };
+
+    let EvaluationResult {
+        value,
+        avg_q,
+        states,
+    } = trainer.evaluate(top_k);
+    println!(
+        "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
+        "Pre-training Evaluation".dimmed().bold(),
+        format!("{:>8.2}", value).bold(),
+        format!("{:>8.2}", avg_q).bold(),
+        format!("{:>8}", states).bold(),
+    );
+
+    println!("{}", "Starting training...".green());
+    let training_start = Instant::now();
+
+    let mut results = Vec::<(usize, EvaluationResult)>::new();
+    let iterations = 500;
+
+    RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
+    let mut i = 0;
+    loop {
+        i += 1;
+        checkpoint += 1;
+
+        let start = Instant::now();
+        let loss = trainer.train(iterations);
+        let evaluation_result = trainer.evaluate(top_k);
+        println!(
+            "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
+            format!("[{:>5}]", checkpoint).green().bold(),
+            format!("{:>10.4}", loss).bold(),
+            format!("{:>8.2}", evaluation_result.value).bold(),
+            format!("{:>8.2}", evaluation_result.avg_q).bold(),
+            format!("{:>8}", evaluation_result.states).bold(),
+        );
+        results.push((checkpoint, evaluation_result));
+
+        model_dir.push(format!("{checkpoint}.safetensors"));
+        if let Err(e) = trainer.save_checkpoint(&model_dir) {
+            eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold(),);
+        }
+        model_dir.pop();
+
+        // Check if we reached the checkpoint limit.
+        if let Some(limit) = args.checkpoints {
+            if i >= limit {
+                break;
+            }
+        }
+        // Check if an interrupt is received
+        if RUNNING_STATE.load(atomic::Ordering::SeqCst) & 1 == 1 {
+            break;
+        }
+        print!("  {}\r", format_duration(&start.elapsed()));
+        stdout().flush().unwrap();
+    }
+    RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
+
+    let duration = format_duration(&training_start.elapsed());
+
+    println!("\n{}", "Training finished.".green().bold());
+    println!("Trained for {i} x {iterations} iterations in {duration}.");
+
+    let (best_checkpoint, best_result) = results
+        .into_iter()
+        .reduce(|acc, e| if e.1.value < acc.1.value { e } else { acc })
+        .unwrap();
+    println!("\n{}", "Best Evaluation:".bold().underline());
+    println!("    {:13}{}", "Checkpoint:".bold(), best_checkpoint);
+    println!("    {:13}{}", "Value:".bold(), best_result.value);
+    println!("    {:13}{}", "States:".bold(), best_result.states);
+    println!("    {:13}{}", "Avg. Q:".bold(), best_result.avg_q);
+}
+
+fn run(args: ModelArgs) {
+    load_model(args.path);
+    todo!()
+}
+
 impl DqnCommand {
     pub fn run(self) {
         match self {
-            DqnCommand::Train(args) => {
-                let mut model_dir = args.model.path.with_extension("d");
-                let top_k = args.model.top_k;
-                if top_k == 0 {
-                    fatal_error!(1, "Top-k parameter cannot be 0.");
-                }
-
-                let DqnModel {
-                    name: _,
-                    problem,
-                    model,
-                    trainer,
-                } = load_model(args.model.path);
-
-                println!("\nInitializing...");
-
-                load_torch_seed();
-
-                let (problem, config) = match problem.prepare() {
-                    Ok(x) => x,
-                    Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
-                };
-
-                let device = get_device(args.model.cpu);
-
-                let mut trainer = trainer.build(
-                    &problem.graph,
-                    problem.initial_teams.clone(),
-                    model,
-                    config,
-                    device,
-                );
-
-                // Load checkpoint if present
-                let mut checkpoint: usize =
-                    if let Some((i, path)) = get_latest_checkpoint(&model_dir) {
-                        println!("Loading checkpoint: {}", format!("{i}").bold());
-                        if let Err(e) = trainer.load_checkpoint(&path) {
-                            fatal_error!(1, "Error while loading the checkpoint: {}", e);
-                        }
-                        i
-                    } else {
-                        println!("No checkpoint found, starting over.");
-                        0
-                    };
-
-                let EvaluationResult {
-                    value,
-                    avg_q,
-                    states,
-                } = trainer.evaluate(top_k);
-                println!(
-                    "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
-                    "Pre-training Evaluation".dimmed().bold(),
-                    format!("{:>8.2}", value).bold(),
-                    format!("{:>8.2}", avg_q).bold(),
-                    format!("{:>8}", states).bold(),
-                );
-
-                println!("{}", "Starting training...".green());
-                let training_start = Instant::now();
-
-                let mut results = Vec::<(usize, EvaluationResult)>::new();
-                let iterations = 500;
-
-                RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
-                let mut i = 0;
-                loop {
-                    i += 1;
-                    checkpoint += 1;
-
-                    let start = Instant::now();
-                    let loss = trainer.train(iterations);
-                    let evaluation_result = trainer.evaluate(top_k);
-                    println!(
-                        "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
-                        format!("[{:>5}]", checkpoint).green().bold(),
-                        format!("{:>10.4}", loss).bold(),
-                        format!("{:>8.2}", evaluation_result.value).bold(),
-                        format!("{:>8.2}", evaluation_result.avg_q).bold(),
-                        format!("{:>8}", evaluation_result.states).bold(),
-                    );
-                    results.push((checkpoint, evaluation_result));
-
-                    model_dir.push(format!("{checkpoint}.safetensors"));
-                    if let Err(e) = trainer.save_checkpoint(&model_dir) {
-                        eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold(),);
-                    }
-                    model_dir.pop();
-
-                    // Check if we reached the checkpoint limit.
-                    if let Some(limit) = args.checkpoints {
-                        if i >= limit {
-                            break;
-                        }
-                    }
-                    // Check if an interrupt is received
-                    if RUNNING_STATE.load(atomic::Ordering::SeqCst) & 1 == 1 {
-                        break;
-                    }
-                    print!("  {}\r", format_duration(&start.elapsed()));
-                    stdout().flush().unwrap();
-                }
-                RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
-
-                let duration = format_duration(&training_start.elapsed());
-
-                println!("\n{}", "Training finished.".green().bold());
-                println!("Trained for {i} x {iterations} iterations in {duration}.");
-
-                let (best_checkpoint, best_result) = results
-                    .into_iter()
-                    .reduce(|acc, e| if e.1.value < acc.1.value { e } else { acc })
-                    .unwrap();
-                println!("\n{}", "Best Evaluation:".bold().underline());
-                println!("    {:13}{}", "Checkpoint:".bold(), best_checkpoint);
-                println!("    {:13}{}", "Value:".bold(), best_result.value);
-                println!("    {:13}{}", "States:".bold(), best_result.states);
-                println!("    {:13}{}", "Avg. Q:".bold(), best_result.avg_q);
-            }
-            DqnCommand::Run(args) => {
-                load_model(args.path);
-                todo!()
-            }
+            DqnCommand::Train(args) => train(args),
+            DqnCommand::Run(args) => run(args),
         }
     }
 }
