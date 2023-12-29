@@ -1,0 +1,13 @@
+name: Basic DQN
+problem: "problems/wscc-9-9-9.json"
+model: !Dqn
+trainer: !NaiveClassic
+  replay:
+    capacity: 1
+    init: 1
+  lr: 0.01
+  gradient_clip: 0.5
+  epsilon: 0.25
+  discount: 0.95
+  target_update_period: 50
+checkpoint_iterations: 500
