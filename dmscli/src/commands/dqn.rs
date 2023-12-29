@@ -1,4 +1,5 @@
 use std::{
+    fmt::Display,
     io::{stdout, Write},
     time::Instant,
 };
@@ -105,6 +106,15 @@ fn get_latest_checkpoint<P: AsRef<Path>>(model_dir: P) -> Option<(usize, PathBuf
     safetensor_files.into_iter().max_by_key(|e| e.0)
 }
 
+fn append_to_file<P: AsRef<Path>, V: Display>(path: P, value: V) -> std::io::Result<()> {
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+
+    writeln!(file, "{}", value)
+}
+
 fn update_evaluation_settings(
     mut settings: EvaluationSettings,
     args: &ModelArgs,
@@ -115,8 +125,12 @@ fn update_evaluation_settings(
     settings
 }
 
+const VALUES_FILE: &str = "values.txt";
+
 fn train(args: TrainArgs) {
     let mut model_dir = args.model.path.with_extension("d");
+    let mut values_file = model_dir.clone();
+    values_file.push(VALUES_FILE);
 
     let DqnModel {
         name: _,
@@ -194,11 +208,14 @@ fn train(args: TrainArgs) {
             format!("{:>8.2}", evaluation_result.avg_q).bold(),
             format!("{:>8}", evaluation_result.states).bold(),
         );
+        if let Err(e) = append_to_file(&values_file, evaluation_result.value) {
+            eprintln!("{} Failed to append value: {e}", "[ERROR]".red().bold());
+        }
         results.push((checkpoint, evaluation_result));
 
         model_dir.push(format!("{checkpoint}.safetensors"));
         if let Err(e) = trainer.save_checkpoint(&model_dir) {
-            eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold(),);
+            eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold());
         }
         model_dir.pop();
 
