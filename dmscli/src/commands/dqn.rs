@@ -6,7 +6,6 @@ use std::{
 use dmslib::{
     dqn::{load_torch_seed, EvaluationResult},
     io::DqnModel,
-    types::Value,
 };
 
 use super::*;
@@ -116,7 +115,7 @@ impl DqnCommand {
                 println!("{}", "Starting training...".green());
                 let training_start = Instant::now();
 
-                let mut values = Vec::<Value>::new();
+                let mut results = Vec::<(usize, EvaluationResult)>::new();
                 let iterations = 500;
 
                 RUNNING_STATE.store(2, atomic::Ordering::SeqCst);
@@ -125,20 +124,16 @@ impl DqnCommand {
                     i += 1;
                     let start = Instant::now();
                     let loss = trainer.train(iterations);
-                    let EvaluationResult {
-                        value,
-                        avg_q,
-                        states,
-                    } = trainer.evaluate();
+                    let evaluation_result = trainer.evaluate();
                     println!(
                         "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
                         format!("[{i:>4}]").green().bold(),
                         format!("{:>10.4}", loss).bold(),
-                        format!("{:>8.2}", value).bold(),
-                        format!("{:>8.2}", avg_q).bold(),
-                        format!("{:>8}", states).bold(),
+                        format!("{:>8.2}", evaluation_result.value).bold(),
+                        format!("{:>8.2}", evaluation_result.avg_q).bold(),
+                        format!("{:>8}", evaluation_result.states).bold(),
                     );
-                    values.push(value);
+                    results.push((i, evaluation_result));
                     // Check if we reached the checkpoint limit.
                     if let Some(limit) = args.checkpoints {
                         if i >= limit {
@@ -155,13 +150,19 @@ impl DqnCommand {
                 RUNNING_STATE.store(0, atomic::Ordering::SeqCst);
 
                 let duration = format_duration(&training_start.elapsed());
+
                 println!("\n{}", "Training finished.".green().bold());
                 println!("Trained for {i} x {iterations} iterations in {duration}.");
-                println!(
-                    "{:18}{}",
-                    "Minimum Value:".bold(),
-                    values.into_iter().reduce(Value::min).unwrap()
-                );
+
+                let (best_i, best_result) = results
+                    .into_iter()
+                    .reduce(|acc, e| if e.1.value < acc.1.value { e } else { acc })
+                    .unwrap();
+                println!("\n{}", "Best Evaluation:".bold().underline());
+                println!("    {:13}{}", "Checkpoint:".bold(), best_i);
+                println!("    {:13}{}", "Value:".bold(), best_result.value);
+                println!("    {:13}{}", "States:".bold(), best_result.states);
+                println!("    {:13}{}", "Avg. Q:".bold(), best_result.avg_q);
             }
             DqnCommand::Run(args) => {
                 load_model(args.path);
