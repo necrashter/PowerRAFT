@@ -6,6 +6,7 @@ use crate::{
 use super::{environment::Tensorizer, *};
 
 use itertools::Itertools;
+use tch::IndexOp;
 
 pub struct DqnExplorer<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> {
     /// Action iterator.
@@ -25,6 +26,9 @@ pub struct DqnExplorer<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndex
     transitions: Vec<Vec<Vec<TT>>>,
 
     qvals: Vec<f64>,
+
+    /// How many actions to select from the network in each state.
+    top_k: usize,
 }
 
 impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a, 'b, TT, AI, SI> {
@@ -59,37 +63,41 @@ impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a
             let device = self.model.vs.device();
             let input = self.tensorizer.state_to_tensor(&state).to_device(device);
 
-            // Compute valid actions in this state.
-            let state = state.to_action_state(self.graph);
-            let actions = self.iterator.prepare(&state).collect_vec();
-            let action_filter = self
-                .tensorizer
-                .action_filter(&actions, f32::INFINITY, 0.0)
-                .to_device(device);
-
             // Get the output from the model.
-            let mut output = self.model.forward(&input);
-            // Filter invalid actions
-            output += action_filter;
-            let qval = output.min_dim(0, false).0.double_value(&[]);
-            self.qvals.push(qval);
+            let output = self.model.forward(&input);
 
-            // Get the valid action with minimum value
-            let best_action = output.argmin(0, false).int64_value(&[]);
-            let action = actions
-                .into_iter()
-                .find(|action| self.tensorizer.action_to_number(action) as i64 == best_action)
-                .unwrap();
-
-            vec![AA::apply(&state, cost, self.graph, &action)
-                .into_iter()
-                .map(|(mut transition, successor_state)| {
-                    // Index the successor states
-                    let successor_index = self.states.index_state(successor_state);
-                    transition.set_successor(successor_index as StateIndex);
-                    transition
+            // Compute the valid actions in this state.
+            let state = state.to_action_state(self.graph);
+            let mut actions = self
+                .iterator
+                .prepare(&state)
+                .map(|action| {
+                    // Add the network's output Q-value to each action.
+                    let i = self.tensorizer.action_to_number(&action) as i64;
+                    let qval = output.i(i).double_value(&[]);
+                    self.qvals.push(qval);
+                    (qval, action)
                 })
-                .collect()]
+                .collect_vec();
+
+            // Sory by Q-values
+            actions.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+            actions
+                .into_iter()
+                .take(self.top_k)
+                .map(|(_qval, action)| {
+                    AA::apply(&state, cost, self.graph, &action)
+                        .into_iter()
+                        .map(|(mut transition, successor_state)| {
+                            // Index the successor states
+                            let successor_index = self.states.index_state(successor_state);
+                            transition.set_successor(successor_index as StateIndex);
+                            transition
+                        })
+                        .collect()
+                })
+                .collect()
         };
         if self.transitions.len() <= index {
             self.transitions.resize_with(index + 1, Default::default);
@@ -118,6 +126,7 @@ pub fn dqn_evaluate<
     model: &'b Model,
     tensorizer: &'b mut Tensorizer,
     horizon: usize,
+    top_k: usize,
 ) -> EvaluationResult {
     // Don't calculate gradients
     let _guard = tch::no_grad_guard();
@@ -130,6 +139,7 @@ pub fn dqn_evaluate<
         model,
         tensorizer,
         qvals: Vec::new(),
+        top_k,
     };
     explorer
         .states

@@ -197,13 +197,14 @@ where
         average_loss
     }
 
-    fn evaluate(&mut self) -> EvaluationResult {
+    fn evaluate(&mut self, top_k: usize) -> EvaluationResult {
         dqn_evaluate::<TT, AI, SI, AA, PS>(
             self.env.graph,
             self.env.initial_state.teams.clone(),
             &self.model,
             &mut self.env.tensorizer,
             self.horizon,
+            top_k,
         )
     }
 

@@ -26,6 +26,9 @@ pub struct ModelArgs {
     /// Force Torch to use CPU. By default, CUDA will be used if available.
     #[arg(long, default_value_t = false)]
     cpu: bool,
+    /// How many actions to select from the network in each state.
+    #[arg(long, default_value_t = 1)]
+    top_k: usize,
 }
 
 #[derive(clap::Args, Debug)]
@@ -107,6 +110,10 @@ impl DqnCommand {
         match self {
             DqnCommand::Train(args) => {
                 let mut model_dir = args.model.path.with_extension("d");
+                let top_k = args.model.top_k;
+                if top_k == 0 {
+                    fatal_error!(1, "Top-k parameter cannot be 0.");
+                }
 
                 let DqnModel {
                     name: _,
@@ -151,7 +158,7 @@ impl DqnCommand {
                     value,
                     avg_q,
                     states,
-                } = trainer.evaluate();
+                } = trainer.evaluate(top_k);
                 println!(
                     "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
                     "Pre-training Evaluation".dimmed().bold(),
@@ -174,7 +181,7 @@ impl DqnCommand {
 
                     let start = Instant::now();
                     let loss = trainer.train(iterations);
-                    let evaluation_result = trainer.evaluate();
+                    let evaluation_result = trainer.evaluate(top_k);
                     println!(
                         "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
                         format!("[{:>5}]", checkpoint).green().bold(),

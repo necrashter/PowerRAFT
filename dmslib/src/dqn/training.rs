@@ -12,7 +12,9 @@ pub trait DqnTrainer {
     /// Evaluate the model by generating a full policy and computing its value.
     ///
     /// Horizon should come from the teams::Config provided in `new` method.
-    fn evaluate(&mut self) -> EvaluationResult;
+    ///
+    /// `top_k` defines how many actions to select from the network in each state.
+    fn evaluate(&mut self, top_k: usize) -> EvaluationResult;
 
     /// Load the model from the given checkpoint.
     fn load_checkpoint(&mut self, path: &Path) -> Result<(), tch::TchError>;
