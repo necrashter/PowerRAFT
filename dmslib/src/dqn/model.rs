@@ -4,6 +4,9 @@ use super::*;
 pub enum ModelLayer {
     Linear(i64),
     Relu,
+    Sigmoid,
+    Sgn,
+    Silu,
 }
 
 fn build_seq(root: &nn::Path, layers: &[ModelLayer], input_size: i64) -> (nn::Sequential, i64) {
@@ -23,6 +26,15 @@ fn build_seq(root: &nn::Path, layers: &[ModelLayer], input_size: i64) -> (nn::Se
             }
             ModelLayer::Relu => {
                 seq = seq.add_fn(|xs| xs.relu());
+            }
+            ModelLayer::Sigmoid => {
+                seq = seq.add_fn(|xs| xs.sigmoid());
+            }
+            ModelLayer::Sgn => {
+                seq = seq.add_fn(|xs| xs.sgn());
+            }
+            ModelLayer::Silu => {
+                seq = seq.add_fn(|xs| xs.silu());
             }
         }
     }
