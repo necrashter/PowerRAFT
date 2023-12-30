@@ -1,0 +1,12 @@
+{
+  "name": "IEEE-37",
+  "graph": "../../graphs/IEEE-37/round200.json",
+  "teams": [
+    { "index": 34 }
+  ],
+  "horizon": 329,
+  "timeFunction": {
+    "type": "DirectDistance",
+    "divider": 0.34
+  }
+}
