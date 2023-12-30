@@ -29,6 +29,7 @@ pub use self::classic::*;
 pub enum TrainerSettings {
     NaiveClassic(ClassicTrainerSettings),
     TimedClassic(ClassicTrainerSettings),
+    AeClassic(ClassicTrainerSettings),
 }
 
 impl TrainerSettings {
@@ -50,6 +51,14 @@ impl TrainerSettings {
                 device,
             )),
             TrainerSettings::TimedClassic(settings) => Box::new(TimedClassicTrainer::new(
+                graph,
+                teams,
+                model_settings,
+                settings,
+                config,
+                device,
+            )),
+            TrainerSettings::AeClassic(settings) => Box::new(AeClassicTrainer::new(
                 graph,
                 teams,
                 model_settings,

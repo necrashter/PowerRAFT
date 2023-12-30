@@ -7,7 +7,10 @@ use crate::{
         replay::{Experience, ReplayMemorySettings},
     },
     policy::{NaiveTimedPolicySynthesizer, TimedTransition},
-    teams::transitions::{TimeUntilArrival, TimedActionApplier},
+    teams::{
+        transitions::{TimeUntilArrival, TimedActionApplier},
+        FilterOnWay, PermutationalActions,
+    },
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -235,6 +238,15 @@ pub type NaiveClassicTrainer<'a> = ClassicTrainer<
 pub type TimedClassicTrainer<'a> = ClassicTrainer<
     'a,
     NaiveActions,
+    TimedTransition,
+    TimedActionApplier<TimeUntilArrival>,
+    NaiveTimedPolicySynthesizer,
+    BitStackStateIndexer,
+>;
+
+pub type AeClassicTrainer<'a> = ClassicTrainer<
+    'a,
+    FilterOnWay<'a, PermutationalActions<'a>>,
     TimedTransition,
     TimedActionApplier<TimeUntilArrival>,
     NaiveTimedPolicySynthesizer,
