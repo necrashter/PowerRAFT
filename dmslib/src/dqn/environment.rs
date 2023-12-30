@@ -259,7 +259,7 @@ impl<'a, AI: ActionSet<'a>> Environment<'a, AI> {
         action_index: usize,
     ) -> Experience {
         let state = self.current_state_to_tensor();
-        let cost = self.state.get_cost();
+        let cost = self.state.get_cost() as f64;
         let action = self
             .tensorizer
             .action_to_number(&self.actions[action_index]) as i64;
@@ -291,6 +291,7 @@ impl<'a, AI: ActionSet<'a>> Environment<'a, AI> {
         let transition = self.transitions[action_index]
             .choose_weighted(&mut self.rng, |t| t.p)
             .unwrap();
+        let time = transition.time as f64;
         self.state = transition.successor.clone();
         self.prepare_current_state::<TT, AA>();
 
@@ -298,6 +299,7 @@ impl<'a, AI: ActionSet<'a>> Environment<'a, AI> {
             state,
             action,
             cost,
+            time,
             successors,
             action_filters,
             probabilities,

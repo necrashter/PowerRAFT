@@ -9,7 +9,6 @@ use crate::{
     create_rng,
     policy::Transition,
     teams::{transitions::ActionApplier, ActionSet},
-    types::Cost,
 };
 
 use super::environment::Environment;
@@ -23,7 +22,9 @@ pub struct Experience {
     /// Has to be i64 because of Torch.
     pub action: i64,
     /// Cost of the taken action.
-    pub cost: Cost,
+    pub cost: f64,
+    /// Time spent in this transition.
+    pub time: f64,
     /// Successor states for the taken action.
     /// [S, N] where S is the number of successors and N is the input size.
     pub successors: Tensor,
@@ -41,6 +42,7 @@ impl Experience {
             state: self.state.shallow_clone(),
             action: self.action,
             cost: self.cost,
+            time: self.time,
             successors: self.successors.shallow_clone(),
             action_filters: self.action_filters.shallow_clone(),
             probabilities: self.probabilities.shallow_clone(),

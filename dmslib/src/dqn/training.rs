@@ -28,6 +28,7 @@ pub use self::classic::*;
 #[derive(Serialize, Deserialize, Debug)]
 pub enum TrainerSettings {
     NaiveClassic(ClassicTrainerSettings),
+    TimedClassic(ClassicTrainerSettings),
 }
 
 impl TrainerSettings {
@@ -41,6 +42,14 @@ impl TrainerSettings {
     ) -> Box<dyn DqnTrainer + 'a> {
         match self {
             TrainerSettings::NaiveClassic(settings) => Box::new(NaiveClassicTrainer::new(
+                graph,
+                teams,
+                model_settings,
+                settings,
+                config,
+                device,
+            )),
+            TrainerSettings::TimedClassic(settings) => Box::new(TimedClassicTrainer::new(
                 graph,
                 teams,
                 model_settings,

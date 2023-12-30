@@ -1,9 +1,13 @@
 use tch::IndexOp;
 
 use super::*;
-use crate::dqn::{
-    evaluation::{dqn_evaluate_custom, EvaluationResult},
-    replay::{Experience, ReplayMemorySettings},
+use crate::{
+    dqn::{
+        evaluation::{dqn_evaluate_custom, EvaluationResult},
+        replay::{Experience, ReplayMemorySettings},
+    },
+    policy::{NaiveTimedPolicySynthesizer, TimedTransition},
+    teams::transitions::{TimeUntilArrival, TimedActionApplier},
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -149,6 +153,7 @@ where
                 state,
                 action,
                 cost,
+                time,
                 successors,
                 action_filters,
                 probabilities,
@@ -167,9 +172,8 @@ where
                 // x: [S]
                 x *= probabilities;
                 let x = x.sum(None);
-                // TODO: Discount should change due to modified value function
-                // Modified value function is not used for now because of this
-                (&x * self.settings.discount) + (cost as f64)
+                // Modified value function.
+                (&x * self.settings.discount.powf(time)) + (cost * time)
             });
 
             // Compute loss & backward step
@@ -225,5 +229,14 @@ pub type NaiveClassicTrainer<'a> = ClassicTrainer<
     RegularTransition,
     NaiveActionApplier,
     NaivePolicySynthesizer,
+    BitStackStateIndexer,
+>;
+
+pub type TimedClassicTrainer<'a> = ClassicTrainer<
+    'a,
+    NaiveActions,
+    TimedTransition,
+    TimedActionApplier<TimeUntilArrival>,
+    NaiveTimedPolicySynthesizer,
     BitStackStateIndexer,
 >;
