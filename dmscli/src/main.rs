@@ -87,9 +87,9 @@ pub fn format_duration(duration: &Duration) -> String {
     let seconds = remainder;
 
     if hours > 0 {
-        format!("{hours}:{minutes}:{seconds}.{millis}")
+        format!("{hours:02}:{minutes:02}:{seconds:02}.{millis}")
     } else if minutes > 0 {
-        format!("{minutes}:{seconds}.{millis}")
+        format!("{minutes:02}:{seconds:02}.{millis}")
     } else {
         format!("{seconds}.{millis}")
     }
