@@ -73,11 +73,11 @@ where
         settings: ClassicTrainerSettings,
         config: teams::Config,
         device: tch::Device,
-    ) -> Self {
+    ) -> Result<Self, String> {
         let horizon = if let Some(value) = config.horizon {
             value
         } else {
-            panic!("Optimization horizon must be specified in the configuration.");
+            return Err("Optimization horizon must be specified in the configuration.".to_string());
         };
 
         let mut mem = ReplayMemory::new(settings.replay.capacity, device);
@@ -103,7 +103,7 @@ where
         // Optimizer
         let opt = nn::Adam::default().build(&model.vs, settings.lr).unwrap();
 
-        ClassicTrainer {
+        Ok(ClassicTrainer {
             mem,
             env,
             rng,
@@ -115,7 +115,7 @@ where
             settings,
             horizon,
             _phantom: std::marker::PhantomData,
-        }
+        })
     }
 }
 

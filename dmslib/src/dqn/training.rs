@@ -40,32 +40,32 @@ impl TrainerSettings {
         model_settings: ModelSettings,
         config: teams::Config,
         device: tch::Device,
-    ) -> Box<dyn DqnTrainer + 'a> {
+    ) -> Result<Box<dyn DqnTrainer + 'a>, String> {
         match self {
-            TrainerSettings::NaiveClassic(settings) => Box::new(NaiveClassicTrainer::new(
+            TrainerSettings::NaiveClassic(settings) => Ok(Box::new(NaiveClassicTrainer::new(
                 graph,
                 teams,
                 model_settings,
                 settings,
                 config,
                 device,
-            )),
-            TrainerSettings::TimedClassic(settings) => Box::new(TimedClassicTrainer::new(
+            )?)),
+            TrainerSettings::TimedClassic(settings) => Ok(Box::new(TimedClassicTrainer::new(
                 graph,
                 teams,
                 model_settings,
                 settings,
                 config,
                 device,
-            )),
-            TrainerSettings::AeClassic(settings) => Box::new(AeClassicTrainer::new(
+            )?)),
+            TrainerSettings::AeClassic(settings) => Ok(Box::new(AeClassicTrainer::new(
                 graph,
                 teams,
                 model_settings,
                 settings,
                 config,
                 device,
-            )),
+            )?)),
         }
     }
 }

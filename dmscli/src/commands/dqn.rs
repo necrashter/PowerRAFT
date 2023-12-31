@@ -153,13 +153,16 @@ fn train(args: TrainArgs) {
 
     let device = get_device(args.model.cpu);
 
-    let mut trainer = trainer.build(
+    let mut trainer = match trainer.build(
         &problem.graph,
         problem.initial_teams.clone(),
         model,
         config,
         device,
-    );
+    ) {
+        Ok(trainer) => trainer,
+        Err(e) => fatal_error!(1, "{}", e),
+    };
 
     // Load checkpoint if present
     let mut checkpoint: usize = if let Some((i, path)) = get_latest_checkpoint(&model_dir) {
