@@ -92,6 +92,9 @@ where
             env.tensorizer.output_size,
             &model_settings,
         );
+        if !model.is_dqn() {
+            return Err("ClassicTrainer requires DQN model type.".to_string());
+        }
         // The target model that will be updated occasionally from the primary model.
         let mut target_model = Model::new(
             device,
@@ -139,7 +142,7 @@ where
                     // convert to input
                     let input = self.env.current_state_to_tensor().to_device(self.device);
                     // Pass through the model
-                    let mut output = self.model.forward(&input);
+                    let mut output = self.model.forward_dqn(&input);
                     // Filter invalid actions
                     output += self.env.action_filter().to_device(self.device);
                     // Get the valid action with minimum value
@@ -161,12 +164,12 @@ where
                 action_filters,
                 probabilities,
             } = self.mem.sample_experience();
-            let predicted_value = self.model.forward(&state).i(action);
+            let predicted_value = self.model.forward_dqn(&state).i(action);
 
             let expected_value = tch::no_grad(|| {
                 // For successor count S, and input size N,
                 // successors: [S, N]
-                let mut x = self.target_model.forward(&successors);
+                let mut x = self.target_model.forward_dqn(&successors);
                 // x: [S, M]
                 // Apply the action filter, eliminate invalid actions.
                 x += action_filters;

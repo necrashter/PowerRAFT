@@ -176,16 +176,11 @@ fn train(args: TrainArgs) {
         0
     };
 
-    let EvaluationResult {
-        value,
-        avg_q,
-        states,
-    } = trainer.evaluate(evaluation);
+    let EvaluationResult { value, states } = trainer.evaluate(evaluation);
     println!(
-        "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
+        "\n{:24} || Value: {} | States: {}",
         "Pre-training Evaluation".dimmed().bold(),
         format!("{:>8.2}", value).bold(),
-        format!("{:>8.2}", avg_q).bold(),
         format!("{:>8}", states).bold(),
     );
 
@@ -204,11 +199,10 @@ fn train(args: TrainArgs) {
         let loss = trainer.train(checkpoint_iterations);
         let evaluation_result = trainer.evaluate(evaluation);
         println!(
-            "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
+            "{} Loss: {} || Value: {} | States: {}",
             format!("[{:>5}]", checkpoint).green().bold(),
             format!("{:>10.4}", loss).bold(),
             format!("{:>8.2}", evaluation_result.value).bold(),
-            format!("{:>8.2}", evaluation_result.avg_q).bold(),
             format!("{:>8}", evaluation_result.states).bold(),
         );
         if let Err(e) = append_to_file(&values_file, evaluation_result.value) {
@@ -250,7 +244,6 @@ fn train(args: TrainArgs) {
     println!("    {:13}{}", "Checkpoint:".bold(), best_checkpoint);
     println!("    {:13}{}", "Value:".bold(), best_result.value);
     println!("    {:13}{}", "States:".bold(), best_result.states);
-    println!("    {:13}{}", "Avg. Q:".bold(), best_result.avg_q);
 }
 
 fn run(args: ModelArgs) {

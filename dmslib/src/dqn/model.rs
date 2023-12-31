@@ -59,7 +59,17 @@ pub enum ModelSettings {
     },
 }
 
-type ModelFunc = Box<dyn Fn(&Tensor) -> Tensor>;
+pub type DqnFunc = Box<dyn Fn(&Tensor) -> Tensor>;
+pub type A2cFunc = Box<dyn Fn(&Tensor) -> (Tensor, Tensor)>;
+
+pub enum ModelFunc {
+    /// DQN model type. Returns a Q-value for each possible action.
+    Dqn(DqnFunc),
+    /// A2C model type. Returns two tensors:
+    /// 1. Actor: Preference for each action.
+    /// 2. Critic: Expected cost/reward.
+    A2c(A2cFunc),
+}
 
 pub struct Model {
     pub vs: nn::VarStore,
@@ -86,6 +96,7 @@ impl Model {
                     Default::default(),
                 ));
                 let func = Box::new(move |xs: &Tensor| xs.apply(&seq));
+                let func = ModelFunc::Dqn(func);
                 Self { vs, func }
             }
             ModelSettings::DuelingDqn {
@@ -101,7 +112,7 @@ impl Model {
                     output_size,
                     Default::default(),
                 );
-                let func: ModelFunc = if *normalize_advantages {
+                let func: DqnFunc = if *normalize_advantages {
                     Box::new(move |xs: &Tensor| {
                         let zs = xs.apply(&seq);
                         let advantages = zs.apply(&advantage_layer);
@@ -118,15 +129,39 @@ impl Model {
                         zs.apply(&advantage_layer) + zs.apply(&value_layer)
                     })
                 };
+                let func = ModelFunc::Dqn(func);
                 Self { vs, func }
             }
         }
     }
 
-    /// A forward pass on the network. Syntactic sugar for calling the `func` field.
-    #[inline(always)]
-    pub fn forward(&self, input: &Tensor) -> Tensor {
-        (self.func)(input)
+    /// A forward pass on a DQN. Panics if the model type doesn't match.
+    pub fn forward_dqn(&self, input: &Tensor) -> Tensor {
+        if let ModelFunc::Dqn(func) = &self.func {
+            func(input)
+        } else {
+            panic!("Mismatched model type (expected DQN)")
+        }
+    }
+
+    /// Returns true if the model type is DQN.
+    pub fn is_dqn(&self) -> bool {
+        matches!(&self.func, ModelFunc::Dqn(_))
+    }
+
+    /// Returns true if the model type is A2C.
+    pub fn is_a2c(&self) -> bool {
+        matches!(&self.func, ModelFunc::A2c(_))
+    }
+
+    /// Returns a tensor of action preferences. Higher actions are preferred.
+    /// For DQN, this is negative Q-value (since Q-value is the expected cost).
+    /// For A2C, this is the action probabilities.
+    pub fn get_action_preferences(&self, input: &Tensor) -> Tensor {
+        match &self.func {
+            ModelFunc::Dqn(func) => func(input) * -1.0,
+            ModelFunc::A2c(func) => func(input).0,
+        }
     }
 
     /// Copies parameters from another model.

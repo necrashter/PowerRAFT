@@ -25,8 +25,6 @@ pub struct DqnExplorer<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndex
     /// - `transitions[i][j]`: Transitions of action j in state i
     transitions: Vec<Vec<Vec<TT>>>,
 
-    qvals: Vec<f64>,
-
     /// How many actions to select from the network in each state.
     top_k: usize,
 }
@@ -64,7 +62,7 @@ impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a
             let input = self.tensorizer.state_to_tensor(&state).to_device(device);
 
             // Get the output from the model.
-            let output = self.model.forward(&input);
+            let output = self.model.get_action_preferences(&input);
 
             // Compute the valid actions in this state.
             let state = state.to_action_state(self.graph);
@@ -74,14 +72,13 @@ impl<'a, 'b, TT: Transition, AI: ActionSet<'a>, SI: StateIndexer> DqnExplorer<'a
                 .map(|action| {
                     // Add the network's output Q-value to each action.
                     let i = self.tensorizer.action_to_number(&action) as i64;
-                    let qval = output.i(i).double_value(&[]);
-                    self.qvals.push(qval);
-                    (qval, action)
+                    let val = output.i(i).double_value(&[]);
+                    (val, action)
                 })
                 .collect_vec();
 
-            // Sory by Q-values
-            actions.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            // Sory in ascending order by action preferences.
+            actions.sort_unstable_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
             actions
                 .into_iter()
@@ -120,7 +117,6 @@ impl Default for EvaluationSettings {
 
 pub struct EvaluationResult {
     pub value: Value,
-    pub avg_q: f64,
     pub states: usize,
 }
 
@@ -152,7 +148,6 @@ pub fn dqn_evaluate_custom<
         transitions: Vec::new(),
         model,
         tensorizer,
-        qvals: Vec::new(),
         top_k,
     };
     explorer
@@ -163,18 +158,11 @@ pub fn dqn_evaluate_custom<
         explorer.explore_state::<AA>(i);
     }
 
-    let qvals_len = explorer.qvals.len();
-    let avg_q = explorer.qvals.into_iter().sum::<f64>() / (qvals_len as f64);
     let states = explorer.states.get_state_count();
 
     let transitions = explorer.transitions;
-
     let (values, _policy) = PS::synthesize_policy(&transitions, horizon);
     let value = get_min_value(&values);
 
-    EvaluationResult {
-        value,
-        avg_q,
-        states,
-    }
+    EvaluationResult { value, states }
 }
