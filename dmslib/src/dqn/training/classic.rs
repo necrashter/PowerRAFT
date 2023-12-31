@@ -144,7 +144,10 @@ where
                     // Pass through the model
                     let mut output = self.model.forward_dqn(&input);
                     // Filter invalid actions
-                    output += self.env.action_filter().to_device(self.device);
+                    output += self
+                        .env
+                        .action_filter(f32::INFINITY, 0.0)
+                        .to_device(self.device);
                     // Get the valid action with minimum value
                     output.argmin(0, false).int64_value(&[])
                 });

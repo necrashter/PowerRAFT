@@ -322,9 +322,8 @@ impl<'a, AI: ActionSet<'a>> Environment<'a, AI> {
     /// Create a filter tensor for the actions in the current state.
     /// Valid actions will be marked by 0.0 in the Tensor.
     /// Invalid actions will be marked by infinity.
-    pub fn action_filter(&mut self) -> Tensor {
-        self.tensorizer
-            .action_filter(&self.actions, f32::INFINITY, 0.0)
+    pub fn action_filter(&mut self, invalid: f32, valid: f32) -> Tensor {
+        self.tensorizer.action_filter(&self.actions, invalid, valid)
     }
 
     /// Convert action number (its index in the network's output) to

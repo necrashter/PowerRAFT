@@ -57,6 +57,11 @@ pub enum ModelSettings {
         layers: Vec<ModelLayer>,
         normalize_advantages: bool,
     },
+    /// Basic Advantage Actor Critic architecture.
+    A2c {
+        #[serde(default)]
+        layers: Vec<ModelLayer>,
+    },
 }
 
 pub type DqnFunc = Box<dyn Fn(&Tensor) -> Tensor>;
@@ -132,6 +137,18 @@ impl Model {
                 let func = ModelFunc::Dqn(func);
                 Self { vs, func }
             }
+            ModelSettings::A2c { layers } => {
+                let (seq, last_size) = build_seq(root, layers, input_size);
+                // The final critic and actor layers.
+                let critic = nn::linear(root / "critic", last_size, 1, Default::default());
+                let actor = nn::linear(root / "actor", last_size, output_size, Default::default());
+                let func: A2cFunc = Box::new(move |xs: &Tensor| {
+                    let zs = xs.apply(&seq);
+                    (zs.apply(&actor), zs.apply(&critic))
+                });
+                let func = ModelFunc::A2c(func);
+                Self { vs, func }
+            }
         }
     }
 
@@ -141,6 +158,15 @@ impl Model {
             func(input)
         } else {
             panic!("Mismatched model type (expected DQN)")
+        }
+    }
+
+    /// A forward pass on an A2C. Panics if the model type doesn't match.
+    pub fn forward_a2c(&self, input: &Tensor) -> (Tensor, Tensor) {
+        if let ModelFunc::A2c(func) = &self.func {
+            func(input)
+        } else {
+            panic!("Mismatched model type (expected A2C)")
         }
     }
 

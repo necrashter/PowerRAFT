@@ -25,11 +25,18 @@ pub trait DqnTrainer {
 mod classic;
 pub use self::classic::*;
 
+mod a2c;
+pub use self::a2c::*;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum TrainerSettings {
     NaiveClassic(ClassicTrainerSettings),
     TimedClassic(ClassicTrainerSettings),
     AeClassic(ClassicTrainerSettings),
+
+    NaiveA2c(A2cTrainerSettings),
+    TimedA2c(A2cTrainerSettings),
+    AeA2c(A2cTrainerSettings),
 }
 
 impl TrainerSettings {
@@ -59,6 +66,30 @@ impl TrainerSettings {
                 device,
             )?)),
             TrainerSettings::AeClassic(settings) => Ok(Box::new(AeClassicTrainer::new(
+                graph,
+                teams,
+                model_settings,
+                settings,
+                config,
+                device,
+            )?)),
+            TrainerSettings::NaiveA2c(settings) => Ok(Box::new(NaiveA2cTrainer::new(
+                graph,
+                teams,
+                model_settings,
+                settings,
+                config,
+                device,
+            )?)),
+            TrainerSettings::TimedA2c(settings) => Ok(Box::new(TimedA2cTrainer::new(
+                graph,
+                teams,
+                model_settings,
+                settings,
+                config,
+                device,
+            )?)),
+            TrainerSettings::AeA2c(settings) => Ok(Box::new(AeA2cTrainer::new(
                 graph,
                 teams,
                 model_settings,
