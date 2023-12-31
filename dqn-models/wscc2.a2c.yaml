@@ -1,0 +1,7 @@
+name: Basic A2C
+problem: "problems/wscc-9-9.json"
+model: !A2c
+trainer: !NaiveA2c
+  lr: 0.01
+  gradient_clip: 0.5
+checkpoint_iterations: 500
