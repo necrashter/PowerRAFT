@@ -139,8 +139,9 @@ mod tests {
         assert_eq!(indexer.get_state_count(), 0);
 
         let state0 = State {
-            buses: vec![Unknown, Unknown, Unknown],
-            teams: vec![TeamState { time: 0, index: 0 }],
+            buses: vec![Unknown, Unknown, Unknown, Unknown],
+            // Start from index: 3 to simulate additional node for the initial location.
+            teams: vec![TeamState { time: 0, index: 4 }],
         };
 
         assert_eq!(indexer.index_state(state0.clone()), 0);
@@ -155,11 +156,11 @@ mod tests {
         assert_eq!(indexer.get_state_count(), 1);
 
         let state1 = State {
-            buses: vec![Unknown, Unknown, Damaged],
+            buses: vec![Unknown, Unknown, Damaged, Unknown],
             teams: vec![TeamState { time: 0, index: 1 }],
         };
         let state2 = State {
-            buses: vec![Energized, Energized, Unknown],
+            buses: vec![Energized, Energized, Unknown, Unknown],
             teams: vec![TeamState { index: 2, time: 3 }],
         };
 
@@ -204,15 +205,15 @@ mod tests {
         assert_eq!(
             bus_states,
             ndarray::array![
-                [Unknown, Unknown, Unknown],
-                [Unknown, Unknown, Damaged],
-                [Energized, Energized, Unknown],
+                [Unknown, Unknown, Unknown, Unknown],
+                [Unknown, Unknown, Damaged, Unknown],
+                [Energized, Energized, Unknown, Unknown],
             ]
         );
         assert_eq!(
             team_states,
             ndarray::array![
-                [TeamState { time: 0, index: 0 }],
+                [TeamState { time: 0, index: 4 }],
                 [TeamState { time: 0, index: 1 }],
                 [TeamState { index: 2, time: 3 }],
             ]
@@ -221,7 +222,12 @@ mod tests {
 
     #[test]
     fn bit_stack_indexer_test() {
-        let indexer = BitStackStateIndexer::new(3, 1, 3);
+        let bus_count = 4;
+        let team_count = 1;
+        // (bus_count - 1) and +1 for the initial location.
+        let max_index = 4;
+        let max_time = 3;
+        let indexer = BitStackStateIndexer::new(bus_count, team_count, max_index, max_time);
         generic_indexer_test(indexer, true);
     }
 }

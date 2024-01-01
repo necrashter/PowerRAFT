@@ -23,16 +23,20 @@ fn push_bits<T: Integral>(bv: &mut BitVec, value: T, bits: usize) {
 pub struct StateCompressor {
     bus_count: usize,
     team_count: usize,
-    bus_bits: usize,
+    /// Number of bits required to encode the index field of a TeamState.
+    node_bits: usize,
     time_bits: usize,
 }
 
 impl StateCompressor {
-    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
+    /// - `max_index`: Maximum `index` field in team representation.
+    ///    Not necessarily equal to `bus_count - 1` because of initial location nodes.
+    /// - `max_time`: Maximum possible travel time.
+    pub fn new(bus_count: usize, team_count: usize, max_index: usize, max_time: usize) -> Self {
         StateCompressor {
             bus_count,
             team_count,
-            bus_bits: get_bits_required_for(bus_count - 1),
+            node_bits: get_bits_required_for(max_index),
             time_bits: get_bits_required_for(max_time),
         }
     }
@@ -50,7 +54,7 @@ impl StateCompressor {
         }
         for team in teams.iter() {
             push_bits(&mut out, team.time, self.time_bits);
-            push_bits(&mut out, team.index, self.bus_bits);
+            push_bits(&mut out, team.index, self.node_bits);
         }
         out
     }
@@ -74,8 +78,8 @@ impl StateCompressor {
         for _ in 0..self.team_count {
             let time = bits[index..(index + self.time_bits)].load::<Time>();
             index += self.time_bits;
-            let bus_index = bits[index..(index + self.bus_bits)].load::<BusIndex>();
-            index += self.bus_bits;
+            let bus_index = bits[index..(index + self.node_bits)].load::<BusIndex>();
+            index += self.node_bits;
             teams.push(TeamState {
                 time,
                 index: bus_index,
@@ -158,11 +162,11 @@ pub struct BitStackStateIndexer {
 }
 
 impl BitStackStateIndexer {
-    pub fn new(bus_count: usize, team_count: usize, max_time: usize) -> Self {
+    pub fn new(bus_count: usize, team_count: usize, max_index: usize, max_time: usize) -> Self {
         BitStackStateIndexer {
             bus_count,
             team_count,
-            compressor: StateCompressor::new(bus_count, team_count, max_time),
+            compressor: StateCompressor::new(bus_count, team_count, max_index, max_time),
             state_to_index: HashMap::new(),
             stack: Vec::new(),
         }
@@ -185,12 +189,18 @@ impl StateIndexer for BitStackStateIndexer {
     fn new(graph: &Graph, teams: &[TeamState]) -> Self {
         let bus_count = graph.branches.len();
         let team_count = teams.len();
+        let max_index = teams
+            .iter()
+            .map(|team| team.index)
+            .max()
+            .expect("No teams in StateIndexer") as usize;
+        let max_index = max_index.max(bus_count - 1);
         let max_time = graph
             .travel_times
             .iter()
             .max()
             .expect("Cannot get max travel time");
-        BitStackStateIndexer::new(bus_count, team_count, *max_time as usize)
+        BitStackStateIndexer::new(bus_count, team_count, max_index, *max_time as usize)
     }
 
     fn get_state_count(&self) -> usize {
@@ -340,7 +350,9 @@ mod tests {
 
     #[test]
     fn state_compressor_test() {
-        let comp = StateCompressor::new(4, 3, 3);
+        let bus_count = 4;
+        let team_count = 3;
+        let comp = StateCompressor::new(bus_count, team_count, bus_count - 1, 3);
 
         for state in get_states() {
             let bits = comp.state_to_bits(state.clone());
@@ -350,7 +362,9 @@ mod tests {
 
     #[test]
     fn compress_states_test() {
-        let comp = StateCompressor::new(4, 3, 3);
+        let bus_count = 4;
+        let team_count = 3;
+        let comp = StateCompressor::new(bus_count, team_count, bus_count - 1, 3);
 
         let bus_states: Array2<BusState> = array![
             [Unknown, Damaged, Damaged, Damaged],
@@ -393,6 +407,48 @@ mod tests {
                 TeamState { time: 0, index: 1 }
             ],
         ];
+
+        let bitvecs = comp.compress(bus_states.clone(), team_states.clone());
+        let (bus2, team2) = comp.decompress(bitvecs);
+
+        assert_eq!(bus2, bus_states);
+        assert_eq!(team2, team_states);
+    }
+
+    /// Check whether the state compressor can handle the cases where the teams
+    /// are located outside the bus graph, i.e., the additional nodes for the
+    /// initial locations.
+    #[test]
+    fn compress_states_initial_node_test() {
+        let bus_states: Array2<BusState> = array![
+            [Unknown, Damaged, Damaged, Damaged],
+            [Unknown, Unknown, Damaged, Energized],
+            [Energized, Energized, Unknown, Energized],
+        ];
+
+        let team_states: Array2<TeamState> = array![
+            [
+                TeamState { time: 0, index: 4 },
+                TeamState { time: 0, index: 0 },
+                TeamState { index: 1, time: 3 }
+            ],
+            [
+                TeamState { time: 0, index: 6 },
+                TeamState { index: 4, time: 1 },
+                TeamState { time: 0, index: 5 }
+            ],
+            [
+                TeamState { index: 2, time: 3 },
+                TeamState { time: 0, index: 6 },
+                TeamState { time: 0, index: 4 }
+            ],
+        ];
+
+        let bus_count = 4;
+        let team_count = 3;
+        let max_index = team_states.iter().map(|team| team.index).max().unwrap() as usize;
+        let max_index = max_index.max(bus_count - 1);
+        let comp = StateCompressor::new(bus_count, team_count, max_index, 3);
 
         let bitvecs = comp.compress(bus_states.clone(), team_states.clone());
         let (bus2, team2) = comp.decompress(bitvecs);
