@@ -149,16 +149,16 @@ mod saveable {
 
     #[derive(Serialize, Deserialize)]
     pub struct RegularTransition {
-        pub successor: usize,
-        pub p: f64,
-        pub cost: f64,
+        pub successor: StateIndex,
+        pub p: Probability,
+        pub cost: Cost,
     }
 
     #[derive(Serialize, Deserialize)]
     pub struct TimedTransition {
-        pub successor: usize,
-        pub p: f64,
-        pub cost: f64,
+        pub successor: StateIndex,
+        pub p: Probability,
+        pub cost: Cost,
         pub time: Time,
     }
 
@@ -315,4 +315,80 @@ pub fn load_solution<P: AsRef<Path>>(path: P) -> std::io::Result<SaveFile> {
     );
 
     Ok(output)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::teams::{solve_custom_regular, solve_custom_timed};
+
+    use super::*;
+
+    const TEST_GRAPH: &str = include_str!("../../../../graphs/FieldTeams/paperE0.json");
+
+    fn encode_decode_save_file(save_file: SaveFile) {
+        let file_content = saveable::SaveFile {
+            problem: save_file.problem.clone().into(),
+            solution: save_file.solution.clone().into(),
+        };
+
+        let encoded = bincode_options!().serialize(&file_content).unwrap();
+        let decoded: saveable::SaveFile = bincode_options!().deserialize(&encoded[..]).unwrap();
+
+        let reconstructed = SaveFile {
+            problem: decoded.problem.into(),
+            solution: decoded.solution.into(),
+        };
+
+        assert_eq!(save_file.problem, reconstructed.problem);
+        assert_eq!(save_file.solution, reconstructed.solution);
+    }
+
+    #[test]
+    fn solution_binary_save_test() {
+        let input_graph: Graph = serde_json::from_str(TEST_GRAPH).unwrap();
+        let teams = vec![Team {
+            index: Some(0),
+            latlng: None,
+        }];
+        let (problem, config) = input_graph
+            .clone()
+            .to_teams_problem(teams.clone(), Some(30))
+            .unwrap();
+        let team_problem = TeamProblem {
+            name: Some("Save Test".to_string()),
+            graph: input_graph,
+            teams,
+            horizon: Some(30),
+            pfo: None,
+            time_func: TimeFunc::default(),
+        };
+
+        let solution = solve_custom_timed(
+            &problem.graph,
+            problem.initial_teams.clone(),
+            &config,
+            "NaiveStateIndexer",
+            "NaiveActions",
+            "TimedActionApplier<TimeUntilEnergization>",
+        )
+        .unwrap();
+
+        encode_decode_save_file(SaveFile {
+            problem: team_problem.clone(),
+            solution: GenericTeamSolution::Timed(solution.into_io(&problem.graph)),
+        });
+
+        let solution = solve_custom_regular(
+            &problem.graph,
+            problem.initial_teams.clone(),
+            &config,
+            "NaiveStateIndexer",
+            "NaiveActions",
+        )
+        .unwrap();
+        encode_decode_save_file(SaveFile {
+            problem: team_problem.clone(),
+            solution: GenericTeamSolution::Regular(solution.into_io(&problem.graph)),
+        });
+    }
 }
