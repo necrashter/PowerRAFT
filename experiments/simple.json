@@ -1,0 +1,27 @@
+{
+  "name": "Simple Network Exact Solution",
+  "tasks": [
+    {
+      "problems": [{
+        "name": "Simple Network with 2 Teams",
+        "graph": "../graphs/simple.json",
+        "teams": [
+          { "latlng": [ 41.02061040757306, 29.0888786315918 ] },
+          { "latlng": [ 41.01076661068138, 29.089307785034183 ] }
+        ],
+        "horizon": 18,
+        "timeFunction": {
+          "type": "DirectDistance",
+          "divider": 0.67
+        }
+      }],
+      "optimizations": [
+        {
+          "indexer": "BitStackStateIndexer",
+          "actions": "FilterEnergizedOnWay<PermutationalActions>",
+          "transitions": "TimedActionApplier<TimeUntilEnergization>"
+        }
+      ]
+    }
+  ]
+}

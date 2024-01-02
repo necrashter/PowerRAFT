@@ -2,7 +2,6 @@
 use dmslib::io::fs::*;
 use dmslib::GRAPHS_PATH;
 
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use warp::{filters::BoxedFilter, Filter, Reply};
 use warp::{http::StatusCode, reply};
@@ -12,33 +11,6 @@ pub const STATIC_PATH: &str = "../client";
 
 /// Content length limit for JSON requests.
 const JSON_CONTENT_LIMIT: u64 = 8 * 1024 * 1024;
-
-/// Generic response struct.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GenericOperationResult {
-    pub successful: bool,
-    pub error: Option<String>,
-}
-
-impl GenericOperationResult {
-    /// Return a [`GenericOperationResult`] that denotes success.
-    #[inline]
-    pub fn success() -> GenericOperationResult {
-        GenericOperationResult {
-            successful: true,
-            error: None,
-        }
-    }
-
-    /// Return a [`GenericOperationResult`] with the given error.
-    #[inline]
-    pub fn err(e: String) -> GenericOperationResult {
-        GenericOperationResult {
-            successful: false,
-            error: Some(e),
-        }
-    }
-}
 
 /// Every route combined for a single network
 pub fn api() -> BoxedFilter<(impl Reply,)> {
@@ -87,27 +59,21 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
             .map(|mut req: serde_json::Value| {
-                dbg!(&req);
                 match req.as_object_mut() {
                     Some(map) => {
                         map.remove("benchmark");
                     }
                     None => {
                         return reply::with_status(
-                            reply::json(&GenericOperationResult::err(
-                                "The type of request must be a JSON object.".to_string(),
-                            )),
+                            "The type of request must be a JSON object.".to_string(),
                             StatusCode::BAD_REQUEST,
                         );
                     }
                 }
                 match save_problem(&req) {
-                    Ok(_) => reply::with_status(
-                        reply::json(&GenericOperationResult::success()),
-                        StatusCode::OK,
-                    ),
+                    Ok(_) => reply::with_status("OK".to_string(), StatusCode::OK),
                     Err(e) => reply::with_status(
-                        reply::json(&GenericOperationResult::err(e.to_string())),
+                        e.to_string(),
                         if e.kind() == std::io::ErrorKind::Other {
                             StatusCode::BAD_REQUEST
                         } else {

@@ -21,6 +21,11 @@ from matplotlib.ticker import MaxNLocator
 
 plt.rc('font', size=14)
 
+SAVEFIG_SETTINGS = {
+    "bbox_inches": "tight",
+    "dpi": 192,
+}
+
 def plot_setup(l):
     fig, ax1 = plt.subplots(figsize=(12, l*0.6))
     fig.subplots_adjust(left=0.135, bottom=0.2)
@@ -326,35 +331,35 @@ plot_type = args.plot if args.plot else "t"
 if plot_type.startswith("t"):
     plot_time(data[::-1], {})
     filename += ".exec"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("m"):
     plot_memory(data[::-1], {})
     filename += ".mem"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("v"):
     plot_value(data[::-1], {})
     filename += ".val"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("e"):
     plot_ep(data[::-1], {})
     filename += ".ep"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("ac"):
     plot_ac(data[::-1], {})
     filename += ".ac"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("a"):
     plot_avg(data[::-1], {})
     filename += ".avg"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("st"):
     plot_st(data[::-1], {})
     filename += ".st"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("s"):
     plot_states(data[::-1], {})
     filename += ".states"
-    plt.savefig(filename + ".png", bbox_inches='tight')
+    plt.savefig(filename + ".png", **SAVEFIG_SETTINGS)
 elif plot_type.startswith("T"):
     benchmark_data = data#[::-1]
     table = table_with(

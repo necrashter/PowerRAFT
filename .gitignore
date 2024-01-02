@@ -1,5 +1,6 @@
 /target
 *.res.json
+*.soln.d
 /dmscli/results
 /experiments/tmp
 __pycache__
