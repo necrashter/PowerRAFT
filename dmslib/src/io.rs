@@ -1,6 +1,8 @@
 //! Input output module.
 //!
 //! Contains structs to serialize and deserialize various representation of graphs.
+use std::any::TypeId;
+
 use crate::policy::*;
 use crate::teams;
 use crate::types::*;
@@ -524,6 +526,19 @@ impl GenericTeamSolution {
         match self {
             GenericTeamSolution::Timed(s) => s.get_benchmark_result(),
             GenericTeamSolution::Regular(s) => s.get_benchmark_result(),
+        }
+    }
+}
+
+impl<TT: Transition + 'static> From<TeamSolution<TT>> for GenericTeamSolution {
+    fn from(val: TeamSolution<TT>) -> Self {
+        // Only two classes implement Transition
+        if TypeId::of::<TT>() == TypeId::of::<RegularTransition>() {
+            GenericTeamSolution::Regular(unsafe { std::mem::transmute(val) })
+        } else if TypeId::of::<TT>() == TypeId::of::<TimedTransition>() {
+            GenericTeamSolution::Timed(unsafe { std::mem::transmute(val) })
+        } else {
+            unreachable!()
         }
     }
 }

@@ -275,7 +275,7 @@ pub fn save_solution<P: AsRef<Path>, S: Into<saveable::GenericTeamSolution>>(
     let mut file = std::fs::File::create(&path)?;
     file.write_all(&encoded[..])?;
 
-    log::info!(
+    log::debug!(
         "Saved {} bytes to {} in {:.4} seconds.",
         encoded.len(),
         path.as_ref().to_string_lossy().to_string(),
@@ -307,7 +307,7 @@ pub fn load_solution<P: AsRef<Path>>(path: P) -> std::io::Result<SaveFile> {
         solution: solution.into(),
     };
 
-    log::info!(
+    log::debug!(
         "Loaded {} bytes from {} in {:.4} seconds.",
         encoded.len(),
         path.as_ref().to_string_lossy().to_string(),

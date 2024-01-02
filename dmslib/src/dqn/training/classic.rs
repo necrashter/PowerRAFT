@@ -122,7 +122,7 @@ where
 impl<'a, AI, TT, AA, PS, SI> DqnTrainer for ClassicTrainer<'a, AI, TT, AA, PS, SI>
 where
     AI: ActionSet<'a>,
-    TT: Transition,
+    TT: Transition + 'static,
     AA: ActionApplier<TT>,
     PS: PolicySynthesizer<TT>,
     SI: StateIndexer,
@@ -204,7 +204,10 @@ where
         average_loss
     }
 
-    fn evaluate(&mut self, settings: EvaluationSettings) -> EvaluationResult {
+    fn evaluate(
+        &mut self,
+        settings: EvaluationSettings,
+    ) -> (EvaluationResult, GenericTeamSolution) {
         dqn_evaluate_custom::<TT, AI, SI, AA, PS>(
             self.env.graph,
             self.env.initial_state.teams.clone(),

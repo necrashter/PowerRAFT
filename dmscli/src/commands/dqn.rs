@@ -6,7 +6,7 @@ use std::{
 
 use dmslib::{
     dqn::{load_torch_seed, EvaluationResult, EvaluationSettings},
-    io::DqnModel,
+    io::{fs::save_solution, DqnModel},
 };
 
 use super::*;
@@ -134,7 +134,7 @@ fn train(args: TrainArgs) {
 
     let DqnModel {
         name: _,
-        problem,
+        problem: team_problem,
         model,
         trainer,
         evaluation,
@@ -146,7 +146,7 @@ fn train(args: TrainArgs) {
 
     load_torch_seed();
 
-    let (problem, config) = match problem.prepare() {
+    let (problem, config) = match team_problem.clone().prepare() {
         Ok(x) => x,
         Err(err) => fatal_error!(1, "Error while parsing team problem: {}", err),
     };
@@ -180,7 +180,7 @@ fn train(args: TrainArgs) {
         value,
         avg_q,
         states,
-    } = trainer.evaluate(evaluation);
+    } = trainer.evaluate(evaluation).0;
     println!(
         "\n{:24} || Value: {} | Avg. Q: {} | States: {}",
         "Pre-training Evaluation".dimmed().bold(),
@@ -202,23 +202,32 @@ fn train(args: TrainArgs) {
 
         let start = Instant::now();
         let loss = trainer.train(checkpoint_iterations);
-        let evaluation_result = trainer.evaluate(evaluation);
+        let (result, solution) = trainer.evaluate(evaluation);
         println!(
             "{} Loss: {} || Value: {} | Avg. Q: {} | States: {}",
             format!("[{:>5}]", checkpoint).green().bold(),
             format!("{:>10.4}", loss).bold(),
-            format!("{:>8.2}", evaluation_result.value).bold(),
-            format!("{:>8.2}", evaluation_result.avg_q).bold(),
-            format!("{:>8}", evaluation_result.states).bold(),
+            format!("{:>8.2}", result.value).bold(),
+            format!("{:>8.2}", result.avg_q).bold(),
+            format!("{:>8}", result.states).bold(),
         );
-        if let Err(e) = append_to_file(&values_file, evaluation_result.value) {
+        if let Err(e) = append_to_file(&values_file, result.value) {
             eprintln!("{} Failed to append value: {e}", "[ERROR]".red().bold());
         }
-        results.push((checkpoint, evaluation_result));
+        results.push((checkpoint, result));
 
         model_dir.push(format!("{checkpoint}.safetensors"));
         if let Err(e) = trainer.save_checkpoint(&model_dir) {
             eprintln!("{} Failed to save checkpoint: {e}", "[ERROR]".red().bold());
+        }
+        model_dir.pop();
+
+        model_dir.push(format!("solution-{checkpoint}.bin"));
+        if let Err(e) = save_solution(team_problem.clone(), solution, &model_dir) {
+            eprintln!(
+                "{} Failed to save the solution: {e}",
+                "[ERROR]".red().bold()
+            );
         }
         model_dir.pop();
 

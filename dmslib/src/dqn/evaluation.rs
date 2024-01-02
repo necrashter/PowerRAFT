@@ -1,5 +1,9 @@
 use crate::{
-    teams::state::{State, StateIndexer},
+    io::GenericTeamSolution,
+    teams::{
+        state::{State, StateIndexer},
+        Solution,
+    },
     types::StateIndex,
 };
 
@@ -127,7 +131,7 @@ pub struct EvaluationResult {
 pub fn dqn_evaluate_custom<
     'a,
     'b,
-    TT: Transition,
+    TT: Transition + 'static,
     AI: ActionSet<'a>,
     SI: StateIndexer,
     AA: ActionApplier<TT>,
@@ -139,7 +143,7 @@ pub fn dqn_evaluate_custom<
     tensorizer: &'b mut Tensorizer,
     horizon: usize,
     settings: EvaluationSettings,
-) -> EvaluationResult {
+) -> (EvaluationResult, GenericTeamSolution) {
     let EvaluationSettings { top_k } = settings;
 
     // Don't calculate gradients
@@ -165,16 +169,33 @@ pub fn dqn_evaluate_custom<
 
     let qvals_len = explorer.qvals.len();
     let avg_q = explorer.qvals.into_iter().sum::<f64>() / (qvals_len as f64);
-    let states = explorer.states.get_state_count();
+    let num_states = explorer.states.get_state_count();
 
+    let (states, teams) = explorer.states.deconstruct();
     let transitions = explorer.transitions;
 
-    let (values, _policy) = PS::synthesize_policy(&transitions, horizon);
+    let (values, policy) = PS::synthesize_policy(&transitions, horizon);
     let value = get_min_value(&values);
 
-    EvaluationResult {
+    let result = EvaluationResult {
         value,
         avg_q,
+        states: num_states,
+    };
+
+    let solution = Solution {
+        total_time: 0.0,
+        generation_time: 0.0,
+        max_memory: 0,
         states,
-    }
+        teams,
+        transitions,
+        values,
+        policy,
+        horizon,
+    };
+
+    let solution = solution.into_io(graph);
+
+    (result, solution.into())
 }
