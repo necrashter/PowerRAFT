@@ -99,8 +99,7 @@ pub struct Graph {
 pub struct GraphEntry {
     pub filename: String,
     pub name: String,
-    #[serde(rename = "solutionFile")]
-    pub solution_file: Option<String>,
+    pub solutions: Vec<String>,
     pub view: View,
 }
 

@@ -35,13 +35,13 @@ pub fn list_graphs(dir: &Path) -> std::io::Result<HashMap<String, Vec<GraphEntry
         for entry in std::fs::read_dir(&dir)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() {
+            if path.is_dir() && path.extension().is_none() {
                 q.push(path);
             } else {
                 let filename = String::from(
                     &path.clone().into_os_string().into_string().unwrap()[rootdirstrlen..],
                 );
-                if !filename.ends_with(".soln.json") && filename.ends_with(".json") {
+                if filename.ends_with(".json") {
                     let data = std::fs::read_to_string(&path)?;
                     let data: serde_json::Value = serde_json::from_str(&data)?;
                     let name = if let Some(serde_json::Value::String(name)) = data.get("name") {
@@ -49,13 +49,23 @@ pub fn list_graphs(dir: &Path) -> std::io::Result<HashMap<String, Vec<GraphEntry
                     } else {
                         String::from(path.file_stem().unwrap().to_str().unwrap())
                     };
-                    let solnpath = path.with_extension(".soln.json");
-                    let solution_file = if solnpath.exists() {
-                        Some(String::from(
-                            &solnpath.into_os_string().into_string().unwrap()[rootdirstrlen..],
-                        ))
+                    let solnpath = path.with_extension("soln.d");
+                    let solutions: Vec<String> = if solnpath.exists() && solnpath.is_dir() {
+                        // NOTE: Fails silently on invalid filenames and other I/O errors.
+                        std::fs::read_dir(&solnpath)?
+                            .filter_map(|entry| {
+                                let entry = entry.ok()?;
+                                let path = entry.path();
+                                if path.extension()? == "json" {
+                                    let name = path.file_stem()?.to_str()?;
+                                    Some(name.to_string())
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect_vec()
                     } else {
-                        None
+                        Vec::new()
                     };
                     let view: View = if let Some(view) = data.get("view") {
                         match serde_json::from_value(view.clone()) {
@@ -72,7 +82,7 @@ pub fn list_graphs(dir: &Path) -> std::io::Result<HashMap<String, Vec<GraphEntry
                     let entry = GraphEntry {
                         filename,
                         name,
-                        solution_file,
+                        solutions,
                         view,
                     };
                     entries.push(entry);
