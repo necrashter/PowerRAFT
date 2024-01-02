@@ -9,6 +9,9 @@ pub use list::*;
 mod simulation;
 pub use simulation::*;
 
+mod convert;
+pub use convert::Convert;
+
 /// All CLI commands available in this binary.
 #[derive(clap::Subcommand, Debug)]
 pub enum Command {
@@ -33,6 +36,10 @@ pub enum Command {
 
     /// Load the solution and exit (check integrity).
     Load(Load),
+
+    /// Convert a binary solution file to JSON.
+    #[command(alias = "c")]
+    Convert(Convert),
 }
 
 #[derive(clap::Args, Debug)]
@@ -95,6 +102,7 @@ impl Command {
             Command::Distances(args) => args.run(),
             Command::ListAllOpt => list_all_opt(),
             Command::Load(args) => args.run(),
+            Command::Convert(args) => args.run(),
         }
     }
 }
