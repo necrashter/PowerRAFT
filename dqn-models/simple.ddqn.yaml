@@ -1,0 +1,16 @@
+name: Basic DDQN
+problem: "problems/simple.json"
+model: !DuelingDqn
+  normalize_advantages: true
+trainer: !NaiveClassic
+  replay:
+    # This practically eliminates experience replay,
+    # but it works better for some reason.
+    capacity: 1
+    init: 1
+  lr: 0.01
+  gradient_clip: 0.5
+  epsilon: 0.25
+  discount: 0.95
+  target_update_period: 50
+checkpoint_iterations: 500

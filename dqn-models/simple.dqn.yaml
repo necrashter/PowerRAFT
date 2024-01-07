@@ -1,0 +1,13 @@
+name: Basic DQN
+problem: "problems/simple.json"
+model: !Dqn
+trainer: !NaiveClassic
+  replay:
+    capacity: 2000
+    init: 200
+  lr: 0.01
+  gradient_clip: 0.5
+  epsilon: 0.25
+  discount: 0.9
+  target_update_period: 50
+checkpoint_iterations: 500
