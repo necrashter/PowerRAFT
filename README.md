@@ -3,6 +3,8 @@
 PowerRAFT is a program for computing the optimal power restoration strategy in a post-disaster scenario.
 It features a web-based interface as well as a command line interface for running the experiments.
 
+This software accompanies the paper ["Field teams coordination for earthquake-damaged distribution system energization"](https://doi.org/10.1016/j.ress.2024.110050) which is published in the journal ["Reliability Engineering & System Safety"](https://www.sciencedirect.com/journal/reliability-engineering-and-system-safety). Please [cite](#citation) this paper if you find our work valuable.
+
 ## Demonstration Video
 
 Click [this link](https://youtu.be/rr4daz0UgrY) or the image below to watch:
@@ -189,3 +191,23 @@ cargo test -- --include-ignored
 ```
 
 For more information, please see [cargo-test documentation](https://doc.rust-lang.org/cargo/commands/cargo-test.html).
+
+
+## Citation
+
+Please cite our paper if you found this work valuable:
+```
+@article{ISIK2024110050,
+title = {Field teams coordination for earthquake-damaged distribution system energization},
+journal = {Reliability Engineering & System Safety},
+volume = {245},
+pages = {110050},
+year = {2024},
+issn = {0951-8320},
+doi = {https://doi.org/10.1016/j.ress.2024.110050},
+url = {https://www.sciencedirect.com/science/article/pii/S095183202400125X},
+author = {İlker Işık and Ebru {Aydin Gol}},
+keywords = {Decision support, Markov decision process, Stochastic systems, Power networks, Disaster management},
+abstract = {The re-energization of electrical distribution systems in a post-disaster scenario is of grave importance as most modern infrastructure systems rely heavily on the presence of electricity. This paper introduces a method to coordinate the field teams for the optimal energization of an electrical distribution system after an earthquake-induced blackout. The proposed method utilizes a Markov Decision Process (MDP) to create an optimal energization strategy, which aims to minimize the expected time to energize each distribution system component. The travel duration of each team and the possible outcomes of the energization attempts are considered in the state transitions. The failure probabilities of the system components are computed using the fragility curves of structures and the Peak Ground Acceleration (PGA) values which are encoded to the MDP model via transition probabilities. Furthermore, the proposed solution offers several methods to determine the non-optimal actions during the construction of the MDP and eliminate them in order to improve the run-time performance without sacrificing the optimality of the solution.}
+}
+```
