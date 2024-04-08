@@ -3,7 +3,7 @@
 PowerRAFT is a program for computing the optimal power restoration strategy in a post-disaster scenario.
 It features a web-based interface as well as a command line interface for running the experiments.
 
-This software accompanies the paper ["Field teams coordination for earthquake-damaged distribution system energization"](https://doi.org/10.1016/j.ress.2024.110050) which is published in the journal ["Reliability Engineering & System Safety"](https://www.sciencedirect.com/journal/reliability-engineering-and-system-safety). Please [cite](#citation) this paper if you find our work valuable.
+This software accompanies the paper ["Field teams coordination for earthquake-damaged distribution system energization"](https://doi.org/10.1016/j.ress.2024.110050) ([arxiv](https://arxiv.org/abs/2404.04087)) which is published in the journal ["Reliability Engineering & System Safety"](https://www.sciencedirect.com/journal/reliability-engineering-and-system-safety). Please [cite](#citation) this paper if you find our work valuable.
 
 ## Demonstration Video
 
