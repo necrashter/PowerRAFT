@@ -23,7 +23,7 @@ fn linear_system_energize() {
             (
                 0.5,
                 vec![
-                    BusState::Damaged,
+                    BusState::Energized,
                     BusState::Unknown,
                     BusState::Unknown,
                     BusState::Unknown,
@@ -32,7 +32,7 @@ fn linear_system_energize() {
             (
                 0.5,
                 vec![
-                    BusState::Energized,
+                    BusState::Damaged,
                     BusState::Unknown,
                     BusState::Unknown,
                     BusState::Unknown,
@@ -45,19 +45,10 @@ fn linear_system_energize() {
         energize(&graph, bus_state.clone(), &[0, 1]),
         vec![
             (
-                0.5 * 0.75,
-                vec![
-                    BusState::Damaged,
-                    BusState::Damaged,
-                    BusState::Unknown,
-                    BusState::Unknown,
-                ]
-            ),
-            (
-                0.5 * 0.75,
+                0.5 * 0.25,
                 vec![
                     BusState::Energized,
-                    BusState::Damaged,
+                    BusState::Energized,
                     BusState::Unknown,
                     BusState::Unknown,
                 ]
@@ -72,10 +63,19 @@ fn linear_system_energize() {
                 ]
             ),
             (
-                0.5 * 0.25,
+                0.5 * 0.75,
                 vec![
                     BusState::Energized,
-                    BusState::Energized,
+                    BusState::Damaged,
+                    BusState::Unknown,
+                    BusState::Unknown,
+                ]
+            ),
+            (
+                0.5 * 0.75,
+                vec![
+                    BusState::Damaged,
+                    BusState::Damaged,
                     BusState::Unknown,
                     BusState::Unknown,
                 ]
