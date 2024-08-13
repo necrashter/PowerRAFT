@@ -34,7 +34,7 @@ use hashbrown::HashMap;
 /// For en-route teams (continue action), this must be the index of the destination bus.
 pub type TeamAction = BusIndex;
 
-/// Contains information about the distribution system.
+/// Contains information about the distribution system and team travel times.
 #[derive(Clone)]
 pub struct Graph {
     /// Travel times between each edge.

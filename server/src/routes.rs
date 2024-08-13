@@ -24,24 +24,52 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
             .map(|req: dmslib::io::TeamProblem| {
-                // TODO: Make optimization selection configurable from UI
-                // Use optimizations by default
-                let solution = req.solve_custom_timed(
-                    // NOTE: The client cannot handle sorted teams yet.
-                    "BitStackStateIndexer",
-                    "FilterEnergizedOnWay<PermutationalActions>",
-                    "TimedActionApplier<TimeUntilEnergization>",
-                );
-                // Naive solution:
-                // let solution = req.solve_naive();
-                let solution = match solution {
-                    Ok(x) => x,
-                    Err(e) => {
-                        let error = format!("Error while generating a solution: {e}");
-                        return reply::with_status(reply::json(&error), StatusCode::BAD_REQUEST);
-                    }
-                };
-                reply::with_status(reply::json(&solution), StatusCode::OK)
+                if req.teams.is_empty() {
+                    // Non-team problem
+                    let (graph, config) = match req.prepare_nonteam() {
+                        Ok(out) => out,
+                        Err(e) => {
+                            let error = format!("Error while processing problem: {e}");
+                            return reply::with_status(
+                                reply::json(&error),
+                                StatusCode::BAD_REQUEST,
+                            );
+                        }
+                    };
+                    let solution = match dmslib::nonteam::solve_naive(&graph, &config) {
+                        Ok(out) => out,
+                        Err(e) => {
+                            let error = format!("Error while generating a solution: {e}");
+                            return reply::with_status(
+                                reply::json(&error),
+                                StatusCode::BAD_REQUEST,
+                            );
+                        }
+                    };
+                    reply::with_status(reply::json(&solution), StatusCode::OK)
+                } else {
+                    // TODO: Make optimization selection configurable from UI
+                    // Use optimizations by default
+                    let solution = req.solve_custom_timed(
+                        // NOTE: The client cannot handle sorted teams yet.
+                        "BitStackStateIndexer",
+                        "FilterEnergizedOnWay<PermutationalActions>",
+                        "TimedActionApplier<TimeUntilEnergization>",
+                    );
+                    // Naive solution:
+                    // let solution = req.solve_naive();
+                    let solution = match solution {
+                        Ok(x) => x,
+                        Err(e) => {
+                            let error = format!("Error while generating a solution: {e}");
+                            return reply::with_status(
+                                reply::json(&error),
+                                StatusCode::BAD_REQUEST,
+                            );
+                        }
+                    };
+                    reply::with_status(reply::json(&solution), StatusCode::OK)
+                }
             }))
         .or(warp::path!("get-graphs").and(warp::get()).map(|| {
             match list_graphs(Path::new(GRAPHS_PATH)) {
