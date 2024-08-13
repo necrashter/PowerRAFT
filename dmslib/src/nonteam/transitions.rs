@@ -14,7 +14,7 @@ fn energize(
     let mut outcomes: Vec<(Probability, Vec<BusState>)> = Vec::new();
     let mut state = buses;
     for &i in action {
-        state[i as usize] = BusState::Damaged;
+        state[i as usize] = BusState::Energized;
     }
     'permutations: loop {
         let p = action.iter().fold(1.0, |acc, &i| {
@@ -31,11 +31,11 @@ fn energize(
         }
         for i in action {
             let i = *i as usize;
-            if state[i] == BusState::Damaged {
-                state[i] = BusState::Energized;
+            if state[i] == BusState::Energized {
+                state[i] = BusState::Damaged;
                 continue 'permutations;
             } else {
-                state[i] = BusState::Damaged;
+                state[i] = BusState::Energized;
             }
         }
         break 'permutations;

@@ -38,7 +38,7 @@ fn wscc_nonteam() {
         time_func: io::TimeFunc::default(),
     };
     let (graph, config) = team_problem.prepare_nonteam().unwrap();
-    const OPTIMAL_VALUE: Value = unsafe { std::mem::transmute(0x42bf3a4a_u32) };
+    const OPTIMAL_VALUE: Value = unsafe { std::mem::transmute(0x42bf3a48_u32) };
 
     let solution = solve_naive(&graph, &config).unwrap();
     assert_eq!(solution.get_min_value(), OPTIMAL_VALUE);
