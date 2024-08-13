@@ -1,18 +1,21 @@
 //! Input output module.
 //!
 //! Contains structs to serialize and deserialize various representation of graphs.
+use crate::graph;
 use crate::policy::*;
 use crate::teams;
 use crate::types::*;
 use crate::SolveFailure;
 use teams::state::{BusState, TeamState};
 
-use ndarray::{Array1, Array2, ArrayView1};
-use serde::ser::{SerializeMap, SerializeSeq};
+use ndarray::{Array1, Array2};
+use serde::ser::SerializeMap;
 use serde::{Deserialize, Serialize, Serializer};
 
+mod array;
 mod experiments;
 pub mod fs;
+pub use array::Array2Serializer;
 pub use experiments::*;
 mod simulation;
 pub use simulation::*;
@@ -189,6 +192,8 @@ impl Default for TimeFunc {
 pub struct TeamProblem {
     pub name: Option<String>,
     pub graph: Graph,
+    /// If teams field is missing or empty, the system is remote controlled.
+    #[serde(default)]
     pub teams: Vec<Team>,
     /// Optimization horizon for policy synthesis.
     /// Use `None` to automatically determine it based on transitions.
@@ -234,6 +239,72 @@ impl TeamProblem {
         Ok(distances)
     }
 
+    /// Prepare this problem before solving without teams.
+    pub fn prepare_nonteam(self) -> Result<(graph::Graph, teams::Config), SolveFailure> {
+        let TeamProblem {
+            name: _,
+            graph,
+            teams,
+            horizon,
+            pfo,
+            time_func: _,
+        } = self;
+
+        if !teams.is_empty() {
+            return Err(SolveFailure::BadInput(
+                "Teams field is not empty".to_owned(),
+            ));
+        }
+
+        let pfs: Array1<Probability> = if let Some(pfo) = pfo {
+            Array1::from(vec![pfo as Probability; graph.nodes.len()])
+        } else {
+            graph
+                .nodes
+                .iter()
+                .map(|node| node.pf as Probability)
+                .collect()
+        };
+
+        for res in graph.resources.iter() {
+            if res.kind.is_some() {
+                return Err(SolveFailure::BadInput(String::from(
+                    "Only transmission grid is supported for now!",
+                )));
+            }
+        }
+
+        let mut branches = vec![Vec::<BusIndex>::new(); graph.nodes.len()];
+
+        for branch in graph.branches.iter() {
+            let a = branch.nodes.0;
+            let b = branch.nodes.1;
+            // TODO: throw error on duplicate branch?
+            branches[a].push(b.try_into().expect("Bus index overflow in branch"));
+            branches[b].push(a.try_into().expect("Bus index overflow in branch"));
+        }
+
+        let mut connected: Vec<bool> = vec![false; graph.nodes.len()];
+
+        for x in graph.external.iter() {
+            connected[x.node] = true;
+        }
+
+        let graph = graph::Graph {
+            branches,
+            connected,
+            pfs,
+        };
+
+        Ok((
+            graph,
+            teams::Config {
+                horizon,
+                ..Default::default()
+            },
+        ))
+    }
+
     /// Prepare this problem before solving.
     /// - Add nodes for initial team positions.
     /// - Compute travel times matrix.
@@ -247,6 +318,10 @@ impl TeamProblem {
             pfo,
             time_func,
         } = self;
+
+        if teams.is_empty() {
+            return Err(SolveFailure::BadInput("Teams field is empty".to_owned()));
+        }
 
         let mut locations: Vec<LatLng> =
             graph.nodes.iter().map(|node| node.latlng.clone()).collect();
@@ -539,40 +614,6 @@ impl<T: Transition> Serialize for TeamSolution<T> {
         map.serialize_entry("values", &self.values)?;
         map.serialize_entry("policy", &self.policy)?;
         map.end()
-    }
-}
-
-/// Private helper for 2D array serialization.
-/// Array is serialized as list of lists.
-struct Array2Serializer<'a, T>(&'a Array2<T>);
-
-/// Private helper for 2D array serialization.
-/// This is a row in array.
-struct ArrayRowSerializer<'a, T>(ArrayView1<'a, T>);
-
-impl<T: Serialize> Serialize for Array2Serializer<'_, T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(self.0.shape()[0]))?;
-        for row in self.0.rows() {
-            seq.serialize_element(&ArrayRowSerializer(row))?;
-        }
-        seq.end()
-    }
-}
-
-impl<T: Serialize> Serialize for ArrayRowSerializer<'_, T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-        for i in self.0.iter() {
-            seq.serialize_element(i)?;
-        }
-        seq.end()
     }
 }
 
