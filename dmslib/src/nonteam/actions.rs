@@ -56,7 +56,15 @@ impl ActionSet<'_> for NaiveActions {
             let mut prod = bus_targets
                 .into_iter()
                 .multi_cartesian_product()
-                .map(|targets| targets.into_iter().unique().collect_vec())
+                .map(|targets| {
+                    // Eliminate repeating targets
+                    let mut targets = targets.into_iter().unique().collect_vec();
+                    // Sort the targets so that we can eliminate identical products, which
+                    // usually happen in cyclic cases.
+                    targets.sort();
+                    targets
+                })
+                .unique()
                 .collect_vec();
             // We need to get rid of actions in which multiple source buses target the same bus for energization.
             // Get target bus count for each combination.
