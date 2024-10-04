@@ -46,6 +46,8 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                             );
                         }
                     };
+                    log::info!("States: {}", solution.transitions.len());
+                    log::info!("Time: {}", solution.total_time);
                     reply::with_status(reply::json(&solution), StatusCode::OK)
                 } else {
                     // TODO: Make optimization selection configurable from UI
