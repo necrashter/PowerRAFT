@@ -7,24 +7,34 @@ use std::sync::{Arc, Mutex};
 use tokio::runtime::{Builder, Runtime};
 use tokio::task::JoinHandle;
 
+pub const GRAPHS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../graphs/");
+pub const EXPERIMENTS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../experiments/");
+
 // Struct to hold server state
 #[pyclass]
-struct Server {
+struct ServerState {
     handle: Arc<Mutex<Option<JoinHandle<()>>>>,
     runtime: Arc<Mutex<Option<Runtime>>>,
 }
 
 #[pymethods]
-impl Server {
+impl ServerState {
     #[new]
     fn new() -> Self {
-        Server {
+        ServerState {
             handle: Arc::new(Mutex::new(None)),
             runtime: Arc::new(Mutex::new(None)),
         }
     }
 
-    fn start(&self, addr: String) -> PyResult<()> {
+    #[pyo3(signature = (addr, static_path, graphs_path=None, experiments_path=None))]
+    fn start(
+        &self,
+        addr: String,
+        static_path: String,
+        graphs_path: Option<String>,
+        experiments_path: Option<String>,
+    ) -> PyResult<()> {
         let handle_arc = self.handle.clone();
         let runtime_arc = self.runtime.clone();
 
@@ -37,7 +47,27 @@ impl Server {
             }
         };
 
-        // Create the runtime and store it in the Server
+        let graphs_path = if let Some(path) = graphs_path {
+            path
+        } else {
+            log::warn!(
+                "graphs_path is not provided, using the hardcoded default: {}",
+                GRAPHS_PATH
+            );
+            GRAPHS_PATH.to_string()
+        };
+
+        let experiments_path = if let Some(path) = experiments_path {
+            path
+        } else {
+            log::warn!(
+                "experiments_path is not provided, using the hardcoded default: {}",
+                EXPERIMENTS_PATH
+            );
+            EXPERIMENTS_PATH.to_string()
+        };
+
+        // Create the runtime and store it in the ServerState
         let mut runtime_lock = runtime_arc.lock().unwrap();
         if runtime_lock.is_none() {
             let runtime = Builder::new_multi_thread()
@@ -53,7 +83,7 @@ impl Server {
         }
 
         let runtime = runtime_lock.as_ref().unwrap();
-        let api = routes::api();
+        let api = routes::api(static_path, graphs_path, experiments_path);
 
         // Use the runtime to spawn the server
         let handle = runtime.spawn(async move {
@@ -103,6 +133,6 @@ fn init_logging(level: Option<String>) -> PyResult<()> {
 #[pymodule]
 fn pydms(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(init_logging, m)?)?;
-    m.add_class::<Server>()?;
+    m.add_class::<ServerState>()?;
     Ok(())
 }

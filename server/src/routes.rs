@@ -1,21 +1,21 @@
 //! Server routes module.
 use dmslib::io::fs::*;
-use dmslib::GRAPHS_PATH;
 
 use std::path::Path;
 use warp::{filters::BoxedFilter, Filter, Reply};
 use warp::{http::StatusCode, reply};
 
-/// Path to static files for the client.
-pub const STATIC_PATH: &str = "../client";
-
 /// Content length limit for JSON requests.
 const JSON_CONTENT_LIMIT: u64 = 8 * 1024 * 1024;
 
 /// Every route combined for a single network
-pub fn api() -> BoxedFilter<(impl Reply,)> {
-    let static_files = warp::any().and(warp::fs::dir(STATIC_PATH));
-    let graph_files = warp::path("graphs").and(warp::fs::dir(GRAPHS_PATH));
+pub fn api(
+    static_path: String,
+    graphs_path: String,
+    experiments_path: String,
+) -> BoxedFilter<(impl Reply,)> {
+    let static_files = warp::any().and(warp::fs::dir(static_path));
+    let graph_files = warp::path("graphs").and(warp::fs::dir(graphs_path.clone()));
 
     graph_files
         .or(static_files)
@@ -73,8 +73,8 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                     reply::with_status(reply::json(&solution), StatusCode::OK)
                 }
             }))
-        .or(warp::path!("get-graphs").and(warp::get()).map(|| {
-            match list_graphs(Path::new(GRAPHS_PATH)) {
+        .or(warp::path!("get-graphs").and(warp::get()).map(move || {
+            match list_graphs(Path::new(&graphs_path)) {
                 Ok(list) => reply::with_status(reply::json(&list), StatusCode::OK),
                 Err(error) => {
                     log::error!("Error while getting the graph list: {error}");
@@ -87,7 +87,7 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
             .and(warp::post())
             .and(warp::body::content_length_limit(JSON_CONTENT_LIMIT))
             .and(warp::body::json())
-            .map(|mut req: serde_json::Value| {
+            .map(move |mut req: serde_json::Value| {
                 match req.as_object_mut() {
                     Some(map) => {
                         map.remove("benchmark");
@@ -99,7 +99,7 @@ pub fn api() -> BoxedFilter<(impl Reply,)> {
                         );
                     }
                 }
-                match save_problem(&req) {
+                match save_problem(&req, Path::new(&experiments_path)) {
                     Ok(_) => reply::with_status("OK".to_string(), StatusCode::OK),
                     Err(e) => reply::with_status(
                         e.to_string(),
