@@ -1,6 +1,5 @@
 //! A module responsible for the DMS file system operations.
 use super::*;
-use crate::EXPERIMENTS_PATH;
 
 use itertools::Itertools;
 
@@ -102,9 +101,9 @@ pub fn name_to_json(name: &str) -> String {
     sanitize_filename::sanitize(name)
 }
 
-/// Given a `serde_json::Value`, save it to the [`EXPERIMENTS_PATH`] as a human-readable (pretty)
+/// Given a `serde_json::Value`, save it to the given directory as a human-readable (pretty)
 /// JSON file.
-pub fn save_problem(content: &serde_json::Value) -> std::io::Result<()> {
+pub fn save_problem(content: &serde_json::Value, experiments_dir: &Path) -> std::io::Result<()> {
     let name: String = match content.get("name") {
         Some(name) => match name.as_str() {
             Some(s) => s.to_owned(),
@@ -123,7 +122,7 @@ pub fn save_problem(content: &serde_json::Value) -> std::io::Result<()> {
         }
     };
     let name = name_to_json(&name);
-    let path = Path::new(EXPERIMENTS_PATH).join(name);
+    let path = experiments_dir.join(name);
     let path = path.as_path();
     let mut file = std::fs::File::options()
         .read(false)

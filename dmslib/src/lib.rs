@@ -15,13 +15,6 @@ pub mod utils;
 #[global_allocator]
 static ALLOCATOR: cap::Cap<std::alloc::System> = cap::Cap::new(std::alloc::System, usize::MAX);
 
-/// Path where graphs are stored.
-/// Must end with `/`, or all subdirectory names will start with `/`.
-pub const GRAPHS_PATH: &str = "../graphs/";
-
-/// Path where the problems and experiments are stored.
-pub const EXPERIMENTS_PATH: &str = "../experiments/";
-
 /// Represents the reasons why a solution attempt might fail.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", content = "content")] // content will be used for BadInput(String)
