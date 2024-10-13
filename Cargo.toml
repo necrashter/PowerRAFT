@@ -4,6 +4,7 @@ members = [
   "server",
   "dmslib",
   "dmscli",
+  "pydms",
 ]
 
 [profile.bench]

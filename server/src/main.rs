@@ -1,6 +1,5 @@
+use server::routes;
 use std::net::SocketAddr;
-
-mod routes;
 
 #[tokio::main]
 async fn main() {
