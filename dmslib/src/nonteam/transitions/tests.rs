@@ -4,8 +4,7 @@ use super::*;
 fn linear_system_energize() {
     // 4 bus system, everything in on a line
     let graph = Graph {
-        // Energize does not really care about this
-        branches: vec![vec![1], vec![2], vec![3], vec![4]],
+        branches: vec![vec![1], vec![0, 2], vec![1, 3], vec![2]],
         connected: vec![true, false, false, false],
         pfs: ndarray::arr1(&[0.5, 0.75, 0.5, 0.5]),
     };
