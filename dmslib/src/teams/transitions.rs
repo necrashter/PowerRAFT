@@ -121,11 +121,7 @@ fn advance_time_for_teams(
                 team.time
             };
             TeamState {
-                time: if time >= travel_time {
-                    0
-                } else {
-                    travel_time - time
-                },
+                time: travel_time.saturating_sub(time),
                 index: action,
             }
         })

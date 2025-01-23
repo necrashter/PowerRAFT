@@ -141,7 +141,7 @@ impl TimeFunc {
     }
 
     /// Get the travel time matrix for the given locations according to this function.
-    pub fn get_travel_times(&self, locations: &Vec<LatLng>) -> Array2<Time> {
+    pub fn get_travel_times(&self, locations: &[LatLng]) -> Array2<Time> {
         let lnodes = locations.len();
         let mut travel_times = Array2::<Time>::zeros((lnodes, lnodes));
 
@@ -550,7 +550,7 @@ struct Array2Serializer<'a, T>(&'a Array2<T>);
 /// This is a row in array.
 struct ArrayRowSerializer<'a, T>(ArrayView1<'a, T>);
 
-impl<'a, T: Serialize> Serialize for Array2Serializer<'a, T> {
+impl<T: Serialize> Serialize for Array2Serializer<'_, T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -563,7 +563,7 @@ impl<'a, T: Serialize> Serialize for Array2Serializer<'a, T> {
     }
 }
 
-impl<'a, T: Serialize> Serialize for ArrayRowSerializer<'a, T> {
+impl<T: Serialize> Serialize for ArrayRowSerializer<'_, T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

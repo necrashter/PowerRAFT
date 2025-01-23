@@ -43,7 +43,7 @@ where
 }
 
 /// Given 2 sorted vectors, returns a vector of common elements in sorted order.
-pub fn sorted_intersection<T: Ord + Clone>(a: &Vec<T>, b: &Vec<T>) -> Vec<T> {
+pub fn sorted_intersection<T: Ord + Clone>(a: &[T], b: &[T]) -> Vec<T> {
     let mut output: Vec<T> = Vec::new();
     output.reserve_exact(std::cmp::min(a.len(), b.len()));
     let mut a = a.iter().cloned();
@@ -152,7 +152,7 @@ pub fn is_graph_cyclic(vertex_count: usize, edges: &Vec<(usize, usize)>) -> bool
 /// given indices are sorted in ascending order (equality accepted).
 ///
 /// Panics if an invalid index is given.
-pub fn are_indices_sorted<T: Ord>(v: &[T], indices: &Vec<usize>) -> bool {
+pub fn are_indices_sorted<T: Ord>(v: &[T], indices: &[usize]) -> bool {
     if indices.len() <= 1 {
         return true;
     }

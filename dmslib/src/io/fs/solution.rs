@@ -1,3 +1,5 @@
+#![allow(clippy::missing_transmute_annotations)]
+
 use std::time::Instant;
 
 use super::*;

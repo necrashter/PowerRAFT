@@ -107,7 +107,7 @@ pub struct NaiveIterator<'a> {
     next: Option<Vec<TeamAction>>,
 }
 
-impl<'a> NaiveIterator<'a> {
+impl NaiveIterator<'_> {
     /// Reset the iterator
     fn reset(&mut self) {
         let mut next: Option<Vec<TeamAction>> = Some(
@@ -195,7 +195,7 @@ impl Iterator for NaiveIterator<'_> {
 /// Naive action set definition without any action-eliminating optimizations.
 pub struct NaiveActions;
 
-impl<'a> ActionSet<'a> for NaiveActions {
+impl ActionSet<'_> for NaiveActions {
     type IT<'b> = NaiveIterator<'b>;
 
     fn setup(_graph: &Graph) -> Self {
@@ -228,7 +228,7 @@ pub struct PermutationalIterator<'a> {
     next_actions: Vec<Vec<TeamAction>>,
 }
 
-impl<'a> PermutationalIterator<'a> {
+impl PermutationalIterator<'_> {
     /// Get the next target bus combination from `self.bus_combination_iter`.
     /// Consider the permutations and eliminate non-optimal ones.
     ///
@@ -339,7 +339,7 @@ impl<'a> PermutationalIterator<'a> {
     }
 }
 
-impl<'a> Iterator for PermutationalIterator<'a> {
+impl Iterator for PermutationalIterator<'_> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -372,7 +372,10 @@ impl<'a> ActionSet<'a> for PermutationalActions<'a> {
         }
     }
 
-    type IT<'b> = PermutationalIterator<'b> where Self: 'b;
+    type IT<'b>
+        = PermutationalIterator<'b>
+    where
+        Self: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         let (ready_teams, ready_team_nodes): (Vec<usize>, Vec<BusIndex>) = action_state
@@ -423,7 +426,7 @@ pub struct WaitMovingIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> {
     _phantom: std::marker::PhantomData<&'a ()>,
 }
 
-impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for WaitMovingIterator<'a, T> {
+impl<T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for WaitMovingIterator<'_, T> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -451,7 +454,11 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
         }
     }
 
-    type IT<'b> = WaitMovingIterator<'b, T::IT<'b>> where Self: 'b, T: 'b;
+    type IT<'b>
+        = WaitMovingIterator<'b, T::IT<'b>>
+    where
+        Self: 'b,
+        T: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         let action: Vec<TeamAction> = action_state
@@ -488,7 +495,7 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for WaitMovingActions<'a, T> {
 /// An action iterator that wraps around another action iterator and eliminates actions according
 /// to the "energized components on the way" condition:
 /// - If an energizable component (i.e., in `beta_1` set) that is on the way is skipped in an
-/// action, it will be eliminated.
+///   action, it will be eliminated.
 ///
 /// See [`FilterEnergizedOnWay`].
 pub struct EnergizedOnWayIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> {
@@ -500,7 +507,7 @@ pub struct EnergizedOnWayIterator<'a, T: Iterator<Item = Vec<TeamAction>> + Size
     action_state: &'a ActionState,
 }
 
-impl<'a, T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWayIterator<'a, T> {
+impl<T: Iterator<Item = Vec<TeamAction>> + Sized> Iterator for EnergizedOnWayIterator<'_, T> {
     type Item = Vec<TeamAction>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -551,7 +558,11 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterEnergizedOnWay<'a, T> {
         }
     }
 
-    type IT<'b> = EnergizedOnWayIterator<'b, T::IT<'b>> where T: 'b, Self: 'b;
+    type IT<'b>
+        = EnergizedOnWayIterator<'b, T::IT<'b>>
+    where
+        T: 'b,
+        Self: 'b;
 
     fn prepare<'b>(&'b self, action_state: &'b ActionState) -> Self::IT<'b> {
         EnergizedOnWayIterator {
@@ -587,7 +598,8 @@ impl<'a, T: ActionSet<'a>> ActionSet<'a> for FilterOnWay<'a, T> {
         }
     }
 
-    type IT<'b> = std::vec::IntoIter<Vec<TeamAction>>
+    type IT<'b>
+        = std::vec::IntoIter<Vec<TeamAction>>
     where
         Self: 'b;
 
