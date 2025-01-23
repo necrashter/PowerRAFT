@@ -6,9 +6,9 @@ authors = ["İlker Işık <iiilker99@gmail.com>"]
 description = "CLI for the disaster management system."
 
 [dependencies]
-clap = { version = "4.0.22", features = ["derive"] }
+clap = { version = "4.5.27", features = ["derive"] }
 dmslib = { path = "../dmslib" }
 serde_json = "1.0"
-colored = "2.1"
+colored = "2.2"
 env_logger = "0.10"
 log = "0.4"
